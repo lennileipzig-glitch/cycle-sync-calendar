@@ -143,7 +143,7 @@ const Index = () => {
         <Card className="p-4 shadow-soft">
           {zoom === "year" && <YearView selectedDate={selectedDate} onSelectDate={(d) => { setSelectedDate(d); setZoom("month"); }} profile={profile} />}
           {zoom === "month" && <MonthView monthDate={selectedDate} selectedDate={selectedDate} onSelectDate={setSelectedDate} profile={profile} />}
-          {zoom === "week" && <WeekView monthDate={selectedDate} selectedDate={selectedDate} onSelectDate={setSelectedDate} profile={profile} />}
+          {zoom === "week" && <WeekView selectedDate={selectedDate} onSelectDate={setSelectedDate} profile={profile} />}
         </Card>
 
         {/* Day view */}
