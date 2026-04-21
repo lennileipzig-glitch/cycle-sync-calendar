@@ -57,7 +57,7 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile }: Pr
   );
 }
 
-export function WeekView({ selectedDate, onSelectDate, profile }: Props) {
+export function WeekView({ selectedDate, onSelectDate, profile }: Omit<Props, "monthDate">) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
