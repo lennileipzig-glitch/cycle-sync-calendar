@@ -14,7 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_logs: {
+        Row: {
+          created_at: string
+          energy_level: string | null
+          id: string
+          log_date: string
+          mood: string | null
+          notes: string | null
+          symptoms: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          energy_level?: string | null
+          id?: string
+          log_date: string
+          mood?: string | null
+          notes?: string | null
+          symptoms?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          energy_level?: string | null
+          id?: string
+          log_date?: string
+          mood?: string | null
+          notes?: string | null
+          symptoms?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avg_cycle_length: number
+          avg_period_length: number
+          created_at: string
+          display_name: string | null
+          id: string
+          last_period_start: string | null
+          updated_at: string
+        }
+        Insert: {
+          avg_cycle_length?: number
+          avg_period_length?: number
+          created_at?: string
+          display_name?: string | null
+          id: string
+          last_period_start?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avg_cycle_length?: number
+          avg_period_length?: number
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_period_start?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      todos: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          title: string
+          todo_date: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          title: string
+          todo_date: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          title?: string
+          todo_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
