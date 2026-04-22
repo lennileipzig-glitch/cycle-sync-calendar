@@ -514,12 +514,21 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
               className={cn(
                 "rounded-lg overflow-hidden bg-card border border-border/40 transition-all",
                 selected && "ring-2 ring-primary",
-                !selected && "hover:border-primary/40 opacity-70",
+                isToday && !selected && "ring-2 ring-primary/70 border-primary/40 bg-primary/5",
+                !selected && !isToday && "hover:border-primary/40 opacity-70",
               )}>
               <div className={cn("h-1 w-full", phaseStripe[ph])} />
               <div className="py-1">
                 <div className="text-[9px] uppercase text-muted-foreground">{format(d, "EE", { locale: de })}</div>
-                <div className={cn("text-sm", isToday && "font-bold text-primary")}>{format(d, "d")}</div>
+                {isToday ? (
+                  <div className="flex justify-center">
+                    <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground font-bold text-xs">
+                      {format(d, "d")}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-sm">{format(d, "d")}</div>
+                )}
               </div>
             </button>
           );
