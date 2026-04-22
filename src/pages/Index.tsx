@@ -301,6 +301,51 @@ const Index = () => {
           )}
         </div>
 
+        {zoom === "day" && (
+          <>
+            {/* Phasen-Info kompakt: nur Phase, Tag in Phase, kurzer Text */}
+            <Card className="p-4 shadow-soft" style={{ background: `linear-gradient(135deg, ${phase.color}22, hsl(var(--card)))` }}>
+              <div className="flex items-start gap-3">
+                <div className="w-3 h-3 rounded-full mt-1.5 shrink-0" style={{ background: phase.color }} />
+                <div>
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <h3 className="text-lg font-medium">{profile.in_menopause ? "Im Wandel" : phase.label}</h3>
+                    {!profile.in_menopause && phase.dayInPhase && phase.phaseLength && (
+                      <span className="text-xs text-muted-foreground">
+                        Tag {phase.dayInPhase} von {phase.phaseLength}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {profile.in_menopause
+                      ? "Höre auf deinen Körper. Luna richtet die Empfehlungen auf Energie und Wohlbefinden aus."
+                      : phase.description}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <PhaseLegend className="px-1" />
+
+            <Recommendations phase={phase} energy={dayLog?.energy_level ?? todayLog?.energy_level} symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []} />
+          </>
+        )}
+                selectedDate={selectedDate}
+                onSelectDate={setSelectedDate}
+                profile={profile}
+                events={dayEvents}
+                todos={dayTodosState}
+                log={dayLog}
+                onToggleTodo={toggleDayTodo}
+                onOpenTracker={() => setTrackerOpen(true)}
+                onAddEvent={() => { setQuickAddDate(selectedDate); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddTodo={() => { setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
+                onEditEvent={(ev) => { setEditEvent(ev); setQuickAddDate(new Date(ev.starts_at)); setEventDialogOpen(true); }}
+              />
+            </Card>
+          )}
+        </div>
+
         <PhaseLegend className="px-1" />
 
         <Recommendations phase={phase} energy={dayLog?.energy_level ?? todayLog?.energy_level} symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []} />
