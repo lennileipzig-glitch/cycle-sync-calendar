@@ -1,17 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, LogOut, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, Bell, User as UserIcon, Save, Globe, Shield, Trash2, CreditCard, Star, ExternalLink } from "lucide-react";
-import { SUPPORTED_LANGUAGES, type LangCode } from "@/i18n";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, User as UserIcon, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, type DietStyle, type SportLevel } from "@/hooks/useProfile";
-import { isGuest, guestStore } from "@/lib/guestStore";
+import { isGuest } from "@/lib/guestStore";
 import { dataApi } from "@/lib/dataApi";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -20,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ImportDialog } from "@/components/ImportDialog";
 import { EnergyChart } from "@/components/profile/EnergyChart";
