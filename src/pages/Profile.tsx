@@ -1,6 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, LogOut, Upload, Calendar as CalendarIcon, TrendingUp, Settings, Apple, Dumbbell, Bell, User as UserIcon, Save } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { ArrowLeft, LogOut, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, Bell, User as UserIcon, Save, Globe, Shield, Trash2, CreditCard, Star, ExternalLink } from "lucide-react";
+import { SUPPORTED_LANGUAGES, type LangCode } from "@/i18n";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, type DietStyle, type SportLevel } from "@/hooks/useProfile";
 import { isGuest, guestStore } from "@/lib/guestStore";
