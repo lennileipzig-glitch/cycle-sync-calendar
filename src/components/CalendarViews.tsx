@@ -297,10 +297,37 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
           const key = fmtDate(d);
           const events = eventsByDay[key] ?? [];
           const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+          const isToday = isSameDay(d, today);
           return (
-            <div key={d.toISOString()} className="relative bg-card/50 rounded-lg border border-border/30">
+            <div
+              key={d.toISOString()}
+              className={cn(
+                "relative bg-card/50 rounded-lg border border-border/30",
+                isToday && "bg-primary/5 border-primary/40 ring-1 ring-primary/30",
+              )}
+            >
               {HOURS.map(h => (
-                <div key={h} style={{ height: ROW_HEIGHT }} className="border-t border-border/30 first:border-t-0" />
+                <button
+                  key={h}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const offsetY = e.clientY - rect.top;
+                    const minutes = Math.round(((offsetY / ROW_HEIGHT) * 60) / 15) * 15;
+                    const mm = Math.min(45, Math.max(0, minutes));
+                    const time = `${h.toString().padStart(2, "0")}:${mm.toString().padStart(2, "0")}`;
+                    if (onAddEventAtTime) onAddEventAtTime(d, time);
+                    else onAddEventForDate?.(d);
+                  }}
+                  style={{ height: ROW_HEIGHT }}
+                  className="block w-full border-t border-border/30 first:border-t-0 hover:bg-primary/10 transition-colors group/slot relative text-left"
+                  aria-label={`Termin am ${format(d, "EEEE", { locale: de })} um ${h}:00 hinzufügen`}
+                >
+                  <span className="absolute top-0.5 right-1 text-[9px] text-primary opacity-0 group-hover/slot:opacity-100 transition-opacity">
+                    + Termin
+                  </span>
+                </button>
               ))}
               {events.map(ev => {
                 const startD = new Date(ev.starts_at);
