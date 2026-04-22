@@ -29,7 +29,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, guestMode } = useAuth();
   const guest = guestMode || isGuest();
-  const { profile, update } = useProfile(user?.id, guest);
+  const { profile, loading: profileLoading, update, reload } = useProfile(user?.id, guest);
   const userId = user?.id ?? null;
 
   const [zoom, setZoom] = useState<Zoom>("month");
@@ -180,8 +180,24 @@ const Index = () => {
     return () => el.removeEventListener("wheel", handleWheel);
   }, [handleWheel]);
 
-  if (authLoading || (!user && !guest) || !profile) {
+  if (authLoading || profileLoading || (!user && !guest)) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Lade...</div>;
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <Card className="w-full max-w-md p-6 text-center space-y-4 shadow-soft">
+          <div className="space-y-2">
+            <h1 className="text-xl">Dein Profil wird vorbereitet</h1>
+            <p className="text-sm text-muted-foreground">
+              Wir konnten deinen Startbildschirm gerade noch nicht laden. Bitte versuche es direkt noch einmal.
+            </p>
+          </div>
+          <Button onClick={() => reload()}>Erneut laden</Button>
+        </Card>
+      </div>
+    );
   }
 
   const navigatePrev = () => {
