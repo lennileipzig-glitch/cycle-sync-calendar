@@ -161,10 +161,6 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
               {...dragHandlers(d)}
             >
               <div className={cn("h-1.5 w-full shrink-0", phaseStripe[phase])} />
-              <div className="flex justify-between items-center px-1.5 pt-1">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
-                </div>
               <div className="flex justify-between items-center px-1.5 pt-1 gap-1">
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                   <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
