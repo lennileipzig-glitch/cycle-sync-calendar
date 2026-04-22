@@ -313,30 +313,15 @@ const Index = () => {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
-                  Termine · <span className="capitalize text-muted-foreground text-base">{format(selectedDate, "EEEE", { locale: de })}</span>
+                  Termine
                 </h3>
                 <Button variant="ghost" size="sm" onClick={() => setEventDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-1" /> Termin
                 </Button>
               </div>
-              {dayEvents.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">Keine Termine an diesem Tag.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {dayEvents.map(e => (
-                    <li key={e.id} className="flex items-start gap-2 p-2 rounded-lg bg-muted/40 text-sm">
-                      <div className="w-1 self-stretch rounded-full" style={{ background: phase.color }} />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{e.title}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {e.all_day ? "Ganztägig" : format(new Date(e.starts_at), "HH:mm", { locale: de })}
-                          {e.location && ` · ${e.location}`}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <p className="text-sm text-muted-foreground italic">
+                Termine erscheinen direkt im jeweiligen Tag im Kalender oben.
+              </p>
             </Card>
             <Card className="p-5 shadow-soft">
               <h3 className="text-lg mb-3 flex items-center gap-2">
