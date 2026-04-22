@@ -402,11 +402,12 @@ interface DayProps extends DataMaps {
   onOpenTracker: () => void;
   onAddEvent?: () => void;
   onAddTodo?: () => void;
+  onEditEvent?: (e: GuestEvent) => void;
 }
 
 const energyToNum = (raw?: string | null) => energyToFloat(raw);
 
-export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker, onAddEvent, onAddTodo }: DayProps) {
+export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker, onAddEvent, onAddTodo, onEditEvent }: DayProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
@@ -516,23 +517,42 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
           {events.length === 0 ? (
             <div className="text-sm text-muted-foreground">Keine Termine.</div>
           ) : (
-            <ul className="space-y-2">
-              {events.map(e => (
-                <li key={e.id} className="text-sm">
-                  <div className="font-medium">
-                    {e.title}
-                    {e._shared_owner_name && (
-                      <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground border border-dashed border-border rounded px-1 py-px">
-                        von {e._shared_owner_name}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {e.all_day ? "Ganztägig" : format(new Date(e.starts_at), "HH:mm")}
-                    {e.location && ` · ${e.location}`}
-                  </div>
-                </li>
-              ))}
+            <ul className="space-y-1">
+              {events.map(e => {
+                const isShared = !!e._shared_owner_name;
+                const editable = !isShared && !!onEditEvent;
+                return (
+                  <li key={e.id}>
+                    <button
+                      type="button"
+                      onClick={editable ? () => onEditEvent!(e) : undefined}
+                      disabled={!editable}
+                      className={cn(
+                        "w-full text-left text-sm rounded-md px-2 py-1.5 -mx-2 transition-colors",
+                        editable && "hover:bg-muted/60 cursor-pointer",
+                        !editable && "cursor-default",
+                      )}
+                      aria-label={editable ? `${e.title} bearbeiten` : e.title}
+                    >
+                      <div className="font-medium flex items-center gap-2">
+                        <span className="truncate">{e.title}</span>
+                        {isShared && (
+                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-dashed border-border rounded px-1 py-px">
+                            von {e._shared_owner_name}
+                          </span>
+                        )}
+                        {editable && (
+                          <span className="ml-auto text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100">bearbeiten</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {e.all_day ? "Ganztägig" : format(new Date(e.starts_at), "HH:mm")}
+                        {e.location && ` · ${e.location}`}
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

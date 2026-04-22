@@ -37,6 +37,7 @@ const Index = () => {
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [todoDialogOpen, setTodoDialogOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [editEvent, setEditEvent] = useState<GuestEvent | null>(null);
   const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null>(null);
   const [allEvents, setAllEvents] = useState<GuestEvent[]>([]);
@@ -316,8 +317,9 @@ const Index = () => {
                 log={dayLog}
                 onToggleTodo={toggleDayTodo}
                 onOpenTracker={() => setTrackerOpen(true)}
-                onAddEvent={() => { setQuickAddDate(selectedDate); setEventDialogOpen(true); }}
+                onAddEvent={() => { setQuickAddDate(selectedDate); setEditEvent(null); setEventDialogOpen(true); }}
                 onAddTodo={() => { setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
+                onEditEvent={(ev) => { setEditEvent(ev); setQuickAddDate(new Date(ev.starts_at)); setEventDialogOpen(true); }}
               />
             </Card>
           )}
@@ -338,8 +340,12 @@ const Index = () => {
         userId={userId}
         date={quickAddDate}
         open={eventDialogOpen}
-        onOpenChange={setEventDialogOpen}
-        onCreated={async () => setAllEvents(await dataApi.getEvents(userId))}
+        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) setEditEvent(null); }}
+        event={editEvent}
+        onCreated={async () => {
+          setAllEvents(await dataApi.getEvents(userId));
+          setEditEvent(null);
+        }}
       />
 
       <TodoDialog

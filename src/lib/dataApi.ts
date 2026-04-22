@@ -182,4 +182,18 @@ export const dataApi = {
     }));
     await supabase.from("calendar_events").insert(rows);
   },
+
+  async updateEvent(userId: string | null, id: string, patch: Partial<GuestEvent>): Promise<void> {
+    if (isGuest()) { guestStore.updateEvent(id, patch); return; }
+    if (!userId) return;
+    // UI-only Felder rausstrippen
+    const { _shared_owner_name, _shared_show_phases, user_id, id: _i, ...rest } = patch as GuestEvent;
+    await supabase.from("calendar_events").update(rest).eq("id", id);
+  },
+
+  async deleteEvent(userId: string | null, id: string): Promise<void> {
+    if (isGuest()) { guestStore.deleteEvent(id); return; }
+    if (!userId) return;
+    await supabase.from("calendar_events").delete().eq("id", id);
+  },
 };

@@ -118,6 +118,13 @@ export const guestStore = {
     events.forEach(e => all.push({ id: crypto.randomUUID(), ...e }));
     write(EVENTS_KEY, all);
   },
+  updateEvent(id: string, patch: Partial<GuestEvent>) {
+    const all = read<GuestEvent[]>(EVENTS_KEY, []).map(e => e.id === id ? { ...e, ...patch } : e);
+    write(EVENTS_KEY, all);
+  },
+  deleteEvent(id: string) {
+    write(EVENTS_KEY, read<GuestEvent[]>(EVENTS_KEY, []).filter(e => e.id !== id));
+  },
   clearAll() {
     [PROFILE_KEY, LOGS_KEY, TODOS_KEY, EVENTS_KEY, GUEST_FLAG].forEach(k => localStorage.removeItem(k));
   },

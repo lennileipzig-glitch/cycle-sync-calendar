@@ -13,6 +13,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
+import type { GuestEvent } from "@/lib/guestStore";
 
 interface Props {
   userId: string | null;
@@ -20,6 +22,8 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onCreated?: () => void;
+  /** Wenn gesetzt: Bearbeitungs-Modus statt Neu-Anlegen */
+  event?: GuestEvent | null;
 }
 
 type Recurrence = "none" | "daily" | "weekly" | "monthly";
@@ -32,9 +36,10 @@ const COST_LABEL = (c: number) => {
   return "sehr anstrengend";
 };
 
-export function EventDialog({ userId, date, open, onOpenChange, onCreated }: Props) {
+export function EventDialog({ userId, date, open, onOpenChange, onCreated, event }: Props) {
   const { guestMode } = useAuth();
   const { profile } = useProfile(userId ?? undefined, guestMode);
+  const isEdit = !!event;
 
   const [title, setTitle] = useState("");
   const [allDay, setAllDay] = useState(false);
@@ -46,9 +51,25 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated }: Pro
   const [recurrence, setRecurrence] = useState<Recurrence>("none");
   const [until, setUntil] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    if (event) {
+      // Edit: Vorbefüllen
+      const s = new Date(event.starts_at);
+      const e = event.ends_at ? new Date(event.ends_at) : new Date(s.getTime() + 60 * 60 * 1000);
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      setTitle(event.title ?? "");
+      setAllDay(!!event.all_day);
+      setStartTime(`${pad(s.getHours())}:${pad(s.getMinutes())}`);
+      setEndTime(`${pad(e.getHours())}:${pad(e.getMinutes())}`);
+      setLocation(event.location ?? "");
+      setCost(event.energy_cost ?? 3);
+      setFlexible(!!event.is_flexible);
+      setRecurrence((event.recurrence_freq as Recurrence) ?? "none");
+      setUntil(event.recurrence_until ?? "");
+    } else {
       setTitle("");
       setAllDay(false);
       setStartTime("09:00");
@@ -57,12 +78,11 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated }: Pro
       setCost(3);
       setFlexible(false);
       setRecurrence("none");
-      // default until = +3 Monate
       const u = new Date(date);
       u.setMonth(u.getMonth() + 3);
       setUntil(fmtDate(u));
     }
-  }, [open, date]);
+  }, [open, date, event]);
 
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const targetDate = flexible
@@ -94,7 +114,7 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated }: Pro
         ? new Date(`${dateStr}T23:59:59`).toISOString()
         : toLocalIso(endTime);
 
-      await dataApi.addEvents(userId, [{
+      const payload = {
         title: title.trim(),
         starts_at,
         ends_at,
@@ -105,14 +125,21 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated }: Pro
         is_flexible: flexible,
         recurrence_freq: recurrence === "none" ? null : recurrence,
         recurrence_until: recurrence === "none" ? null : until,
-      }]);
-      toast.success(
-        flexible
-          ? `Termin für ${format(targetDate, "EEEE, d. MMM", { locale: de })} eingeplant`
-          : recurrence !== "none"
-            ? "Wiederkehrenden Termin angelegt"
-            : "Termin hinzugefügt",
-      );
+      };
+
+      if (isEdit && event) {
+        await dataApi.updateEvent(userId, event.id, payload);
+        toast.success("Termin aktualisiert");
+      } else {
+        await dataApi.addEvents(userId, [payload]);
+        toast.success(
+          flexible
+            ? `Termin für ${format(targetDate, "EEEE, d. MMM", { locale: de })} eingeplant`
+            : recurrence !== "none"
+              ? "Wiederkehrenden Termin angelegt"
+              : "Termin hinzugefügt",
+        );
+      }
       onOpenChange(false);
       onCreated?.();
     } catch (e) {
@@ -123,11 +150,28 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated }: Pro
     }
   };
 
+  const handleDelete = async () => {
+    if (!event) return;
+    if (!confirm("Diesen Termin wirklich löschen?")) return;
+    setDeleting(true);
+    try {
+      await dataApi.deleteEvent(userId, event.id);
+      toast.success("Termin gelöscht");
+      onOpenChange(false);
+      onCreated?.();
+    } catch (e) {
+      console.error(e);
+      toast.error("Fehler beim Löschen");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Neuer Termin</DialogTitle>
+          <DialogTitle>{isEdit ? "Termin bearbeiten" : "Neuer Termin"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
@@ -223,9 +267,16 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated }: Pro
             )}
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Abbrechen</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? "Speichere…" : "Hinzufügen"}</Button>
+        <DialogFooter className="gap-2 sm:justify-between">
+          {isEdit ? (
+            <Button variant="ghost" size="sm" onClick={handleDelete} disabled={deleting || saving} className="text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4 mr-1" /> {deleting ? "Lösche…" : "Löschen"}
+            </Button>
+          ) : <span />}
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>Abbrechen</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? "Speichere…" : isEdit ? "Speichern" : "Hinzufügen"}</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
