@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Luna",
+    "name": "Fravia",
     "tagline": "für dich, im Einklang mit deinem Zyklus",
     "greeting": "Hallo {{name}}, schön dass du da bist.",
     "greeting_default": "schön",
@@ -43,11 +43,11 @@
     "delete_error": "Konnte Profil nicht löschen",
     "guest_delete_desc": "Im Gast-Modus löscht das alle lokal gespeicherten Daten.",
     "payments": "Zahlung & Abo",
-    "payments_body": "Luna bleibt in der Basisversion kostenlos. Premium-Funktionen (z. B. KI-Tagesvorhersagen, erweiterte Auswertungen) kommen bald.",
+    "payments_body": "Fravia bleibt in der Basisversion kostenlos. Premium-Funktionen (z. B. KI-Tagesvorhersagen, erweiterte Auswertungen) kommen bald.",
     "payments_cta": "Premium freischalten",
     "payments_soon": "Demnächst verfügbar",
     "rate": "App bewerten",
-    "rate_body": "Wenn dir Luna hilft, würden wir uns über eine kurze Bewertung sehr freuen 💜",
+    "rate_body": "Wenn dir Fravia hilft, würden wir uns über eine kurze Bewertung sehr freuen 💜",
     "rate_cta": "Jetzt bewerten",
     "rate_thanks": "Danke für deine Bewertung!"
   }

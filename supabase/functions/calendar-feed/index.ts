@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
       .select("display_name")
       .eq("id", share.owner_id)
       .maybeSingle();
-    const ownerName = profile?.display_name || "Luna";
+    const ownerName = profile?.display_name || "Fravia";
 
     // Fetch events of the owner. Limit to a sensible window.
     const since = new Date();
@@ -107,16 +107,16 @@ Deno.serve(async (req) => {
     const lines: string[] = [];
     lines.push("BEGIN:VCALENDAR");
     lines.push("VERSION:2.0");
-    lines.push("PRODID:-//Luna//Calendar Share//DE");
+    lines.push("PRODID:-//Fravia//Calendar Share//DE");
     lines.push("CALSCALE:GREGORIAN");
     lines.push("METHOD:PUBLISH");
-    lines.push(`X-WR-CALNAME:${escapeText(`Luna · ${ownerName}`)}`);
-    lines.push(`X-WR-CALDESC:${escapeText(`Geteilter Luna-Kalender von ${ownerName}`)}`);
+    lines.push(`X-WR-CALNAME:${escapeText(`Fravia · ${ownerName}`)}`);
+    lines.push(`X-WR-CALDESC:${escapeText(`Geteilter Fravia-Kalender von ${ownerName}`)}`);
 
     for (const e of events ?? []) {
       const start = new Date(e.starts_at);
       const end = e.ends_at ? new Date(e.ends_at) : new Date(start.getTime() + 60 * 60 * 1000);
-      const uid = `${e.id}@luna-share`;
+      const uid = `${e.id}@fravia-share`;
 
       lines.push("BEGIN:VEVENT");
       lines.push(`UID:${uid}`);
@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
       headers: {
         ...corsHeaders,
         "Content-Type": "text/calendar; charset=utf-8",
-        "Content-Disposition": `inline; filename="luna-${token}.ics"`,
+        "Content-Disposition": `inline; filename="fravia-${token}.ics"`,
       },
     });
   } catch (err) {

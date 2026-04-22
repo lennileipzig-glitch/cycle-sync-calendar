@@ -48,7 +48,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
       avg_cycle_length: cycleLen,
       avg_period_length: periodLen,
     });
-    toast.success("Willkommen bei Luna 🌸");
+    toast.success("Willkommen bei Fravia 🌸");
   };
 
   return (
@@ -66,7 +66,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
               <div className="space-y-3">
                 <Label htmlFor="name">Wie heißt du?</Label>
                 <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Vorname" autoFocus />
-                <p className="text-sm text-muted-foreground">Damit Luna dich persönlich begrüßen kann.</p>
+                <p className="text-sm text-muted-foreground">Damit Fravia dich persönlich begrüßen kann.</p>
               </div>
             )}
 
@@ -85,7 +85,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
                     <RadioGroupItem value="menopause" id="r-meno" className="mt-0.5" />
                     <div>
                       <div className="font-medium">Ich bin in der Menopause</div>
-                      <div className="text-sm text-muted-foreground">Luna fokussiert dann auf Energie & Wohlbefinden.</div>
+                      <div className="text-sm text-muted-foreground">Fravia fokussiert dann auf Energie & Wohlbefinden.</div>
                     </div>
                   </label>
                 </RadioGroup>
@@ -96,7 +96,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
               <div className="space-y-3">
                 <Label htmlFor="lp">Wann hat deine letzte Periode begonnen?</Label>
                 <Input id="lp" type="date" value={lastPeriod} onChange={e => setLastPeriod(e.target.value)} max={new Date().toISOString().slice(0, 10)} />
-                <p className="text-sm text-muted-foreground">Wenn du es nicht weißt, lass das Feld leer – Luna lernt mit jedem Tag, den du trackst.</p>
+                <p className="text-sm text-muted-foreground">Wenn du es nicht weißt, lass das Feld leer – Fravia lernt mit jedem Tag, den du trackst.</p>
               </div>
             )}
             {step === 2 && phase === "menopause" && (
@@ -145,7 +145,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground italic">Standard ist 28/5 – Luna passt sich an, je mehr du trackst.</p>
+                <p className="text-xs text-muted-foreground italic">Standard ist 28/5 – Fravia passt sich an, je mehr du trackst.</p>
               </div>
             )}
 

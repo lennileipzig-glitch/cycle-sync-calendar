@@ -298,7 +298,7 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
             <div className="space-y-1">
               <Label htmlFor="ev-flex" className="cursor-pointer">Flexibler Tag</Label>
               <p className="text-xs text-muted-foreground">
-                Luna ordnet den Termin automatisch einer passenden Zyklusphase zu.
+                Fravia ordnet den Termin automatisch einer passenden Zyklusphase zu.
               </p>
             </div>
             <Switch

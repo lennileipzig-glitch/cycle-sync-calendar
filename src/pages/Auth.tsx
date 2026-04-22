@@ -47,10 +47,10 @@ export default function Auth() {
   };
 
   const continueAsGuest = () => {
-    localStorage.setItem("luna-guest-mode", "1");
-    if (!localStorage.getItem("luna-guest-profile")) {
+    localStorage.setItem("fravia-guest-mode", "1");
+    if (!localStorage.getItem("fravia-guest-profile")) {
       localStorage.setItem(
-        "luna-guest-profile",
+        "fravia-guest-profile",
         JSON.stringify({
           display_name: name || "Gast",
           avg_cycle_length: 28,
@@ -68,7 +68,7 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-warm">
       <Card className="w-full max-w-md p-8 shadow-elevated animate-scale-in">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl mb-2">Luna</h1>
+          <h1 className="text-3xl mb-2">Fravia</h1>
           <p className="text-sm text-muted-foreground">Plane deine Woche im Einklang mit deinem Zyklus.</p>
         </div>
 

@@ -141,7 +141,7 @@ export function ShareCalendarDialog({ ownerId, open, onOpenChange }: Props) {
                   placeholder="kollegin@beispiel.de"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Hat die Person ein Luna-Konto mit dieser E-Mail, erscheint dein Kalender automatisch.
+                  Hat die Person ein Fravia-Konto mit dieser E-Mail, erscheint dein Kalender automatisch.
                 </p>
               </div>
               <Button onClick={handleCreate} disabled={creating} className="w-full">
@@ -151,7 +151,7 @@ export function ShareCalendarDialog({ ownerId, open, onOpenChange }: Props) {
 
             <TabsContent value="link" className="space-y-3 pt-3">
               <p className="text-sm text-muted-foreground">
-                Erstelle einen Link, den du verschicken kannst. Wer ihn öffnet und in Luna eingeloggt ist, kann den Kalender abonnieren.
+                Erstelle einen Link, den du verschicken kannst. Wer ihn öffnet und in Fravia eingeloggt ist, kann den Kalender abonnieren.
               </p>
               <Button onClick={handleCreate} disabled={creating} className="w-full">
                 {creating ? "Erstelle…" : "Einladungs-Link erzeugen"}
@@ -189,7 +189,7 @@ export function ShareCalendarDialog({ ownerId, open, onOpenChange }: Props) {
                     </div>
                     {s.invite_method === "link" && s.status !== "revoked" && (
                       <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={() => copyLink(s.invite_token)}>
-                        <Copy className="h-3 w-3 mr-1" /> Luna-Link kopieren
+                        <Copy className="h-3 w-3 mr-1" /> Fravia-Link kopieren
                       </Button>
                     )}
                     {s.status !== "revoked" && (

@@ -13,7 +13,7 @@ import { Plus, X } from "lucide-react";
 
 const DEFAULT_SYMPTOMS = ["Krämpfe", "Kopfschmerz", "Müdigkeit", "Reizbarkeit", "Heißhunger", "Brustspannen", "Akne", "Wassereinlagerung", "Schlafprobleme"];
 
-const CUSTOM_SYMPTOMS_KEY = "luna-custom-symptoms";
+const CUSTOM_SYMPTOMS_KEY = "fravia-custom-symptoms";
 
 // Energie-Skala 1.0 – 5.0 (Schrittweite 0.1)
 const ENERGY_LABELS = ["sehr schlecht", "schlecht", "mittel", "gut", "sehr gut"] as const;
@@ -112,7 +112,7 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string |
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">Wie geht's dir heute?</DialogTitle>
-          <DialogDescription>Ein paar kurze Angaben helfen Luna, deinen Tag besser auf dich abzustimmen.</DialogDescription>
+          <DialogDescription>Ein paar kurze Angaben helfen Fravia, deinen Tag besser auf dich abzustimmen.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-2">

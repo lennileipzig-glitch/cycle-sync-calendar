@@ -146,7 +146,7 @@ export default function Profile() {
             <Card className="p-5 space-y-5">
               <div>
                 <h2 className="text-lg">Stammdaten & Zyklus</h2>
-                <p className="text-sm text-muted-foreground">Diese Werte helfen Luna, deine Phasen zu berechnen.</p>
+                <p className="text-sm text-muted-foreground">Diese Werte helfen Fravia, deine Phasen zu berechnen.</p>
               </div>
 
               <div className="space-y-2">
@@ -157,7 +157,7 @@ export default function Profile() {
               <div className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
                   <div className="text-sm font-medium">Ich bin in der Menopause</div>
-                  <div className="text-xs text-muted-foreground">Luna fokussiert auf Energie & Wohlbefinden statt Zyklusphase.</div>
+                  <div className="text-xs text-muted-foreground">Fravia fokussiert auf Energie & Wohlbefinden statt Zyklusphase.</div>
                 </div>
                 <Switch checked={meno} onCheckedChange={setMeno} />
               </div>
@@ -214,7 +214,7 @@ export default function Profile() {
             <Card className="p-5 space-y-5">
               <div>
                 <h2 className="text-lg">Ernährungseinstellungen</h2>
-                <p className="text-sm text-muted-foreground">Damit Luna passende Lebensmittel für deine Phase vorschlägt.</p>
+                <p className="text-sm text-muted-foreground">Damit Fravia passende Lebensmittel für deine Phase vorschlägt.</p>
               </div>
 
               <div className="space-y-2">
@@ -246,7 +246,7 @@ export default function Profile() {
             <Card className="p-5 space-y-5">
               <div>
                 <h2 className="text-lg">Sporteinstellungen</h2>
-                <p className="text-sm text-muted-foreground">Damit Luna Bewegungstipps vorschlägt, die zu dir passen.</p>
+                <p className="text-sm text-muted-foreground">Damit Fravia Bewegungstipps vorschlägt, die zu dir passen.</p>
               </div>
 
               <div className="space-y-2">
