@@ -38,7 +38,7 @@ const COST_LABEL = (c: number) => {
   return "sehr anstrengend";
 };
 
-export function EventDialog({ userId, date, open, onOpenChange, onCreated, event }: Props) {
+export function EventDialog({ userId, date, open, onOpenChange, onCreated, event, initialTime }: Props) {
   const { guestMode } = useAuth();
   const { profile } = useProfile(userId ?? undefined, guestMode);
   const isEdit = !!event;
@@ -74,8 +74,13 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
     } else {
       setTitle("");
       setAllDay(false);
-      setStartTime("09:00");
-      setEndTime("10:00");
+      // Falls eine konkrete Uhrzeit übergeben wurde (z. B. Klick im Wochenraster)
+      const start = initialTime ?? "09:00";
+      setStartTime(start);
+      // Endzeit = +1h
+      const [h, m] = start.split(":").map(Number);
+      const endH = Math.min(23, h + 1);
+      setEndTime(`${endH.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`);
       setLocation("");
       setCost(3);
       setFlexible(false);
@@ -84,7 +89,7 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       u.setMonth(u.getMonth() + 3);
       setUntil(fmtDate(u));
     }
-  }, [open, date, event]);
+  }, [open, date, event, initialTime]);
 
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const targetDate = flexible
