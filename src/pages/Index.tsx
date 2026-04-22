@@ -15,6 +15,7 @@ import { EventDialog } from "@/components/EventDialog";
 import { TodoDialog } from "@/components/TodoDialog";
 import { PhaseLegend } from "@/components/PhaseLegend";
 import { Recommendations } from "@/components/Recommendations";
+import { VoiceFAB } from "@/components/VoiceFAB";
 
 import { OnboardingDialog } from "@/components/OnboardingDialog";
 import { dataApi } from "@/lib/dataApi";
@@ -449,6 +450,12 @@ const Index = () => {
       />
 
       <ShareCalendarDialog ownerId={userId} open={shareOpen} onOpenChange={setShareOpen} />
+
+      <VoiceFAB
+        userId={userId}
+        profile={profile}
+        onChanged={async () => setAllEvents(await dataApi.getEvents(userId))}
+      />
     </div>
   );
 };
