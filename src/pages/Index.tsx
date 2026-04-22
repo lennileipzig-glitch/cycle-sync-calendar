@@ -7,7 +7,8 @@ import { useProfile } from "@/hooks/useProfile";
 import { getPhase, fmtDate } from "@/lib/cycle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Sparkles, User, Settings as SettingsIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, User, Settings as SettingsIcon, Share2 } from "lucide-react";
+import { ShareCalendarDialog } from "@/components/ShareCalendarDialog";
 import { MonthView, WeekView, YearView, DayView } from "@/components/CalendarViews";
 import { TrackerDialog } from "@/components/TrackerDialog";
 import { EventDialog } from "@/components/EventDialog";
@@ -35,6 +36,7 @@ const Index = () => {
   const [trackerOpen, setTrackerOpen] = useState(false);
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [todoDialogOpen, setTodoDialogOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null>(null);
   const [allEvents, setAllEvents] = useState<GuestEvent[]>([]);
@@ -249,12 +251,18 @@ const Index = () => {
             <h3 className="text-xl px-2 capitalize min-w-[220px] text-center">{headerLabel}</h3>
             <Button variant="ghost" size="icon" onClick={navigateNext}><ChevronRight className="h-4 w-4" /></Button>
           </div>
-          <div className="flex items-center gap-1 bg-muted rounded-full p-1">
-            {ZOOM_ORDER.map(z => (
-              <Button key={z} variant={zoom === z ? "default" : "ghost"} size="sm" className="rounded-full" onClick={() => setZoom(z)}>
-                {ZOOM_LABELS[z]}
-              </Button>
-            ))}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={() => setShareOpen(true)}>
+              <Share2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Teilen</span>
+            </Button>
+            <div className="flex items-center gap-1 bg-muted rounded-full p-1">
+              {ZOOM_ORDER.map(z => (
+                <Button key={z} variant={zoom === z ? "default" : "ghost"} size="sm" className="rounded-full" onClick={() => setZoom(z)}>
+                  {ZOOM_LABELS[z]}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -380,6 +388,8 @@ const Index = () => {
           setAllEvents(await dataApi.getEvents(userId));
         }}
       />
+
+      <ShareCalendarDialog ownerId={userId} open={shareOpen} onOpenChange={setShareOpen} />
     </div>
   );
 };
