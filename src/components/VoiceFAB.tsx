@@ -410,7 +410,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
             <DialogDescription>
               {queueProgress
                 ? `Sachverhalt ${queueProgress.done} von ${queueProgress.total}`
-                : "Z. B. „Morgen 18 Uhr Yoga, danach einkaufen, 21 Uhr Telefonat mit Boss"."}
+                : "Z. B. „Morgen 18 Uhr Yoga, danach einkaufen, 21 Uhr Telefonat mit Boss“."}
             </DialogDescription>
           </DialogHeader>
 
