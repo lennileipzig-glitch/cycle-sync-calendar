@@ -181,8 +181,8 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
                 Weiter
               </Button>
             ) : (
-              <Button onClick={finish}>
-                <Sparkles className="h-4 w-4 mr-2" /> Los geht's
+              <Button onClick={finish} disabled={finishing}>
+                <Sparkles className="h-4 w-4 mr-2" /> {finishing ? "Speichere…" : "Los geht's"}
               </Button>
             )}
           </div>
