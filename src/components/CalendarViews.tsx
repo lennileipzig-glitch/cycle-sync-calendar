@@ -344,10 +344,10 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
       {/* Stundenraster (scrollbar, ganzer Tag 0–24h) */}
       <div className="rounded-lg border border-border/40 overflow-hidden">
         <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 relative max-h-[60vh] overflow-y-auto">
-          {/* Zeit-Spalte */}
+          {/* Zeit-Spalte (inkl. 24:00 als Endmarker) */}
           <div className="flex flex-col sticky left-0 bg-background z-10">
-            {HOURS.map(h => (
-              <div key={h} style={{ height: ROW_HEIGHT }} className="text-[10px] text-muted-foreground text-right pr-1 -mt-1.5">
+            {HOUR_LABELS.map(h => (
+              <div key={h} style={{ height: h === 24 ? 0 : ROW_HEIGHT }} className="text-[10px] text-muted-foreground text-right pr-1 -mt-1.5">
                 {h.toString().padStart(2, "0")}:00
               </div>
             ))}
