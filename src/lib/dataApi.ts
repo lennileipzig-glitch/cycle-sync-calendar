@@ -138,7 +138,7 @@ export const dataApi = {
     return all.filter(e => e.starts_at.slice(0, 10) === date);
   },
 
-  async addEvents(userId: string | null, events: Omit<GuestEvent, "id">[], opts?: { sharedVia?: string; ownerUserId?: string }): Promise<void> {
+  async addEvents(userId: string | null, events: Omit<GuestEvent, "id">[], opts?: { sharedVia?: string; ownerUserId?: string }): Promise<GuestEvent[]> {
     // Wiederkehrende Termine zu Einzel-Events expandieren
     const expanded: Omit<GuestEvent, "id">[] = [];
     for (const e of events) {
@@ -171,8 +171,12 @@ export const dataApi = {
         safety++;
       }
     }
-    if (isGuest()) { guestStore.addEvents(expanded); return; }
-    if (!userId || expanded.length === 0) return;
+    if (isGuest()) {
+      const before = guestStore.getEvents().length;
+      guestStore.addEvents(expanded);
+      return guestStore.getEvents().slice(before);
+    }
+    if (!userId || expanded.length === 0) return [];
     // UI-only Felder rausstrippen + Owner setzen (bei Beitrag in fremdem Kalender)
     const targetOwner = opts?.ownerUserId ?? userId;
     const rows = expanded.map(({ _shared_owner_name, _shared_show_phases, user_id, shared_via, ...rest }) => ({
@@ -180,7 +184,8 @@ export const dataApi = {
       user_id: targetOwner,
       shared_via: opts?.sharedVia ?? null,
     }));
-    await supabase.from("calendar_events").insert(rows);
+    const { data } = await supabase.from("calendar_events").insert(rows).select();
+    return (data ?? []) as GuestEvent[];
   },
 
   async updateEvent(userId: string | null, id: string, patch: Partial<GuestEvent>): Promise<void> {
