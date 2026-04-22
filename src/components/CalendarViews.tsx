@@ -244,6 +244,7 @@ interface DayProps extends DataMaps {
   log: { energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null;
   onToggleTodo: (id: string, completed: boolean) => void;
   onOpenTracker: () => void;
+  onAddEvent?: () => void;
 }
 
 const energyToNum = (raw?: string | null) => {
