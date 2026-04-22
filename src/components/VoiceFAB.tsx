@@ -368,7 +368,34 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
             </div>
           )}
 
-          {pendingAction && pendingAction.action !== "suggest_recipe" && pendingAction.action !== "clarify" && (
+          {pendingAction && pendingAction.action === "clarify_category" && (
+            <div className="space-y-3">
+              <Card className="p-4 bg-primary/5 border-primary/30">
+                <p className="text-sm font-medium">{pendingAction.payload.question}</p>
+                <p className="text-xs text-muted-foreground mt-1">Wozu passt das am besten?</p>
+              </Card>
+              <div className="grid grid-cols-2 gap-2">
+                {pendingAction.payload.options.map((opt) => (
+                  <Button
+                    key={opt}
+                    variant="secondary"
+                    onClick={() => handleCategoryChoice(opt)}
+                    disabled={processing}
+                    className="h-12"
+                  >
+                    {CATEGORY_LABELS[opt]}
+                  </Button>
+                ))}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setPendingAction(null); setTranscript(""); }}>
+                  <X className="h-4 w-4 mr-1" /> Abbrechen
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+
+          {pendingAction && pendingAction.action !== "suggest_recipe" && pendingAction.action !== "clarify" && pendingAction.action !== "clarify_category" && (
             <div className="space-y-3">
               {!editMode ? (
                 <Card className="p-4 bg-primary/5 border-primary/30">
