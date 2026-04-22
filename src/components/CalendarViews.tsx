@@ -912,7 +912,9 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
           )}
           <InlineAddSport userId={userId ?? null} date={selectedDate} onCreated={onEventChanged} />
         </div>
-
+        <div className="rounded-xl bg-card border border-border/60 p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">To-dos</div>
             {onAddTodo && (
               <button onClick={onAddTodo} className="text-xs text-primary hover:underline">+ Neu</button>
             )}
