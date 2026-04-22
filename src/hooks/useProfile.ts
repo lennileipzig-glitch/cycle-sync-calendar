@@ -35,21 +35,64 @@ export function useProfile(userId: string | undefined, isGuestMode: boolean) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchProfile = useCallback(async () => {
+    if (!userId) return null;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("profile fetch error", error, { userId });
+      throw error;
+    }
+
+    if (data) return data as Profile;
+
+    const { data: created, error: createError } = await supabase
+      .from("profiles")
+      .upsert({ id: userId }, { onConflict: "id" })
+      .select()
+      .maybeSingle();
+
+    if (createError) {
+      console.error("profile bootstrap error", createError, { userId });
+      throw createError;
+    }
+
+    return (created as Profile | null) ?? null;
+  }, [userId]);
+
   const reload = useCallback(async () => {
     setLoading(true);
-    if (isGuestMode) {
-      const g = guestStore.getProfile();
-      setProfile({ id: guestId, ...g });
-      setLoading(false);
-      return;
-    }
-    if (!userId) { setProfile(null); setLoading(false); return; }
-    const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
-    setProfile(data as Profile | null);
-    setLoading(false);
-  }, [userId, isGuestMode]);
 
-  useEffect(() => { reload(); }, [reload]);
+    try {
+      if (isGuestMode) {
+        const g = guestStore.getProfile();
+        setProfile({ id: guestId, ...g });
+        return;
+      }
+
+      if (!userId) {
+        setProfile(null);
+        return;
+      }
+
+      const nextProfile = await fetchProfile();
+      setProfile(nextProfile);
+    } catch (error) {
+      console.error("profile reload failed", error);
+      setProfile(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchProfile, isGuestMode, userId]);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   const update = async (patch: Partial<Profile>) => {
     if (isGuest()) {
@@ -57,23 +100,32 @@ export function useProfile(userId: string | undefined, isGuestMode: boolean) {
       setProfile({ id: guestId, ...updated });
       return;
     }
+
     if (!userId) return;
-    // Upsert statt update: legt das Profil notfalls an, falls der Trigger
-    // handle_new_user (z. B. bei OAuth-Erstanmeldung) noch nicht durch ist.
+
     const { data, error } = await supabase
       .from("profiles")
       .upsert({ id: userId, ...patch }, { onConflict: "id" })
       .select()
       .maybeSingle();
+
     if (error) {
       console.error("profile update error", error, patch);
       throw error;
     }
-    if (data) setProfile(data as Profile);
-    else {
-      const { data: fresh } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
-      if (fresh) setProfile(fresh as Profile);
+
+    if (data) {
+      setProfile(data as Profile);
+      return;
     }
+
+    const fresh = await fetchProfile();
+    if (fresh) {
+      setProfile(fresh);
+      return;
+    }
+
+    throw new Error("Profil konnte nach dem Speichern nicht geladen werden.");
   };
 
   return { profile, loading, update, reload };
