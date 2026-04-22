@@ -200,8 +200,6 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
     };
   }, [userId, profile]);
 
-  const sendToAssistant = useCallback(async (text: string) => {
-    setProcessing(true);
   // Verarbeitet die nächste Action aus der Queue (für Multi-Action-Anweisungen).
   const processNextAction = useCallback(async (
     remaining: VoiceAction[],
