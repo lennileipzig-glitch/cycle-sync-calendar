@@ -218,7 +218,8 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
               className={cn(
                 "group rounded-lg overflow-hidden bg-card border border-border/40 transition-all cursor-pointer",
                 selected && "ring-2 ring-primary shadow-soft",
-                !selected && "hover:border-primary/40",
+                isToday && !selected && "ring-2 ring-primary/70 border-primary/40 bg-primary/5",
+                !selected && !isToday && "hover:border-primary/40",
               )}
               role="button"
               tabIndex={0}
@@ -227,7 +228,13 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
               <div className="px-2 py-1.5 relative">
                 <div className="flex items-baseline justify-between">
                   <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{format(d, "EE", { locale: de })}</span>
-                  <span className={cn("text-base", isToday && "font-bold text-primary")}>{format(d, "d")}</span>
+                  {isToday ? (
+                    <span className="inline-flex items-center justify-center h-6 min-w-6 px-1 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                      {format(d, "d")}
+                    </span>
+                  ) : (
+                    <span className="text-base">{format(d, "d")}</span>
+                  )}
                 </div>
                 {m?.symptoms && m.symptoms.length > 0 && (
                   <div className="flex gap-0.5 mt-1">
