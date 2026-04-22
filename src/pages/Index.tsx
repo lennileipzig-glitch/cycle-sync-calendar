@@ -340,8 +340,12 @@ const Index = () => {
         userId={userId}
         date={quickAddDate}
         open={eventDialogOpen}
-        onOpenChange={setEventDialogOpen}
-        onCreated={async () => setAllEvents(await dataApi.getEvents(userId))}
+        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) setEditEvent(null); }}
+        event={editEvent}
+        onCreated={async () => {
+          setAllEvents(await dataApi.getEvents(userId));
+          setEditEvent(null);
+        }}
       />
 
       <TodoDialog
