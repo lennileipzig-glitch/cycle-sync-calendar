@@ -33,6 +33,8 @@ interface Props {
   initialTitle?: string;
   /** Optional: Vorbefüllte Details (z. B. Rezept-Beschreibung) */
   initialDetails?: string;
+  /** Optional: Kategorie-Wechsler ausblenden (z. B. wenn nur ein Termin angelegt werden soll) */
+  lockCategory?: boolean;
 }
 
 type Recurrence = "none" | "daily" | "weekly" | "monthly";
