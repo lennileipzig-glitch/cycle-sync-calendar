@@ -360,12 +360,14 @@ const Index = () => {
       <EventDialog
         userId={userId}
         date={quickAddDate}
+        initialTime={quickAddTime}
         open={eventDialogOpen}
-        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) setEditEvent(null); }}
+        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) { setEditEvent(null); setQuickAddTime(null); } }}
         event={editEvent}
         onCreated={async () => {
           setAllEvents(await dataApi.getEvents(userId));
           setEditEvent(null);
+          setQuickAddTime(null);
         }}
       />
 
