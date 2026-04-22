@@ -24,6 +24,8 @@ interface Props {
   onCreated?: () => void;
   /** Wenn gesetzt: Bearbeitungs-Modus statt Neu-Anlegen */
   event?: GuestEvent | null;
+  /** Optional: Vorausgewählte Startzeit "HH:mm" (z. B. aus Wochenansicht) */
+  initialTime?: string | null;
 }
 
 type Recurrence = "none" | "daily" | "weekly" | "monthly";
