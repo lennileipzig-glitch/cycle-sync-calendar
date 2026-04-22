@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { Plus, X } from "lucide-react";
 
 const DEFAULT_SYMPTOMS = ["Krämpfe", "Kopfschmerz", "Müdigkeit", "Reizbarkeit", "Heißhunger", "Brustspannen", "Akne", "Wassereinlagerung", "Schlafprobleme"];
-const MOODS = ["😊", "😌", "🙂", "😐", "😔", "😢", "😤", "🥰"];
+
 const CUSTOM_SYMPTOMS_KEY = "luna-custom-symptoms";
 
 // Energie-Skala 1–5
@@ -112,18 +112,6 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string |
         </DialogHeader>
 
         <div className="space-y-6 py-2">
-          <div>
-            <Label className="mb-3 block">Stimmung</Label>
-            <div className="flex flex-wrap gap-2">
-              {MOODS.map(m => (
-                <button key={m} type="button" onClick={() => setMood(m)}
-                  className={cn("text-2xl w-12 h-12 rounded-full transition-all", mood === m ? "bg-primary/15 ring-2 ring-primary scale-110" : "bg-muted hover:bg-accent")}>
-                  {m}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div>
             <div className="flex items-baseline justify-between mb-3">
               <Label>Energielevel</Label>
