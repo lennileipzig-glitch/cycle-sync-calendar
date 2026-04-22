@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendar_events: {
+        Row: {
+          all_day: boolean
+          created_at: string
+          ends_at: string | null
+          external_uid: string | null
+          id: string
+          location: string | null
+          source: string
+          starts_at: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          all_day?: boolean
+          created_at?: string
+          ends_at?: string | null
+          external_uid?: string | null
+          id?: string
+          location?: string | null
+          source?: string
+          starts_at: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          all_day?: boolean
+          created_at?: string
+          ends_at?: string | null
+          external_uid?: string | null
+          id?: string
+          location?: string | null
+          source?: string
+          starts_at?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_logs: {
         Row: {
           created_at: string
@@ -57,7 +96,9 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          in_menopause: boolean
           last_period_start: string | null
+          onboarding_completed: boolean
           updated_at: string
         }
         Insert: {
@@ -66,7 +107,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          in_menopause?: boolean
           last_period_start?: string | null
+          onboarding_completed?: boolean
           updated_at?: string
         }
         Update: {
@@ -75,7 +118,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          in_menopause?: boolean
           last_period_start?: string | null
+          onboarding_completed?: boolean
           updated_at?: string
         }
         Relationships: []

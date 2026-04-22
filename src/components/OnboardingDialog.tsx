@@ -1,0 +1,190 @@
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Progress } from "@/components/ui/progress";
+import { ImportDialog } from "./ImportDialog";
+import { Sparkles, Upload, Calendar as CalendarIcon } from "lucide-react";
+import { toast } from "sonner";
+
+export interface OnboardingData {
+  display_name: string;
+  in_menopause: boolean;
+  last_period_start: string | null;
+  avg_cycle_length: number;
+  avg_period_length: number;
+}
+
+interface Props {
+  open: boolean;
+  initialName?: string | null;
+  onComplete: (data: OnboardingData) => Promise<void> | void;
+  onImportLogs?: (logs: { log_date: string; mood: string | null; energy_level: string | null; symptoms: string[]; notes: string | null }[], earliestPeriodStart: string | null) => Promise<void> | void;
+  onImportEvents?: (events: { title: string; starts_at: string; ends_at: string | null; all_day: boolean; location: string | null }[]) => Promise<void> | void;
+}
+
+export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, onImportEvents }: Props) {
+  const [step, setStep] = useState(0);
+  const [name, setName] = useState(initialName ?? "");
+  const [phase, setPhase] = useState<"cycling" | "menopause" | "">("");
+  const [lastPeriod, setLastPeriod] = useState("");
+  const [knowsCycle, setKnowsCycle] = useState<"yes" | "no" | "">("");
+  const [cycleLen, setCycleLen] = useState(28);
+  const [knowsPeriod, setKnowsPeriod] = useState<"yes" | "no" | "">("");
+  const [periodLen, setPeriodLen] = useState(5);
+  const [importOpen, setImportOpen] = useState<"csv" | "ics" | null>(null);
+
+  const totalSteps = 5;
+  const next = () => setStep(s => Math.min(s + 1, totalSteps - 1));
+  const back = () => setStep(s => Math.max(s - 1, 0));
+
+  const finish = async () => {
+    await onComplete({
+      display_name: name || "Du",
+      in_menopause: phase === "menopause",
+      last_period_start: phase === "menopause" ? null : (lastPeriod || null),
+      avg_cycle_length: cycleLen,
+      avg_period_length: periodLen,
+    });
+    toast.success("Willkommen bei Luna 🌸");
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={() => { /* nicht schließbar */ }}>
+        <DialogContent className="max-w-lg" onPointerDownOutside={e => e.preventDefault()} onEscapeKeyDown={e => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Lass uns dich kennenlernen</DialogTitle>
+            <DialogDescription>Schritt {step + 1} von {totalSteps} – du kannst alles später anpassen.</DialogDescription>
+          </DialogHeader>
+          <Progress value={((step + 1) / totalSteps) * 100} className="h-1" />
+
+          <div className="py-4 space-y-5 min-h-[280px]">
+            {step === 0 && (
+              <div className="space-y-3">
+                <Label htmlFor="name">Wie heißt du?</Label>
+                <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Vorname" autoFocus />
+                <p className="text-sm text-muted-foreground">Damit Luna dich persönlich begrüßen kann.</p>
+              </div>
+            )}
+
+            {step === 1 && (
+              <div className="space-y-3">
+                <Label>In welcher Lebensphase bist du gerade?</Label>
+                <RadioGroup value={phase} onValueChange={(v) => setPhase(v as "cycling" | "menopause")}>
+                  <label className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:border-primary/40">
+                    <RadioGroupItem value="cycling" id="r-cycling" className="mt-0.5" />
+                    <div>
+                      <div className="font-medium">Ich habe einen Zyklus</div>
+                      <div className="text-sm text-muted-foreground">Periode kommt regelmäßig oder unregelmäßig.</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:border-primary/40">
+                    <RadioGroupItem value="menopause" id="r-meno" className="mt-0.5" />
+                    <div>
+                      <div className="font-medium">Ich bin in der Menopause</div>
+                      <div className="text-sm text-muted-foreground">Luna fokussiert dann auf Energie & Wohlbefinden.</div>
+                    </div>
+                  </label>
+                </RadioGroup>
+              </div>
+            )}
+
+            {step === 2 && phase !== "menopause" && (
+              <div className="space-y-3">
+                <Label htmlFor="lp">Wann hat deine letzte Periode begonnen?</Label>
+                <Input id="lp" type="date" value={lastPeriod} onChange={e => setLastPeriod(e.target.value)} max={new Date().toISOString().slice(0, 10)} />
+                <p className="text-sm text-muted-foreground">Wenn du es nicht weißt, lass das Feld leer – Luna lernt mit jedem Tag, den du trackst.</p>
+              </div>
+            )}
+            {step === 2 && phase === "menopause" && (
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>Da du in der Menopause bist, brauchen wir keinen Periodenstart. Tippe weiter, um deine Tagesangaben zu starten.</p>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <Label>Kennst du deine Zykluslänge?</Label>
+                  <RadioGroup value={knowsCycle} onValueChange={(v) => setKnowsCycle(v as "yes" | "no")}>
+                    <label className="flex items-center gap-3 p-2.5 rounded-lg border border-border cursor-pointer hover:border-primary/40">
+                      <RadioGroupItem value="yes" id="kc-y" />
+                      <span className="text-sm">Ja, ungefähr</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-2.5 rounded-lg border border-border cursor-pointer hover:border-primary/40">
+                      <RadioGroupItem value="no" id="kc-n" />
+                      <span className="text-sm">Ich bin mir nicht sicher, wie lange mein Zyklus geht.</span>
+                    </label>
+                  </RadioGroup>
+                  {knowsCycle === "yes" && (
+                    <div className="flex items-center gap-2 pl-2">
+                      <Input type="number" min={20} max={45} value={cycleLen} onChange={e => setCycleLen(+e.target.value || 28)} className="w-24" />
+                      <span className="text-sm text-muted-foreground">Tage</span>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <Label>Kennst du deine Periodendauer?</Label>
+                  <RadioGroup value={knowsPeriod} onValueChange={(v) => setKnowsPeriod(v as "yes" | "no")}>
+                    <label className="flex items-center gap-3 p-2.5 rounded-lg border border-border cursor-pointer hover:border-primary/40">
+                      <RadioGroupItem value="yes" id="kp-y" />
+                      <span className="text-sm">Ja</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-2.5 rounded-lg border border-border cursor-pointer hover:border-primary/40">
+                      <RadioGroupItem value="no" id="kp-n" />
+                      <span className="text-sm">Ich weiß nicht, wie lange meine Periode dauert.</span>
+                    </label>
+                  </RadioGroup>
+                  {knowsPeriod === "yes" && (
+                    <div className="flex items-center gap-2 pl-2">
+                      <Input type="number" min={2} max={10} value={periodLen} onChange={e => setPeriodLen(+e.target.value || 5)} className="w-24" />
+                      <span className="text-sm text-muted-foreground">Tage</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground italic">Standard ist 28/5 – Luna passt sich an, je mehr du trackst.</p>
+              </div>
+            )}
+
+            {step === 4 && (
+              <div className="space-y-3">
+                <Label>Daten importieren (optional)</Label>
+                <p className="text-sm text-muted-foreground">Du kannst Daten aus deiner bisherigen Zyklus-App und deinem Kalender mitbringen.</p>
+                <Button variant="outline" className="w-full justify-start" onClick={() => setImportOpen("csv")}>
+                  <Upload className="h-4 w-4 mr-2" /> Zyklusdaten als CSV importieren
+                </Button>
+                <Button variant="outline" className="w-full justify-start" onClick={() => setImportOpen("ics")}>
+                  <CalendarIcon className="h-4 w-4 mr-2" /> Termine aus .ics-Datei importieren
+                </Button>
+                <p className="text-xs text-muted-foreground">Beides geht später jederzeit in den Einstellungen.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
+            <Button variant="ghost" onClick={back} disabled={step === 0}>Zurück</Button>
+            {step < totalSteps - 1 ? (
+              <Button onClick={next} disabled={(step === 0 && !name) || (step === 1 && !phase)}>
+                Weiter
+              </Button>
+            ) : (
+              <Button onClick={finish}>
+                <Sparkles className="h-4 w-4 mr-2" /> Los geht's
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ImportDialog
+        kind={importOpen}
+        onOpenChange={(o) => !o && setImportOpen(null)}
+        onImportLogs={onImportLogs}
+        onImportEvents={onImportEvents}
+      />
+    </>
+  );
+}
