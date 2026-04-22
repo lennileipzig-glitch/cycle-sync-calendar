@@ -112,7 +112,7 @@ export function TodoDialog({ userId, date, open, onOpenChange, onCreated }: Prop
             <div className="space-y-1">
               <Label htmlFor="todo-flex" className="cursor-pointer">Flexibler Tag</Label>
               <p className="text-xs text-muted-foreground">
-                Luna ordnet die Aufgabe automatisch einer passenden Zyklusphase zu.
+                Fravia ordnet die Aufgabe automatisch einer passenden Zyklusphase zu.
               </p>
             </div>
             <Switch id="todo-flex" checked={flexible} onCheckedChange={setFlexible} />
@@ -125,7 +125,7 @@ export function TodoDialog({ userId, date, open, onOpenChange, onCreated }: Prop
           )}
           {flexible && !lastPeriod && (
             <p className="text-xs text-muted-foreground">
-              Trage erst deinen Zyklus ein, damit Luna passend planen kann. Wird sonst auf das gewählte Datum gelegt.
+              Trage erst deinen Zyklus ein, damit Fravia passend planen kann. Wird sonst auf das gewählte Datum gelegt.
             </p>
           )}
         </div>

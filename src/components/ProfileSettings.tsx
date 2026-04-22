@@ -68,7 +68,7 @@ export function ProfileSettings({ profile, userId, onSave }: Props) {
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
                 <div className="text-sm font-medium">Ich bin in der Menopause</div>
-                <div className="text-xs text-muted-foreground">Luna fokussiert auf Energie & Wohlbefinden statt Zyklusphase.</div>
+                <div className="text-xs text-muted-foreground">Fravia fokussiert auf Energie & Wohlbefinden statt Zyklusphase.</div>
               </div>
               <Switch checked={meno} onCheckedChange={setMeno} />
             </div>

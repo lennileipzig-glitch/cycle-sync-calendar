@@ -47,7 +47,7 @@ export const sharingApi = {
         recipient_email: opts.recipientEmail?.trim().toLowerCase() || null,
         show_phases: opts.showPhases,
         invite_method: opts.method,
-        // Wenn per E-Mail an einen bekannten Luna-Nutzer geschickt wird,
+        // Wenn per E-Mail an einen bekannten Fravia-Nutzer geschickt wird,
         // setzen wir ihn direkt auf accepted, sodass er sofort erscheint.
         // Anders bei Link → bleibt pending bis zur Annahme.
         status: opts.method === "email" && opts.recipientEmail ? "accepted" : "pending",

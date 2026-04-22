@@ -54,7 +54,7 @@ export default function AcceptShare() {
         <div className="space-y-1">
           <h1 className="text-xl">Kalender-Einladung</h1>
           <p className="text-sm text-muted-foreground">
-            Du wurdest eingeladen, einen Luna-Kalender mit anzusehen. Termine werden nach Annahme in deinem eigenen Kalender mit angezeigt.
+            Du wurdest eingeladen, einen Fravia-Kalender mit anzusehen. Termine werden nach Annahme in deinem eigenen Kalender mit angezeigt.
           </p>
         </div>
         {done ? (

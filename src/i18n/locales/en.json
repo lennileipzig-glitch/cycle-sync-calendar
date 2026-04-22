@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Luna",
+    "name": "Fravia",
     "tagline": "for you, in tune with your cycle",
     "greeting": "Hi {{name}}, lovely to see you.",
     "greeting_default": "there",
@@ -43,11 +43,11 @@
     "delete_error": "Could not delete profile",
     "guest_delete_desc": "In guest mode this deletes all locally stored data.",
     "payments": "Payment & Plan",
-    "payments_body": "Luna's basic version stays free. Premium features (AI daily forecasts, advanced insights) are coming soon.",
+    "payments_body": "Fravia's basic version stays free. Premium features (AI daily forecasts, advanced insights) are coming soon.",
     "payments_cta": "Unlock Premium",
     "payments_soon": "Coming soon",
     "rate": "Rate the app",
-    "rate_body": "If Luna helps you, a short review means the world to us 💜",
+    "rate_body": "If Fravia helps you, a short review means the world to us 💜",
     "rate_cta": "Rate now",
     "rate_thanks": "Thanks for rating!"
   }

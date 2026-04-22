@@ -219,7 +219,7 @@ const Index = () => {
       <header className="border-b border-border/60 bg-card/50 backdrop-blur sticky top-0 z-10">
         <div className="container max-w-7xl flex items-center justify-between py-4">
           <div>
-            <h1 className="text-2xl">Luna</h1>
+            <h1 className="text-2xl">Fravia</h1>
             <p className="text-xs text-muted-foreground">
               Hallo {profile.display_name ?? "schön"}, schön dass du da bist.
               {guest && <span className="ml-1 italic">· Gast-Modus (lokal gespeichert)</span>}
@@ -353,7 +353,7 @@ const Index = () => {
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     {profile.in_menopause
-                      ? "Höre auf deinen Körper. Luna richtet die Empfehlungen auf Energie und Wohlbefinden aus."
+                      ? "Höre auf deinen Körper. Fravia richtet die Empfehlungen auf Energie und Wohlbefinden aus."
                       : phase.description}
                   </p>
                 </div>
@@ -375,7 +375,7 @@ const Index = () => {
 
 
         <footer className="text-center text-xs text-muted-foreground py-8">
-          Luna · für dich, im Einklang mit deinem Zyklus
+          Fravia · für dich, im Einklang mit deinem Zyklus
         </footer>
       </main>
 
