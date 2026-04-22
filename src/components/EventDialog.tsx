@@ -42,12 +42,19 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated }: Pro
     setSaving(true);
     try {
       const dateStr = fmtDate(date);
+      // Lokale Zeit -> ISO mit Zeitzonen-Offset, damit der Tag stabil bleibt
+      const toLocalIso = (timeStr: string) => {
+        const [h, m] = timeStr.split(":").map(Number);
+        const d = new Date(date);
+        d.setHours(h, m, 0, 0);
+        return d.toISOString();
+      };
       const starts_at = allDay
-        ? `${dateStr}T00:00:00`
-        : `${dateStr}T${startTime}:00`;
+        ? new Date(`${dateStr}T00:00:00`).toISOString()
+        : toLocalIso(startTime);
       const ends_at = allDay
-        ? `${dateStr}T23:59:59`
-        : `${dateStr}T${endTime}:00`;
+        ? new Date(`${dateStr}T23:59:59`).toISOString()
+        : toLocalIso(endTime);
       await dataApi.addEvents(userId, [{
         title: title.trim(),
         starts_at,

@@ -57,10 +57,11 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
           const events = eventsByDay[key] ?? [];
           const todos = todosByDay[key] ?? [];
           const openTodos = todos.filter(t => !t.completed).length;
+          const phaseColorVar = `hsl(var(--phase-${phase}))`;
           return (
             <button key={d.toISOString()} onClick={() => onSelectDate(d)}
               className={cn(
-                "aspect-square rounded-lg overflow-hidden flex flex-col text-sm transition-all relative bg-card border border-border/40",
+                "min-h-[5.5rem] rounded-lg overflow-hidden flex flex-col text-sm transition-all relative bg-card border border-border/40",
                 !inMonth && "opacity-40",
                 selected && "ring-2 ring-primary shadow-soft",
                 !selected && "hover:border-primary/40",
@@ -74,13 +75,31 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                   isToday && "font-bold text-primary",
                 )}>{format(d, "d")}</span>
               </div>
-              {/* Indikatoren unten */}
-              <div className="flex-1 flex items-end justify-center gap-1 px-1 pb-1">
-                {events.slice(0, 3).map((e, i) => (
-                  <div key={i} className="h-1 w-1 rounded-full bg-foreground/60" />
+              {/* Termine als Chips */}
+              <div className="flex-1 flex flex-col gap-0.5 px-1 pb-1 mt-1 overflow-hidden">
+                {events.slice(0, 2).map((e) => (
+                  <div
+                    key={e.id}
+                    className="text-[9px] leading-tight px-1 py-0.5 rounded truncate text-left border-l-2"
+                    style={{ background: `${phaseColorVar.replace(')', ' / 0.18)')}`, borderLeftColor: phaseColorVar }}
+                    title={e.title}
+                  >
+                    {!e.all_day && (
+                      <span className="text-muted-foreground mr-0.5">
+                        {format(new Date(e.starts_at), "HH:mm")}
+                      </span>
+                    )}
+                    {e.title}
+                  </div>
                 ))}
+                {events.length > 2 && (
+                  <div className="text-[9px] text-muted-foreground px-1">+{events.length - 2} weitere</div>
+                )}
                 {openTodos > 0 && (
-                  <div className="h-1 w-1 rounded-full bg-primary" />
+                  <div className="flex items-center gap-1 mt-auto px-1">
+                    <span className="h-1 w-1 rounded-full bg-primary" />
+                    <span className="text-[9px] text-muted-foreground">{openTodos} offen</span>
+                  </div>
                 )}
               </div>
             </button>
