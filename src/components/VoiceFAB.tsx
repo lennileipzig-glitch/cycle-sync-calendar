@@ -173,6 +173,13 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
         return;
       }
 
+      if (result.action === "clarify_category") {
+        // Auswahl im Dialog anzeigen – Userin entscheidet manuell.
+        setPendingAction(result);
+        setProcessing(false);
+        return;
+      }
+
       if (result.action === "suggest_recipe") {
         // Rezeptvorschläge nur anzeigen, nicht buchen
         setPendingAction(result);
@@ -194,6 +201,38 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
       setProcessing(false);
     }
   }, [buildContext, toast]);
+
+  // Handhabt die Auswahl in der Kategorie-Rückfrage
+  const handleCategoryChoice = useCallback(async (choice: CategoryOption) => {
+    if (!pendingAction || pendingAction.action !== "clarify_category") return;
+    const p = pendingAction.payload;
+    const today = format(new Date(), "yyyy-MM-dd");
+    const date = p.suggested_date ?? today;
+    const title = p.suggested_title ?? transcript.trim().slice(0, 80) || "Neuer Eintrag";
+
+    // To-do direkt anlegen (ohne Edge-Function-Roundtrip)
+    if (choice === "todo") {
+      try {
+        await dataApi.addTodo(userId, date, title);
+        await onChanged();
+        toast({ title: "To-do angelegt", description: `${title} · ${format(new Date(date), "EEE d.M.", { locale: de })}` });
+        setPendingAction(null);
+        setOpen(false);
+      } catch (e) {
+        toast({ title: "Fehler", description: e instanceof Error ? e.message : "Unbekannt", variant: "destructive" });
+      }
+      return;
+    }
+
+    // Für Termin/Sport/Ernährung: Assistent erneut bitten – mit fixierter Kategorie
+    const categoryHint =
+      choice === "sport" ? "Es ist eine Sport-/Bewegungseinheit." :
+      choice === "ernaehrung" ? "Es ist eine Mahlzeit." :
+      "Es ist ein normaler Termin.";
+    const followUp = `${transcript.trim()} (Hinweis von der Nutzerin: ${categoryHint})`;
+    setPendingAction(null);
+    await sendToAssistant(followUp);
+  }, [pendingAction, transcript, userId, onChanged, toast, sendToAssistant]);
 
   const executeAction = useCallback(async (act: VoiceAction) => {
     if (act.action === "clarify" || act.action === "suggest_recipe") return;
