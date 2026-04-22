@@ -27,6 +27,12 @@ interface Props {
   event?: GuestEvent | null;
   /** Optional: Vorausgewählte Startzeit "HH:mm" (z. B. aus Wochenansicht) */
   initialTime?: string | null;
+  /** Optional: Standard-Kategorie beim Anlegen */
+  initialCategory?: EventCategory;
+  /** Optional: Vorbefüllter Titel (z. B. aus KI-Rezept oder -Workout) */
+  initialTitle?: string;
+  /** Optional: Vorbefüllte Details (z. B. Rezept-Beschreibung) */
+  initialDetails?: string;
 }
 
 type Recurrence = "none" | "daily" | "weekly" | "monthly";
