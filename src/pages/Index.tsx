@@ -345,7 +345,14 @@ const Index = () => {
 
             <PhaseLegend className="px-1" />
 
-            <Recommendations phase={phase} energy={dayLog?.energy_level ?? todayLog?.energy_level} symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []} />
+            <Recommendations
+              phase={phase}
+              energy={dayLog?.energy_level ?? todayLog?.energy_level}
+              symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []}
+              selectedDate={selectedDate}
+              userId={userId}
+              onEventAdded={async () => setAllEvents(await dataApi.getEvents(userId))}
+            />
           </>
         )}
 
