@@ -47,6 +47,8 @@ export function Recommendations({
   selectedDate,
   userId,
   onEventAdded,
+  dayEvents = [],
+  onEditEvent,
 }: {
   phase: PhaseInfo;
   energy?: string | null;
@@ -54,9 +56,28 @@ export function Recommendations({
   selectedDate: Date;
   userId: string | null;
   onEventAdded?: () => void;
+  dayEvents?: GuestEvent[];
+  onEditEvent?: (e: GuestEvent) => void;
 }) {
   const { user, guestMode } = useAuth();
   const { profile } = useProfile(user?.id, guestMode || isGuest());
+  const [recipes, setRecipes] = useState<RecipeItem[]>([]);
+  const [workouts, setWorkouts] = useState<WorkoutItem[]>([]);
+  const [loadingR, setLoadingR] = useState(false);
+  const [loadingW, setLoadingW] = useState(false);
+  const [fridge, setFridge] = useState<string[]>(loadFridge());
+  const [fridgeInput, setFridgeInput] = useState("");
+
+  const meals = dayEvents.filter(e => e.category === "mahlzeit");
+  const sports = dayEvents.filter(e => e.category === "sport");
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Wirklich löschen?")) return;
+    try {
+      await dataApi.deleteEvent(userId, id);
+      onEventAdded?.();
+    } catch (e) { console.error(e); }
+  };
   const [recipes, setRecipes] = useState<RecipeItem[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutItem[]>([]);
   const [loadingR, setLoadingR] = useState(false);
