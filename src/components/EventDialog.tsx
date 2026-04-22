@@ -22,6 +22,8 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onCreated?: () => void;
+  /** Wenn gesetzt: Bearbeitungs-Modus statt Neu-Anlegen */
+  event?: GuestEvent | null;
 }
 
 type Recurrence = "none" | "daily" | "weekly" | "monthly";
