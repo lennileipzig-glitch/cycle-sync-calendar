@@ -402,11 +402,12 @@ interface DayProps extends DataMaps {
   onOpenTracker: () => void;
   onAddEvent?: () => void;
   onAddTodo?: () => void;
+  onEditEvent?: (e: GuestEvent) => void;
 }
 
 const energyToNum = (raw?: string | null) => energyToFloat(raw);
 
-export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker, onAddEvent, onAddTodo }: DayProps) {
+export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker, onAddEvent, onAddTodo, onEditEvent }: DayProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
