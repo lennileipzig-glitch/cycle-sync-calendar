@@ -13,8 +13,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
-import type { GuestEvent } from "@/lib/guestStore";
+import { Trash2, CalendarCheck, UtensilsCrossed, Dumbbell } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import type { GuestEvent, EventCategory } from "@/lib/guestStore";
 
 interface Props {
   userId: string | null;
