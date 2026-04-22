@@ -332,7 +332,12 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
 
         {/* Termine */}
         <div className="rounded-xl bg-card border border-border/60 p-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Termine</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Termine</div>
+            {onAddEvent && (
+              <button onClick={onAddEvent} className="text-xs text-primary hover:underline">+ Neu</button>
+            )}
+          </div>
           {events.length === 0 ? (
             <div className="text-sm text-muted-foreground">Keine Termine.</div>
           ) : (
