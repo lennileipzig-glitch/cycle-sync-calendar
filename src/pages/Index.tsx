@@ -7,10 +7,11 @@ import { useProfile } from "@/hooks/useProfile";
 import { getPhase, fmtDate } from "@/lib/cycle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, ListTodo, User, Settings as SettingsIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, ListTodo, User, Settings as SettingsIcon, Plus } from "lucide-react";
 import { MonthView, WeekView, YearView, DayView } from "@/components/CalendarViews";
 import { TodoList } from "@/components/TodoList";
 import { TrackerDialog } from "@/components/TrackerDialog";
+import { EventDialog } from "@/components/EventDialog";
 import { Recommendations } from "@/components/Recommendations";
 
 import { OnboardingDialog } from "@/components/OnboardingDialog";
@@ -31,6 +32,7 @@ const Index = () => {
   const [zoom, setZoom] = useState<Zoom>("month");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [trackerOpen, setTrackerOpen] = useState(false);
+  const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null>(null);
   const [allEvents, setAllEvents] = useState<GuestEvent[]>([]);
   const [weekTodos, setWeekTodos] = useState<{ id: string; title: string; completed: boolean; todo_date: string }[]>([]);
@@ -298,6 +300,7 @@ const Index = () => {
                 log={dayLog}
                 onToggleTodo={toggleDayTodo}
                 onOpenTracker={() => setTrackerOpen(true)}
+                onAddEvent={() => setEventDialogOpen(true)}
               />
             </Card>
           )}
@@ -307,10 +310,15 @@ const Index = () => {
         {zoom !== "day" && (
           <div className="grid gap-4 lg:grid-cols-2">
             <Card className="p-5 shadow-soft">
-              <h3 className="text-lg mb-3 flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                Termine · <span className="capitalize text-muted-foreground text-base">{format(selectedDate, "EEEE", { locale: de })}</span>
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Termine · <span className="capitalize text-muted-foreground text-base">{format(selectedDate, "EEEE", { locale: de })}</span>
+                </h3>
+                <Button variant="ghost" size="sm" onClick={() => setEventDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Termin
+                </Button>
+              </div>
               {dayEvents.length === 0 ? (
                 <p className="text-sm text-muted-foreground italic">Keine Termine an diesem Tag.</p>
               ) : (
@@ -348,6 +356,14 @@ const Index = () => {
       </main>
 
       <TrackerDialog userId={userId} open={trackerOpen} onOpenChange={setTrackerOpen} />
+
+      <EventDialog
+        userId={userId}
+        date={selectedDate}
+        open={eventDialogOpen}
+        onOpenChange={setEventDialogOpen}
+        onCreated={async () => setAllEvents(await dataApi.getEvents(userId))}
+      />
 
       <OnboardingDialog
         open={showOnboarding}

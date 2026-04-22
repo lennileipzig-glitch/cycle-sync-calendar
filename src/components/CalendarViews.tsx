@@ -244,6 +244,7 @@ interface DayProps extends DataMaps {
   log: { energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null;
   onToggleTodo: (id: string, completed: boolean) => void;
   onOpenTracker: () => void;
+  onAddEvent?: () => void;
 }
 
 const energyToNum = (raw?: string | null) => {
@@ -256,7 +257,7 @@ const energyToNum = (raw?: string | null) => {
   return null;
 };
 
-export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker }: DayProps) {
+export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker, onAddEvent }: DayProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
@@ -331,7 +332,12 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
 
         {/* Termine */}
         <div className="rounded-xl bg-card border border-border/60 p-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Termine</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Termine</div>
+            {onAddEvent && (
+              <button onClick={onAddEvent} className="text-xs text-primary hover:underline">+ Neu</button>
+            )}
+          </div>
           {events.length === 0 ? (
             <div className="text-sm text-muted-foreground">Keine Termine.</div>
           ) : (
