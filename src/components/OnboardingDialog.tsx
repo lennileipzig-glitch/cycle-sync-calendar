@@ -40,15 +40,25 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
   const next = () => setStep(s => Math.min(s + 1, totalSteps - 1));
   const back = () => setStep(s => Math.max(s - 1, 0));
 
+  const [finishing, setFinishing] = useState(false);
   const finish = async () => {
-    await onComplete({
-      display_name: name || "Du",
-      in_menopause: phase === "menopause",
-      last_period_start: phase === "menopause" ? null : (lastPeriod || null),
-      avg_cycle_length: cycleLen,
-      avg_period_length: periodLen,
-    });
-    toast.success("Willkommen bei Fravia 🌸");
+    if (finishing) return;
+    setFinishing(true);
+    try {
+      await onComplete({
+        display_name: name || "Du",
+        in_menopause: phase === "menopause",
+        last_period_start: phase === "menopause" ? null : (lastPeriod || null),
+        avg_cycle_length: cycleLen,
+        avg_period_length: periodLen,
+      });
+      toast.success("Willkommen bei Fravia 🌸");
+    } catch (e) {
+      console.error("Onboarding finish failed", e);
+      toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen. Bitte erneut versuchen.");
+    } finally {
+      setFinishing(false);
+    }
   };
 
   return (
@@ -171,8 +181,8 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
                 Weiter
               </Button>
             ) : (
-              <Button onClick={finish}>
-                <Sparkles className="h-4 w-4 mr-2" /> Los geht's
+              <Button onClick={finish} disabled={finishing}>
+                <Sparkles className="h-4 w-4 mr-2" /> {finishing ? "Speichere…" : "Los geht's"}
               </Button>
             )}
           </div>
