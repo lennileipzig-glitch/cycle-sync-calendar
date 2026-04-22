@@ -184,7 +184,11 @@ export const dataApi = {
       user_id: targetOwner,
       shared_via: opts?.sharedVia ?? null,
     }));
-    const { data } = await supabase.from("calendar_events").insert(rows).select();
+    const { data, error } = await supabase.from("calendar_events").insert(rows).select();
+    if (error) {
+      console.error("addEvents insert error", error, rows);
+      throw error;
+    }
     return (data ?? []) as GuestEvent[];
   },
 
@@ -193,13 +197,15 @@ export const dataApi = {
     if (!userId) return;
     // UI-only Felder rausstrippen
     const { _shared_owner_name, _shared_show_phases, user_id, id: _i, ...rest } = patch as GuestEvent;
-    await supabase.from("calendar_events").update(rest).eq("id", id);
+    const { error } = await supabase.from("calendar_events").update(rest).eq("id", id);
+    if (error) { console.error("updateEvent error", error); throw error; }
   },
 
   async deleteEvent(userId: string | null, id: string): Promise<void> {
     if (isGuest()) { guestStore.deleteEvent(id); return; }
     if (!userId) return;
-    await supabase.from("calendar_events").delete().eq("id", id);
+    const { error } = await supabase.from("calendar_events").delete().eq("id", id);
+    if (error) { console.error("deleteEvent error", error); throw error; }
   },
 
   /** Verschiebt ein Event auf ein anderes Datum (Drag & Drop). Uhrzeit bleibt erhalten. */
