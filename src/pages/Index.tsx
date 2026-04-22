@@ -330,25 +330,7 @@ const Index = () => {
             <Recommendations phase={phase} energy={dayLog?.energy_level ?? todayLog?.energy_level} symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []} />
           </>
         )}
-                selectedDate={selectedDate}
-                onSelectDate={setSelectedDate}
-                profile={profile}
-                events={dayEvents}
-                todos={dayTodosState}
-                log={dayLog}
-                onToggleTodo={toggleDayTodo}
-                onOpenTracker={() => setTrackerOpen(true)}
-                onAddEvent={() => { setQuickAddDate(selectedDate); setEditEvent(null); setEventDialogOpen(true); }}
-                onAddTodo={() => { setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
-                onEditEvent={(ev) => { setEditEvent(ev); setQuickAddDate(new Date(ev.starts_at)); setEventDialogOpen(true); }}
-              />
-            </Card>
-          )}
-        </div>
 
-        <PhaseLegend className="px-1" />
-
-        <Recommendations phase={phase} energy={dayLog?.energy_level ?? todayLog?.energy_level} symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []} />
 
         <footer className="text-center text-xs text-muted-foreground py-8">
           Luna · für dich, im Einklang mit deinem Zyklus
