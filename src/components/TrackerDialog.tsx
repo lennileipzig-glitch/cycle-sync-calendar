@@ -15,12 +15,16 @@ const DEFAULT_SYMPTOMS = ["Krämpfe", "Kopfschmerz", "Müdigkeit", "Reizbarkeit"
 
 const CUSTOM_SYMPTOMS_KEY = "luna-custom-symptoms";
 
-// Energie-Skala 1–5
+// Energie-Skala 1.0 – 5.0 (Schrittweite 0.1)
 const ENERGY_LABELS = ["sehr schlecht", "schlecht", "mittel", "gut", "sehr gut"] as const;
+const energyLabel = (n: number): string => {
+  const idx = Math.min(4, Math.max(0, Math.round(n) - 1));
+  return ENERGY_LABELS[idx];
+};
 const energyToNum = (raw: string | null | undefined): number => {
   if (!raw) return 3;
-  const n = parseInt(raw, 10);
-  if (!isNaN(n) && n >= 1 && n <= 5) return n;
+  const n = parseFloat(raw);
+  if (!isNaN(n) && n >= 1 && n <= 5) return Math.round(n * 10) / 10;
   // Backward-Compat für alte Werte
   if (raw === "niedrig") return 2;
   if (raw === "hoch") return 4;
@@ -115,14 +119,17 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string |
           <div>
             <div className="flex items-baseline justify-between mb-3">
               <Label>Energielevel</Label>
-              <span className="text-sm font-medium capitalize">{ENERGY_LABELS[energy - 1]}</span>
+              <span className="text-sm font-medium">
+                <span className="capitalize">{energyLabel(energy)}</span>
+                <span className="text-muted-foreground ml-2 tabular-nums">{energy.toFixed(1)}</span>
+              </span>
             </div>
             <Slider
               value={[energy]}
               min={1}
               max={5}
-              step={1}
-              onValueChange={(v) => setEnergy(v[0])}
+              step={0.1}
+              onValueChange={(v) => setEnergy(Math.round(v[0] * 10) / 10)}
               className="my-2"
             />
             <div className="flex justify-between text-[10px] text-muted-foreground mt-1 px-0.5">
