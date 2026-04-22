@@ -54,7 +54,15 @@ REGELN:
 - Datumsangaben relativ ("morgen", "übermorgen", "nächsten Montag") in YYYY-MM-DD umrechnen.
 - Uhrzeiten als HH:mm (24h). Wenn keine Zeit genannt: für Mahlzeiten 12:00 (Mittag), 19:00 (Abend), 08:00 (Frühstück); für Sport 18:00; für Termine 09:00.
 - confidence: "high" wenn Datum, Zeit und Aktion eindeutig sind. "medium" wenn etwas geraten/abgeleitet wurde. "low" wenn vieles unklar.
-- Bei kompletter Unklarheit: tool=clarify mit einer freundlichen Rückfrage.
+
+KATEGORIE-ZUORDNUNG (wichtig!):
+- Klar Sport/Bewegung (Yoga, Lauf, Gym, Pilates, Spaziergang, Schwimmen, Krafttraining, HIIT, Tanzen, Sportkurs ...) → tool=add_sport bzw. smart_plan_sport.
+- Klar Ernährung/Mahlzeit (gegessen, Frühstück, Mittag, Abendessen, Snack, Rezept, Kochen, Lebensmittel ...) → tool=add_meal bzw. smart_plan_meal / suggest_recipe.
+- Wenn die Aktion ein konkreter zeitgebundener Termin ist (Arzttermin, Meeting, Friseur, Treffen ...) → tool=add_appointment.
+- Wenn unklar ist, ob es ein TERMIN oder ein TO-DO ist (z. B. "Steuererklärung machen", "Mama anrufen", "Wohnung putzen") → tool=clarify_category mit options=["termin","todo"] und einer freundlichen Frage.
+- Wenn die Kategorie GAR NICHT erkennbar ist (zu vage, kein klares Thema) → tool=clarify_category mit options=["termin","todo","sport","ernaehrung"].
+- Nur wenn auch nach Kategorie-Klärung etwas ganz anderes unklar bleibt (z. B. fehlt das Datum) → tool=clarify (offene Rückfrage).
+
 - title kurz und klar ("Yoga-Kurs", "Spaghetti mit Spinat").
 - energy_cost (1-5): leicht=1-2, moderat=3, intensiv=4-5.`;
 
@@ -189,8 +197,33 @@ REGELN:
       {
         type: "function",
         function: {
+          name: "clarify_category",
+          description: "Wenn unklar ist, in welche Kategorie der Eintrag gehört, mit Auswahl an Optionen nachfragen.",
+          parameters: {
+            type: "object",
+            properties: {
+              question: { type: "string", description: "Freundliche Rückfrage auf Deutsch." },
+              options: {
+                type: "array",
+                description: "Auswahlmöglichkeiten. Erlaubt: 'termin', 'todo', 'sport', 'ernaehrung'.",
+                items: { type: "string", enum: ["termin", "todo", "sport", "ernaehrung"] },
+                minItems: 2,
+                maxItems: 4,
+              },
+              suggested_title: { type: "string", description: "Vermuteter Titel für den Eintrag." },
+              suggested_date: { type: "string", description: "YYYY-MM-DD falls erkennbar." },
+              suggested_time: { type: "string", description: "HH:mm falls erkennbar." },
+              spoken_summary: { type: "string" },
+            },
+            required: ["question", "options", "spoken_summary"],
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
           name: "clarify",
-          description: "Wenn die Anweisung unklar ist, freundlich nachfragen.",
+          description: "Wenn die Anweisung in anderer Hinsicht unklar ist (z. B. fehlendes Datum), freundlich nachfragen.",
           parameters: {
             type: "object",
             properties: {

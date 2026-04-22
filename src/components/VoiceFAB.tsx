@@ -15,11 +15,21 @@ import { de } from "date-fns/locale";
 import { getPhase } from "@/lib/cycle";
 import type { Profile } from "@/hooks/useProfile";
 
+type CategoryOption = "termin" | "todo" | "sport" | "ernaehrung";
+
 type VoiceAction =
   | { action: "add_meal" | "add_sport" | "add_appointment"; payload: { title: string; date: string; time: string; duration_min?: number; energy_cost?: number; location?: string; details?: string; confidence: "high" | "medium" | "low"; spoken_summary: string } }
   | { action: "smart_plan_sport" | "smart_plan_meal"; payload: { title: string; date: string; time: string; duration_min?: number; energy_cost?: number; reasoning: string; confidence: "high" | "medium" | "low"; spoken_summary: string } }
   | { action: "suggest_recipe"; payload: { recipes: { title: string; why: string; uses_from_fridge?: string[]; short_steps?: string }[]; spoken_summary: string } }
+  | { action: "clarify_category"; payload: { question: string; options: CategoryOption[]; suggested_title?: string; suggested_date?: string; suggested_time?: string; spoken_summary: string } }
   | { action: "clarify"; payload: { question: string; spoken_summary: string } };
+
+const CATEGORY_LABELS: Record<CategoryOption, string> = {
+  termin: "Termin",
+  todo: "To-do",
+  sport: "Bewegung",
+  ernaehrung: "Ernährung",
+};
 
 interface Props {
   userId: string | null;
@@ -163,6 +173,13 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
         return;
       }
 
+      if (result.action === "clarify_category") {
+        // Auswahl im Dialog anzeigen – Userin entscheidet manuell.
+        setPendingAction(result);
+        setProcessing(false);
+        return;
+      }
+
       if (result.action === "suggest_recipe") {
         // Rezeptvorschläge nur anzeigen, nicht buchen
         setPendingAction(result);
@@ -185,8 +202,40 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
     }
   }, [buildContext, toast]);
 
+  // Handhabt die Auswahl in der Kategorie-Rückfrage
+  const handleCategoryChoice = useCallback(async (choice: CategoryOption) => {
+    if (!pendingAction || pendingAction.action !== "clarify_category") return;
+    const p = pendingAction.payload;
+    const today = format(new Date(), "yyyy-MM-dd");
+    const date = p.suggested_date ?? today;
+    const title = p.suggested_title ?? (transcript.trim().slice(0, 80) || "Neuer Eintrag");
+
+    // To-do direkt anlegen (ohne Edge-Function-Roundtrip)
+    if (choice === "todo") {
+      try {
+        await dataApi.addTodo(userId, date, title);
+        await onChanged();
+        toast({ title: "To-do angelegt", description: `${title} · ${format(new Date(date), "EEE d.M.", { locale: de })}` });
+        setPendingAction(null);
+        setOpen(false);
+      } catch (e) {
+        toast({ title: "Fehler", description: e instanceof Error ? e.message : "Unbekannt", variant: "destructive" });
+      }
+      return;
+    }
+
+    // Für Termin/Sport/Ernährung: Assistent erneut bitten – mit fixierter Kategorie
+    const categoryHint =
+      choice === "sport" ? "Es ist eine Sport-/Bewegungseinheit." :
+      choice === "ernaehrung" ? "Es ist eine Mahlzeit." :
+      "Es ist ein normaler Termin.";
+    const followUp = `${transcript.trim()} (Hinweis von der Nutzerin: ${categoryHint})`;
+    setPendingAction(null);
+    await sendToAssistant(followUp);
+  }, [pendingAction, transcript, userId, onChanged, toast, sendToAssistant]);
+
   const executeAction = useCallback(async (act: VoiceAction) => {
-    if (act.action === "clarify" || act.action === "suggest_recipe") return;
+    if (act.action === "clarify" || act.action === "clarify_category" || act.action === "suggest_recipe") return;
     const p = act.payload;
     const category: "termin" | "mahlzeit" | "sport" =
       act.action === "add_meal" || act.action === "smart_plan_meal" ? "mahlzeit" :
@@ -319,7 +368,34 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
             </div>
           )}
 
-          {pendingAction && pendingAction.action !== "suggest_recipe" && pendingAction.action !== "clarify" && (
+          {pendingAction && pendingAction.action === "clarify_category" && (
+            <div className="space-y-3">
+              <Card className="p-4 bg-primary/5 border-primary/30">
+                <p className="text-sm font-medium">{pendingAction.payload.question}</p>
+                <p className="text-xs text-muted-foreground mt-1">Wozu passt das am besten?</p>
+              </Card>
+              <div className="grid grid-cols-2 gap-2">
+                {pendingAction.payload.options.map((opt) => (
+                  <Button
+                    key={opt}
+                    variant="secondary"
+                    onClick={() => handleCategoryChoice(opt)}
+                    disabled={processing}
+                    className="h-12"
+                  >
+                    {CATEGORY_LABELS[opt]}
+                  </Button>
+                ))}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setPendingAction(null); setTranscript(""); }}>
+                  <X className="h-4 w-4 mr-1" /> Abbrechen
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+
+          {pendingAction && pendingAction.action !== "suggest_recipe" && pendingAction.action !== "clarify" && pendingAction.action !== "clarify_category" && (
             <div className="space-y-3">
               {!editMode ? (
                 <Card className="p-4 bg-primary/5 border-primary/30">
