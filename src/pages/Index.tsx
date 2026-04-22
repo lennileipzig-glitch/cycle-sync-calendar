@@ -300,6 +300,7 @@ const Index = () => {
                 log={dayLog}
                 onToggleTodo={toggleDayTodo}
                 onOpenTracker={() => setTrackerOpen(true)}
+                onAddEvent={() => setEventDialogOpen(true)}
               />
             </Card>
           )}
