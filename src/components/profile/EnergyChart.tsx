@@ -116,7 +116,7 @@ export function EnergyChart({ userId }: { userId: string | null }) {
       {/* Stats Strip */}
       <div className="grid grid-cols-3 gap-2">
         <StatPill label="Ø Energie" value={stats.avg !== null ? `${stats.avg.toFixed(1)}/5` : "—"} icon={<Activity className="h-3.5 w-3.5" />} />
-        <StatPill label="Bester Tag" value={stats.bestLabel ?? "—"} accent />
+        <StatPill label={range === "year" ? "Bester Monat" : "Bester Tag"} value={stats.bestLabel ?? "—"} accent />
         <StatPill label="Erfasst" value={`${stats.tracked}/${stats.total}`} />
       </div>
 
