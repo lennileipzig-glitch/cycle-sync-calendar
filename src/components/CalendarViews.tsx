@@ -219,12 +219,6 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                 {events.length > 2 && (
                   <div className="text-[9px] text-muted-foreground px-1">+{events.length - 2} weitere</div>
                 )}
-                {openTodos > 0 && (
-                  <div className="flex items-center gap-1 mt-auto px-1">
-                    <span className="h-1 w-1 rounded-full bg-primary" />
-                    <span className="text-[9px] text-muted-foreground">{openTodos} offen</span>
-                  </div>
-                )}
               </div>
             </div>
           );
