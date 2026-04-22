@@ -10,7 +10,14 @@ export interface DailyLog {
   symptoms: string[];
   notes: string | null;
 }
-export interface Todo { id: string; title: string; completed: boolean; todo_date: string; }
+export interface Todo {
+  id: string;
+  title: string;
+  completed: boolean;
+  todo_date: string;
+  energy_cost?: number | null;
+  is_flexible?: boolean;
+}
 
 export const dataApi = {
   // ---- Logs ----
