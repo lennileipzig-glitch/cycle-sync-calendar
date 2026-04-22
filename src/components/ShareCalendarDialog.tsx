@@ -5,8 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Mail, Link2, Copy, Trash2, ShieldAlert } from "lucide-react";
-import { sharingApi, buildShareLink, type CalendarShare } from "@/lib/sharingApi";
+import { Mail, Link2, Copy, Trash2, ShieldAlert, CalendarDays, ExternalLink } from "lucide-react";
+import { sharingApi, buildShareLink, buildICalUrl, buildWebcalUrl, type CalendarShare } from "@/lib/sharingApi";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
@@ -96,6 +96,15 @@ export function ShareCalendarDialog({ ownerId, open, onOpenChange }: Props) {
     toast.success("Link kopiert");
   };
 
+  const copyICal = async (token: string) => {
+    await navigator.clipboard.writeText(buildICalUrl(token));
+    toast.success("iCal-Link kopiert – in Apple/Google Kalender als Abo einfügen");
+  };
+
+  const openInExternal = (token: string) => {
+    window.location.href = buildWebcalUrl(token);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -180,8 +189,24 @@ export function ShareCalendarDialog({ ownerId, open, onOpenChange }: Props) {
                     </div>
                     {s.invite_method === "link" && s.status !== "revoked" && (
                       <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={() => copyLink(s.invite_token)}>
-                        <Copy className="h-3 w-3 mr-1" /> Link kopieren
+                        <Copy className="h-3 w-3 mr-1" /> Luna-Link kopieren
                       </Button>
+                    )}
+                    {s.status !== "revoked" && (
+                      <div className="rounded-md border border-border/60 bg-background/50 p-2 space-y-1.5">
+                        <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                          <CalendarDays className="h-3 w-3" />
+                          Apple / Google Kalender abonnieren
+                        </div>
+                        <div className="flex gap-1.5">
+                          <Button variant="outline" size="sm" className="flex-1 h-7 text-xs" onClick={() => copyICal(s.invite_token)}>
+                            <Copy className="h-3 w-3 mr-1" /> iCal-Link
+                          </Button>
+                          <Button variant="outline" size="sm" className="flex-1 h-7 text-xs" onClick={() => openInExternal(s.invite_token)}>
+                            <ExternalLink className="h-3 w-3 mr-1" /> Öffnen
+                          </Button>
+                        </div>
+                      </div>
                     )}
                   </li>
                 ))}

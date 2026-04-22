@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.cycle-recommendations]
 verify_jwt = false
+
+[functions.calendar-feed]
+verify_jwt = false
