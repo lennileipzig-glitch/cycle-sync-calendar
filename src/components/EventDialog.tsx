@@ -147,19 +147,27 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
         is_flexible: flexible,
         recurrence_freq: recurrence === "none" ? null : recurrence,
         recurrence_until: recurrence === "none" ? null : until,
+        category,
+        details: details.trim() || null,
+      };
+
+      const labelByCat: Record<EventCategory, string> = {
+        termin: "Termin",
+        mahlzeit: "Mahlzeit",
+        sport: "Sport-Einheit",
       };
 
       if (isEdit && event) {
         await dataApi.updateEvent(userId, event.id, payload);
-        toast.success("Termin aktualisiert");
+        toast.success(`${labelByCat[category]} aktualisiert`);
       } else {
         await dataApi.addEvents(userId, [payload]);
         toast.success(
           flexible
-            ? `Termin für ${format(targetDate, "EEEE, d. MMM", { locale: de })} eingeplant`
+            ? `${labelByCat[category]} für ${format(targetDate, "EEEE, d. MMM", { locale: de })} eingeplant`
             : recurrence !== "none"
-              ? "Wiederkehrenden Termin angelegt"
-              : "Termin hinzugefügt",
+              ? `Wiederkehrende ${labelByCat[category]} angelegt`
+              : `${labelByCat[category]} hinzugefügt`,
         );
       }
       onOpenChange(false);
