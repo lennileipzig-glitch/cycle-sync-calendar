@@ -57,8 +57,8 @@ interface QuickAdd {
   onMoveEvent?: (event: GuestEvent, newDateStr: string) => void;
 }
 
-function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
-  if (!onAddEventForDate && !onAddTodoForDate) return null;
+function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, onAddMealForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
+  if (!onAddEventForDate && !onAddTodoForDate && !onAddMealForDate) return null;
   const px = size === "xs" ? "h-5 w-5" : "h-7 w-7";
   return (
     <DropdownMenu>
@@ -79,6 +79,11 @@ function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, size = "sm" }
         {onAddEventForDate && (
           <DropdownMenuItem onClick={() => onAddEventForDate(date)}>
             <CalendarPlus className="h-4 w-4 mr-2" /> Termin
+          </DropdownMenuItem>
+        )}
+        {onAddMealForDate && (
+          <DropdownMenuItem onClick={() => onAddMealForDate(date)}>
+            <UtensilsCrossed className="h-4 w-4 mr-2" /> Mahlzeit
           </DropdownMenuItem>
         )}
         {onAddTodoForDate && (
