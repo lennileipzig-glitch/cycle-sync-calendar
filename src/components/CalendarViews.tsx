@@ -30,6 +30,17 @@ const phaseFill: Record<string, string> = {
   unknown: "bg-muted/30",
 };
 
+const categoryIcon = (cat?: EventCategory) => {
+  if (cat === "mahlzeit") return UtensilsCrossed;
+  if (cat === "sport") return Dumbbell;
+  return null;
+};
+const categoryAccent = (cat?: EventCategory): string => {
+  if (cat === "mahlzeit") return "border-l-amber-400 bg-amber-100/30 dark:bg-amber-400/10";
+  if (cat === "sport") return "border-l-emerald-500 bg-emerald-100/30 dark:bg-emerald-400/10";
+  return "";
+};
+
 interface DataMaps {
   eventsByDay?: Record<string, GuestEvent[]>;
   todosByDay?: Record<string, { id: string; title: string; completed: boolean }[]>;
@@ -40,6 +51,10 @@ interface QuickAdd {
   onAddTodoForDate?: (d: Date) => void;
   /** Optional: Termin an einem bestimmten Tag + Uhrzeit (HH:mm) anlegen */
   onAddEventAtTime?: (d: Date, time: string) => void;
+  /** Optional: Mahlzeit für einen Tag hinzufügen (öffnet Dialog mit Kategorie="mahlzeit") */
+  onAddMealForDate?: (d: Date) => void;
+  /** Optional: Drag & Drop – Event auf neues Datum verschieben */
+  onMoveEvent?: (event: GuestEvent, newDateStr: string) => void;
 }
 
 function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
