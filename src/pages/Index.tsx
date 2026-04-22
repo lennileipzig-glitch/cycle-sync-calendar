@@ -187,12 +187,19 @@ const Index = () => {
             <h3 className="text-lg mb-3">Phasen-Cheat-Sheet</h3>
             <div className="space-y-3 text-sm">
               <p className="text-muted-foreground">{phase.description}</p>
-              {todayLog?.energy_level && (
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground">Heutiges Energielevel:</span>
-                  <span className="font-medium capitalize">{todayLog.energy_level}</span>
-                </div>
-              )}
+              {todayLog?.energy_level && (() => {
+                const labels = ["sehr schlecht", "schlecht", "mittel", "gut", "sehr gut"];
+                const n = parseInt(todayLog.energy_level, 10);
+                const display = !isNaN(n) && n >= 1 && n <= 5
+                  ? labels[n - 1]
+                  : (todayLog.energy_level === "niedrig" ? "schlecht" : todayLog.energy_level === "hoch" ? "gut" : todayLog.energy_level);
+                return (
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground">Heutiges Energielevel:</span>
+                    <span className="font-medium capitalize">{display}</span>
+                  </div>
+                );
+              })()}
               {todayLog?.symptoms && todayLog.symptoms.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {todayLog.symptoms.map(s => <span key={s} className="text-xs px-2 py-0.5 bg-muted rounded-full">{s}</span>)}
