@@ -353,8 +353,35 @@ function buildSeries(range: Range, anchor: Date, logs: DailyLog[]): SeriesResult
   // Stats
   const valid = data.filter(p => p.energy !== null) as (Point & { energy: number })[];
   const avg = valid.length ? valid.reduce((s, p) => s + p.energy, 0) / valid.length : null;
-  const best = valid.reduce<(Point & { energy: number }) | null>((acc, p) => (!acc || p.energy > acc.energy) ? p : acc, null);
-  const bestLabel = best ? best.label : null;
+
+  let bestLabel: string | null = null;
+  if (range === "year") {
+    // Bester Monat = Monat mit höchstem Tagesdurchschnitt im Jahr
+    const yearStart = startOfYear(anchor);
+    const yearEnd = endOfYear(anchor);
+    const monthBuckets = new Map<number, number[]>();
+    logs.forEach(l => {
+      const d = new Date(l.log_date);
+      if (d < yearStart || d > yearEnd) return;
+      const v = energyToNum(l.energy_level);
+      if (v === null) return;
+      const m = d.getMonth();
+      if (!monthBuckets.has(m)) monthBuckets.set(m, []);
+      monthBuckets.get(m)!.push(v);
+    });
+    let bestM = -1; let bestAvg = -Infinity;
+    monthBuckets.forEach((vals, m) => {
+      const a = vals.reduce((s, x) => s + x, 0) / vals.length;
+      if (a > bestAvg) { bestAvg = a; bestM = m; }
+    });
+    if (bestM >= 0) {
+      const monthDate = new Date(anchor.getFullYear(), bestM, 1);
+      bestLabel = format(monthDate, "MMMM", { locale: de });
+    }
+  } else {
+    const best = valid.reduce<(Point & { energy: number }) | null>((acc, p) => (!acc || p.energy > acc.energy) ? p : acc, null);
+    bestLabel = best ? format(new Date(best.date), "d. MMM", { locale: de }) : null;
+  }
 
   return {
     data,
