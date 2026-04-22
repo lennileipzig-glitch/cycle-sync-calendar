@@ -114,7 +114,7 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
         ? new Date(`${dateStr}T23:59:59`).toISOString()
         : toLocalIso(endTime);
 
-      await dataApi.addEvents(userId, [{
+      const payload = {
         title: title.trim(),
         starts_at,
         ends_at,
@@ -125,14 +125,21 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
         is_flexible: flexible,
         recurrence_freq: recurrence === "none" ? null : recurrence,
         recurrence_until: recurrence === "none" ? null : until,
-      }]);
-      toast.success(
-        flexible
-          ? `Termin für ${format(targetDate, "EEEE, d. MMM", { locale: de })} eingeplant`
-          : recurrence !== "none"
-            ? "Wiederkehrenden Termin angelegt"
-            : "Termin hinzugefügt",
-      );
+      };
+
+      if (isEdit && event) {
+        await dataApi.updateEvent(userId, event.id, payload);
+        toast.success("Termin aktualisiert");
+      } else {
+        await dataApi.addEvents(userId, [payload]);
+        toast.success(
+          flexible
+            ? `Termin für ${format(targetDate, "EEEE, d. MMM", { locale: de })} eingeplant`
+            : recurrence !== "none"
+              ? "Wiederkehrenden Termin angelegt"
+              : "Termin hinzugefügt",
+        );
+      }
       onOpenChange(false);
       onCreated?.();
     } catch (e) {
@@ -140,6 +147,23 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       toast.error("Fehler beim Speichern");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!event) return;
+    if (!confirm("Diesen Termin wirklich löschen?")) return;
+    setDeleting(true);
+    try {
+      await dataApi.deleteEvent(userId, event.id);
+      toast.success("Termin gelöscht");
+      onOpenChange(false);
+      onCreated?.();
+    } catch (e) {
+      console.error(e);
+      toast.error("Fehler beim Löschen");
+    } finally {
+      setDeleting(false);
     }
   };
 
