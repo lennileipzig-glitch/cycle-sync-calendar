@@ -251,12 +251,18 @@ const Index = () => {
             <h3 className="text-xl px-2 capitalize min-w-[220px] text-center">{headerLabel}</h3>
             <Button variant="ghost" size="icon" onClick={navigateNext}><ChevronRight className="h-4 w-4" /></Button>
           </div>
-          <div className="flex items-center gap-1 bg-muted rounded-full p-1">
-            {ZOOM_ORDER.map(z => (
-              <Button key={z} variant={zoom === z ? "default" : "ghost"} size="sm" className="rounded-full" onClick={() => setZoom(z)}>
-                {ZOOM_LABELS[z]}
-              </Button>
-            ))}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={() => setShareOpen(true)}>
+              <Share2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Teilen</span>
+            </Button>
+            <div className="flex items-center gap-1 bg-muted rounded-full p-1">
+              {ZOOM_ORDER.map(z => (
+                <Button key={z} variant={zoom === z ? "default" : "ghost"} size="sm" className="rounded-full" onClick={() => setZoom(z)}>
+                  {ZOOM_LABELS[z]}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
