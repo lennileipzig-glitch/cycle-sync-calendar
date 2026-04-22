@@ -198,8 +198,36 @@ export function Recommendations({
           </div>
 
           {/* 1. Mahlzeit aktiv hinzufügen */}
-          <div className="rounded-lg bg-card/70 border border-border/50 p-3">
-            <div className="text-xs font-medium mb-2 text-foreground/80">Mahlzeit für heute eintragen</div>
+          <div className="rounded-lg bg-card/70 border border-border/50 p-3 space-y-3">
+            <div className="text-xs font-medium text-foreground/80">Mahlzeit für heute eintragen</div>
+            {meals.length > 0 && (
+              <ul className="space-y-1">
+                {meals.map(m => (
+                  <li key={m.id} className="group flex items-start gap-2 text-sm rounded-md px-2 py-1 -mx-1 hover:bg-foreground/5">
+                    <button
+                      type="button"
+                      onClick={() => onEditEvent?.(m)}
+                      className="flex-1 text-left"
+                    >
+                      <div className="font-medium truncate text-sm">{m.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {m.all_day ? "Ganztägig" : format(new Date(m.starts_at), "HH:mm")}
+                        {m.details && ` · ${m.details.split("\n")[0].slice(0, 50)}`}
+                      </div>
+                    </button>
+                    {!m._shared_owner_name && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(m.id); }}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                        aria-label="Mahlzeit löschen"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
             <InlineAddMeal userId={userId} date={selectedDate} onCreated={onEventAdded} />
           </div>
 
