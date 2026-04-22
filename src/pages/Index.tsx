@@ -7,10 +7,11 @@ import { useProfile } from "@/hooks/useProfile";
 import { getPhase, fmtDate } from "@/lib/cycle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, ListTodo, User, Settings as SettingsIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, ListTodo, User, Settings as SettingsIcon, Plus } from "lucide-react";
 import { MonthView, WeekView, YearView, DayView } from "@/components/CalendarViews";
 import { TodoList } from "@/components/TodoList";
 import { TrackerDialog } from "@/components/TrackerDialog";
+import { EventDialog } from "@/components/EventDialog";
 import { Recommendations } from "@/components/Recommendations";
 
 import { OnboardingDialog } from "@/components/OnboardingDialog";
