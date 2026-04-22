@@ -138,7 +138,10 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
           const selected = isSameDay(d, selectedDate);
           const isToday = isSameDay(d, today);
           const key = fmtDate(d);
-          const events = eventsByDay[key] ?? [];
+          const allEvents = eventsByDay[key] ?? [];
+          const events = allEvents.filter(e => e.category !== "mahlzeit" && e.category !== "sport");
+          const hasMeal = allEvents.some(e => e.category === "mahlzeit");
+          const hasSport = allEvents.some(e => e.category === "sport");
           const todos = todosByDay[key] ?? [];
           const openTodos = todos.filter(t => !t.completed).length;
           const phaseColorVar = `hsl(var(--phase-${phase}))`;
@@ -158,17 +161,28 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
               {...dragHandlers(d)}
             >
               <div className={cn("h-1.5 w-full shrink-0", phaseStripe[phase])} />
-              <div className="flex justify-between items-center px-1.5 pt-1">
+              <div className="flex justify-between items-center px-1.5 pt-1 gap-1">
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                   <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
                 </div>
-                {isToday ? (
-                  <span className="text-xs leading-none inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground font-bold">
-                    {format(d, "d")}
-                  </span>
-                ) : (
-                  <span className="text-xs leading-none">{format(d, "d")}</span>
-                )}
+                <div className="flex items-center gap-0.5 ml-auto">
+                  {hasMeal && (
+                    <UtensilsCrossed className="h-3 w-3 text-amber-600 dark:text-amber-400" aria-label="Mahlzeit geplant" />
+                  )}
+                  {hasSport && (
+                    <Dumbbell className="h-3 w-3 text-emerald-600 dark:text-emerald-400" aria-label="Sport geplant" />
+                  )}
+                  {openTodos > 0 && (
+                    <CheckCircle2 className="h-3 w-3 text-primary" aria-label={`${openTodos} offene Aufgaben`} />
+                  )}
+                  {isToday ? (
+                    <span className="text-xs leading-none inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground font-bold ml-0.5">
+                      {format(d, "d")}
+                    </span>
+                  ) : (
+                    <span className="text-xs leading-none ml-0.5">{format(d, "d")}</span>
+                  )}
+                </div>
               </div>
               <div className="flex-1 flex flex-col gap-0.5 px-1 pb-1 mt-1 overflow-hidden">
                 {events.slice(0, 2).map((e) => {
@@ -204,12 +218,6 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                 })}
                 {events.length > 2 && (
                   <div className="text-[9px] text-muted-foreground px-1">+{events.length - 2} weitere</div>
-                )}
-                {openTodos > 0 && (
-                  <div className="flex items-center gap-1 mt-auto px-1">
-                    <span className="h-1 w-1 rounded-full bg-primary" />
-                    <span className="text-[9px] text-muted-foreground">{openTodos} offen</span>
-                  </div>
                 )}
               </div>
             </div>
