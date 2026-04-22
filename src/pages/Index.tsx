@@ -317,8 +317,9 @@ const Index = () => {
                 log={dayLog}
                 onToggleTodo={toggleDayTodo}
                 onOpenTracker={() => setTrackerOpen(true)}
-                onAddEvent={() => { setQuickAddDate(selectedDate); setEventDialogOpen(true); }}
+                onAddEvent={() => { setQuickAddDate(selectedDate); setEditEvent(null); setEventDialogOpen(true); }}
                 onAddTodo={() => { setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
+                onEditEvent={(ev) => { setEditEvent(ev); setQuickAddDate(new Date(ev.starts_at)); setEventDialogOpen(true); }}
               />
             </Card>
           )}
