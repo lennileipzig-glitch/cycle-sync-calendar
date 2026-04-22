@@ -502,7 +502,28 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
             </div>
           )}
 
-          {pendingAction && pendingAction.action !== "suggest_recipe" && pendingAction.action !== "clarify" && pendingAction.action !== "clarify_category" && (
+          {pendingAction && pendingAction.action === "add_todo" && (
+            <div className="space-y-3">
+              <Card className="p-4 bg-primary/5 border-primary/30">
+                <p className="text-sm font-medium">{pendingAction.payload.spoken_summary}</p>
+                <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
+                  <p>✅ To-do · {format(new Date(pendingAction.payload.date), "EEEE, d. MMMM", { locale: de })}</p>
+                  <p>📝 {pendingAction.payload.title}</p>
+                </div>
+              </Card>
+              <DialogFooter className="flex-wrap gap-2">
+                <Button variant="outline" onClick={() => { setPendingAction(null); setQueue([]); setQueueProgress(null); setTranscript(""); }}>
+                  <X className="h-4 w-4 mr-1" /> Verwerfen
+                </Button>
+                <Button onClick={() => executeAction(pendingAction)} disabled={processing}>
+                  {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+                  Als To-do anlegen
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+
+          {pendingAction && pendingAction.action !== "suggest_recipe" && pendingAction.action !== "clarify" && pendingAction.action !== "clarify_category" && pendingAction.action !== "add_todo" && (
             <div className="space-y-3">
               {!editMode ? (
                 <Card className="p-4 bg-primary/5 border-primary/30">
