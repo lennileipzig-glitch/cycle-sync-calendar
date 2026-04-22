@@ -281,8 +281,13 @@ const Index = () => {
                 profile={profile}
                 eventsByDay={eventsByDay}
                 todosByDay={todosByDay}
-                onAddEventForDate={(d) => { setQuickAddDate(d); setEventDialogOpen(true); }}
+                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("termin"); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
+                onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setEventDialogOpen(true); }}
+                onMoveEvent={async (ev, newDate) => {
+                  await dataApi.moveEventToDate(userId, ev, newDate);
+                  setAllEvents(await dataApi.getEvents(userId));
+                }}
               />
             </Card>
           )}
@@ -295,9 +300,14 @@ const Index = () => {
                 eventsByDay={eventsByDay}
                 moodByDay={weekMood}
                 todosByDay={todosByDay}
-                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddTime(null); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddTime(null); setQuickAddCategory("termin"); setEditEvent(null); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
-                onAddEventAtTime={(d, time) => { setQuickAddDate(d); setQuickAddTime(time); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddEventAtTime={(d, time) => { setQuickAddDate(d); setQuickAddTime(time); setQuickAddCategory("termin"); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setEditEvent(null); setEventDialogOpen(true); }}
+                onMoveEvent={async (ev, newDate) => {
+                  await dataApi.moveEventToDate(userId, ev, newDate);
+                  setAllEvents(await dataApi.getEvents(userId));
+                }}
               />
             </Card>
           )}
