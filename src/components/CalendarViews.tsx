@@ -242,11 +242,21 @@ const energyToFloat = (raw?: string | null): number | null => {
   return null;
 };
 
-export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddEventAtTime }: WeekProps) {
+export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddEventAtTime, onAddMealForDate, onMoveEvent }: WeekProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const today = new Date();
+
+  const dropProps = (d: Date) => onMoveEvent ? {
+    onDragOver: (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; },
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      const data = e.dataTransfer.getData("application/x-luna-event");
+      if (!data) return;
+      try { onMoveEvent(JSON.parse(data) as GuestEvent, fmtDate(d)); } catch { /* ignore */ }
+    },
+  } : {};
 
   return (
     <div className="animate-fade-in space-y-2">
