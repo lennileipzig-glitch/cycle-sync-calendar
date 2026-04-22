@@ -94,33 +94,63 @@ export type Database = {
           avg_cycle_length: number
           avg_period_length: number
           created_at: string
+          custom_symptoms: string[]
+          diet_intolerances: string[]
+          diet_style: string
           display_name: string | null
+          favorite_foods: string[]
           id: string
           in_menopause: boolean
           last_period_start: string | null
+          notification_time: string
+          notification_topics: string[]
+          notifications_enabled: boolean
           onboarding_completed: boolean
+          sport_frequency_per_week: number
+          sport_level: string
+          sports: string[]
           updated_at: string
         }
         Insert: {
           avg_cycle_length?: number
           avg_period_length?: number
           created_at?: string
+          custom_symptoms?: string[]
+          diet_intolerances?: string[]
+          diet_style?: string
           display_name?: string | null
+          favorite_foods?: string[]
           id: string
           in_menopause?: boolean
           last_period_start?: string | null
+          notification_time?: string
+          notification_topics?: string[]
+          notifications_enabled?: boolean
           onboarding_completed?: boolean
+          sport_frequency_per_week?: number
+          sport_level?: string
+          sports?: string[]
           updated_at?: string
         }
         Update: {
           avg_cycle_length?: number
           avg_period_length?: number
           created_at?: string
+          custom_symptoms?: string[]
+          diet_intolerances?: string[]
+          diet_style?: string
           display_name?: string | null
+          favorite_foods?: string[]
           id?: string
           in_menopause?: boolean
           last_period_start?: string | null
+          notification_time?: string
+          notification_topics?: string[]
+          notifications_enabled?: boolean
           onboarding_completed?: boolean
+          sport_frequency_per_week?: number
+          sport_level?: string
+          sports?: string[]
           updated_at?: string
         }
         Relationships: []

@@ -7,12 +7,12 @@ import { useProfile } from "@/hooks/useProfile";
 import { getPhase, fmtDate } from "@/lib/cycle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, ListTodo } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, ListTodo, User } from "lucide-react";
 import { MonthView, WeekView, YearView, DayView } from "@/components/CalendarViews";
 import { TodoList } from "@/components/TodoList";
 import { TrackerDialog } from "@/components/TrackerDialog";
 import { Recommendations } from "@/components/Recommendations";
-import { ProfileSettings } from "@/components/ProfileSettings";
+
 import { OnboardingDialog } from "@/components/OnboardingDialog";
 import { dataApi } from "@/lib/dataApi";
 import { isGuest, type GuestEvent } from "@/lib/guestStore";
@@ -202,7 +202,9 @@ const Index = () => {
             <Button variant="outline" size="sm" onClick={() => setTrackerOpen(true)}>
               <Sparkles className="h-4 w-4 mr-1" /> Tracken
             </Button>
-            <ProfileSettings profile={profile} userId={userId} onSave={update} />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/profile")} aria-label="Profil">
+              <User className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </header>
