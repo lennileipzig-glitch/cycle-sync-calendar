@@ -111,7 +111,8 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                 "group min-h-[5.5rem] rounded-lg overflow-hidden flex flex-col text-sm transition-all relative bg-card border border-border/40 cursor-pointer",
                 !inMonth && "opacity-40",
                 selected && "ring-2 ring-primary shadow-soft",
-                !selected && "hover:border-primary/40",
+                isToday && !selected && "ring-2 ring-primary/70 border-primary/40 bg-primary/5",
+                !selected && !isToday && "hover:border-primary/40",
               )}
               onClick={() => onSelectDate(d)}
               role="button"
@@ -122,10 +123,13 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                   <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} size="xs" />
                 </div>
-                <span className={cn(
-                  "text-xs leading-none",
-                  isToday && "font-bold text-primary",
-                )}>{format(d, "d")}</span>
+                {isToday ? (
+                  <span className="text-xs leading-none inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground font-bold">
+                    {format(d, "d")}
+                  </span>
+                ) : (
+                  <span className="text-xs leading-none">{format(d, "d")}</span>
+                )}
               </div>
               <div className="flex-1 flex flex-col gap-0.5 px-1 pb-1 mt-1 overflow-hidden">
                 {events.slice(0, 2).map((e) => (
