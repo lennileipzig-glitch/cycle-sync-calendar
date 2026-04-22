@@ -267,9 +267,16 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
             )}
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Abbrechen</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? "Speichere…" : "Hinzufügen"}</Button>
+        <DialogFooter className="gap-2 sm:justify-between">
+          {isEdit ? (
+            <Button variant="ghost" size="sm" onClick={handleDelete} disabled={deleting || saving} className="text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4 mr-1" /> {deleting ? "Lösche…" : "Löschen"}
+            </Button>
+          ) : <span />}
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>Abbrechen</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? "Speichere…" : isEdit ? "Speichern" : "Hinzufügen"}</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
