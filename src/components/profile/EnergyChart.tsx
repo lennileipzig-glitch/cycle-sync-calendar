@@ -124,7 +124,7 @@ export function EnergyChart({ userId }: { userId: string | null }) {
       <Card className="p-3 pt-5 bg-gradient-to-br from-card via-card to-primary/[0.03] border-border/60 shadow-sm">
         <div className="h-[260px] w-full">
           <ResponsiveContainer>
-            <AreaChart data={data} onClick={handleClick} margin={{ top: 10, right: 16, bottom: 0, left: -24 }}>
+            <AreaChart data={data} onClick={handleClick} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="energyFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
