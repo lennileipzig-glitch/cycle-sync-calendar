@@ -19,10 +19,52 @@ type CategoryOption = "termin" | "todo" | "sport" | "ernaehrung";
 
 type VoiceAction =
   | { action: "add_meal" | "add_sport" | "add_appointment"; payload: { title: string; date: string; time: string; duration_min?: number; energy_cost?: number; location?: string; details?: string; confidence: "high" | "medium" | "low"; spoken_summary: string } }
+  | { action: "add_todo"; payload: { title: string; date: string; energy_cost?: number; confidence: "high" | "medium" | "low"; spoken_summary: string } }
   | { action: "smart_plan_sport" | "smart_plan_meal"; payload: { title: string; date: string; time: string; duration_min?: number; energy_cost?: number; reasoning: string; confidence: "high" | "medium" | "low"; spoken_summary: string } }
   | { action: "suggest_recipe"; payload: { recipes: { title: string; why: string; uses_from_fridge?: string[]; short_steps?: string }[]; spoken_summary: string } }
   | { action: "clarify_category"; payload: { question: string; options: CategoryOption[]; suggested_title?: string; suggested_date?: string; suggested_time?: string; spoken_summary: string } }
   | { action: "clarify"; payload: { question: string; spoken_summary: string } };
+
+interface MultiItem {
+  kind: "meal" | "sport" | "appointment" | "todo" | "smart_plan_sport" | "smart_plan_meal" | "clarify_category";
+  title: string;
+  date?: string;
+  time?: string;
+  duration_min?: number;
+  energy_cost?: number;
+  location?: string;
+  details?: string;
+  reasoning?: string;
+  confidence?: "high" | "medium" | "low";
+  question?: string;
+  options?: CategoryOption[];
+}
+
+// Wandelt ein multi_action-Item in eine VoiceAction (Single-Action-Form) um.
+function multiItemToAction(item: MultiItem): VoiceAction | null {
+  const today = new Date().toISOString().slice(0, 10);
+  const date = item.date ?? today;
+  const conf = item.confidence ?? "medium";
+  const summary = item.title;
+  switch (item.kind) {
+    case "meal":
+      return { action: "add_meal", payload: { title: item.title, date, time: item.time ?? "12:00", duration_min: item.duration_min, energy_cost: item.energy_cost, details: item.details, confidence: conf, spoken_summary: summary } };
+    case "sport":
+      return { action: "add_sport", payload: { title: item.title, date, time: item.time ?? "18:00", duration_min: item.duration_min, energy_cost: item.energy_cost, details: item.details, confidence: conf, spoken_summary: summary } };
+    case "appointment":
+      return { action: "add_appointment", payload: { title: item.title, date, time: item.time ?? "09:00", duration_min: item.duration_min, location: item.location, details: item.details, confidence: conf, spoken_summary: summary } };
+    case "todo":
+      return { action: "add_todo", payload: { title: item.title, date, energy_cost: item.energy_cost, confidence: conf, spoken_summary: summary } };
+    case "smart_plan_sport":
+      return { action: "smart_plan_sport", payload: { title: item.title, date, time: item.time ?? "18:00", duration_min: item.duration_min, energy_cost: item.energy_cost, reasoning: item.reasoning ?? "", confidence: conf, spoken_summary: summary } };
+    case "smart_plan_meal":
+      return { action: "smart_plan_meal", payload: { title: item.title, date, time: item.time ?? "12:00", reasoning: item.reasoning ?? "", confidence: conf, spoken_summary: summary } };
+    case "clarify_category":
+      return { action: "clarify_category", payload: { question: item.question ?? `Wozu passt „${item.title}"?`, options: (item.options ?? ["termin", "todo", "sport", "ernaehrung"]) as CategoryOption[], suggested_title: item.title, suggested_date: item.date, suggested_time: item.time, spoken_summary: summary } };
+    default:
+      return null;
+  }
+}
 
 const CATEGORY_LABELS: Record<CategoryOption, string> = {
   termin: "Termin",
