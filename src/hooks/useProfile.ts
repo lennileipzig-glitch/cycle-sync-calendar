@@ -58,8 +58,22 @@ export function useProfile(userId: string | undefined, isGuestMode: boolean) {
       return;
     }
     if (!userId) return;
-    const { data } = await supabase.from("profiles").update(patch).eq("id", userId).select().single();
+    // Upsert statt update: legt das Profil notfalls an, falls der Trigger
+    // handle_new_user (z. B. bei OAuth-Erstanmeldung) noch nicht durch ist.
+    const { data, error } = await supabase
+      .from("profiles")
+      .upsert({ id: userId, ...patch }, { onConflict: "id" })
+      .select()
+      .maybeSingle();
+    if (error) {
+      console.error("profile update error", error, patch);
+      throw error;
+    }
     if (data) setProfile(data as Profile);
+    else {
+      const { data: fresh } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+      if (fresh) setProfile(fresh as Profile);
+    }
   };
 
   return { profile, loading, update, reload };
