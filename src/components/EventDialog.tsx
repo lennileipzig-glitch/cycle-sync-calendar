@@ -33,6 +33,8 @@ interface Props {
   initialTitle?: string;
   /** Optional: Vorbefüllte Details (z. B. Rezept-Beschreibung) */
   initialDetails?: string;
+  /** Optional: Kategorie-Wechsler ausblenden (z. B. wenn nur ein Termin angelegt werden soll) */
+  lockCategory?: boolean;
 }
 
 type Recurrence = "none" | "daily" | "weekly" | "monthly";
@@ -45,7 +47,7 @@ const COST_LABEL = (c: number) => {
   return "sehr anstrengend";
 };
 
-export function EventDialog({ userId, date, open, onOpenChange, onCreated, event, initialTime, initialCategory, initialTitle, initialDetails }: Props) {
+export function EventDialog({ userId, date, open, onOpenChange, onCreated, event, initialTime, initialCategory, initialTitle, initialDetails, lockCategory }: Props) {
   const { guestMode } = useAuth();
   const { profile } = useProfile(userId ?? undefined, guestMode);
   const isEdit = !!event;
@@ -215,28 +217,30 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
           <DialogTitle>{titleByCat[category]}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {/* Kategorie-Auswahl */}
-          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg bg-muted">
-            {([
-              { v: "termin", icon: CalendarCheck, label: "Termin" },
-              { v: "mahlzeit", icon: UtensilsCrossed, label: "Mahlzeit" },
-              { v: "sport", icon: Dumbbell, label: "Sport" },
-            ] as const).map(({ v, icon: Icon, label }) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setCategory(v)}
-                className={`flex items-center justify-center gap-1.5 text-xs py-1.5 rounded-md transition-colors ${
-                  category === v
-                    ? "bg-background shadow-sm text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {label}
-              </button>
-            ))}
-          </div>
+          {/* Kategorie-Auswahl (ausgeblendet, wenn Kategorie fixiert ist – z. B. Wochenansicht: nur Termin) */}
+          {!lockCategory && !isEdit && (
+            <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg bg-muted">
+              {([
+                { v: "termin", icon: CalendarCheck, label: "Termin" },
+                { v: "mahlzeit", icon: UtensilsCrossed, label: "Mahlzeit" },
+                { v: "sport", icon: Dumbbell, label: "Sport" },
+              ] as const).map(({ v, icon: Icon, label }) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setCategory(v)}
+                  className={`flex items-center justify-center gap-1.5 text-xs py-1.5 rounded-md transition-colors ${
+                    category === v
+                      ? "bg-background shadow-sm text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="ev-title">Titel</Label>

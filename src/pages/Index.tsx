@@ -41,6 +41,7 @@ const Index = () => {
   const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
   const [quickAddTime, setQuickAddTime] = useState<string | null>(null);
   const [quickAddCategory, setQuickAddCategory] = useState<"termin" | "mahlzeit" | "sport">("termin");
+  const [lockEventCategory, setLockEventCategory] = useState(false);
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null>(null);
   const [allEvents, setAllEvents] = useState<GuestEvent[]>([]);
   const [weekTodos, setWeekTodos] = useState<{ id: string; title: string; completed: boolean; todo_date: string }[]>([]);
@@ -281,9 +282,9 @@ const Index = () => {
                 profile={profile}
                 eventsByDay={eventsByDay}
                 todosByDay={todosByDay}
-                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("termin"); setEventDialogOpen(true); }}
+                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("termin"); setLockEventCategory(false); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
-                onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setEventDialogOpen(true); }}
+                onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setLockEventCategory(false); setEventDialogOpen(true); }}
                 onMoveEvent={async (ev, newDate) => {
                   await dataApi.moveEventToDate(userId, ev, newDate);
                   setAllEvents(await dataApi.getEvents(userId));
@@ -300,10 +301,9 @@ const Index = () => {
                 eventsByDay={eventsByDay}
                 moodByDay={weekMood}
                 todosByDay={todosByDay}
-                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddTime(null); setQuickAddCategory("termin"); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddTime(null); setQuickAddCategory("termin"); setLockEventCategory(true); setEditEvent(null); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
-                onAddEventAtTime={(d, time) => { setQuickAddDate(d); setQuickAddTime(time); setQuickAddCategory("termin"); setEditEvent(null); setEventDialogOpen(true); }}
-                onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddEventAtTime={(d, time) => { setQuickAddDate(d); setQuickAddTime(time); setQuickAddCategory("termin"); setLockEventCategory(true); setEditEvent(null); setEventDialogOpen(true); }}
                 onMoveEvent={async (ev, newDate) => {
                   await dataApi.moveEventToDate(userId, ev, newDate);
                   setAllEvents(await dataApi.getEvents(userId));
@@ -322,7 +322,7 @@ const Index = () => {
                 log={dayLog}
                 onToggleTodo={toggleDayTodo}
                 onOpenTracker={() => setTrackerOpen(true)}
-                onAddEvent={() => { setQuickAddDate(selectedDate); setQuickAddCategory("termin"); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddEvent={() => { setQuickAddDate(selectedDate); setQuickAddCategory("termin"); setLockEventCategory(false); setEditEvent(null); setEventDialogOpen(true); }}
                 onAddTodo={() => { setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
                 onEditEvent={(ev) => { setEditEvent(ev); setQuickAddDate(new Date(ev.starts_at)); setEventDialogOpen(true); }}
                 userId={userId}
@@ -386,14 +386,16 @@ const Index = () => {
         date={quickAddDate}
         initialTime={quickAddTime}
         initialCategory={quickAddCategory}
+        lockCategory={lockEventCategory}
         open={eventDialogOpen}
-        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) { setEditEvent(null); setQuickAddTime(null); setQuickAddCategory("termin"); } }}
+        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) { setEditEvent(null); setQuickAddTime(null); setQuickAddCategory("termin"); setLockEventCategory(false); } }}
         event={editEvent}
         onCreated={async () => {
           setAllEvents(await dataApi.getEvents(userId));
           setEditEvent(null);
           setQuickAddTime(null);
           setQuickAddCategory("termin");
+          setLockEventCategory(false);
         }}
       />
 
