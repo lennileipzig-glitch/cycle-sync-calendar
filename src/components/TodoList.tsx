@@ -1,43 +1,36 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { fmtDate } from "@/lib/cycle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { dataApi, type Todo } from "@/lib/dataApi";
 
-interface Todo { id: string; title: string; completed: boolean; }
-
-export function TodoList({ userId, date }: { userId: string; date: Date }) {
+export function TodoList({ userId, date }: { userId: string | null; date: Date }) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [input, setInput] = useState("");
   const day = fmtDate(date);
 
-  const load = async () => {
-    const { data } = await supabase.from("todos").select("id,title,completed")
-      .eq("user_id", userId).eq("todo_date", day).order("created_at");
-    setTodos((data as Todo[]) ?? []);
-  };
+  const load = async () => setTodos(await dataApi.getTodos(userId, day));
   useEffect(() => { load(); }, [userId, day]);
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-    const { data } = await supabase.from("todos")
-      .insert({ user_id: userId, todo_date: day, title: input.trim() }).select().single();
-    if (data) setTodos(prev => [...prev, data as Todo]);
+    const t = await dataApi.addTodo(userId, day, input.trim());
+    if (t) setTodos(prev => [...prev, t]);
     setInput("");
   };
 
   const toggle = async (t: Todo) => {
     setTodos(prev => prev.map(x => x.id === t.id ? { ...x, completed: !x.completed } : x));
-    await supabase.from("todos").update({ completed: !t.completed }).eq("id", t.id);
+    await dataApi.toggleTodo(userId, t.id, !t.completed);
   };
 
   const remove = async (id: string) => {
     setTodos(prev => prev.filter(x => x.id !== id));
-    await supabase.from("todos").delete().eq("id", id);
+    await dataApi.deleteTodo(userId, id);
   };
 
   return (

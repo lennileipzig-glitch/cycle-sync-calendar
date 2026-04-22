@@ -3,8 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { fmtDate } from "@/lib/cycle";
+import { dataApi } from "@/lib/dataApi";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ const SYMPTOMS = ["Krämpfe", "Kopfschmerz", "Müdigkeit", "Reizbarkeit", "Heiß
 const ENERGY = [{ k: "niedrig", emoji: "🌙" }, { k: "mittel", emoji: "🌤" }, { k: "hoch", emoji: "☀️" }] as const;
 const MOODS = ["😊", "😌", "🙂", "😐", "😔", "😢", "😤", "🥰"];
 
-export function TrackerDialog({ userId, open, onOpenChange }: { userId: string; open: boolean; onOpenChange: (o: boolean) => void }) {
+export function TrackerDialog({ userId, open, onOpenChange }: { userId: string | null; open: boolean; onOpenChange: (o: boolean) => void }) {
   const [mood, setMood] = useState<string>("");
   const [energy, setEnergy] = useState<string>("");
   const [symptoms, setSymptoms] = useState<string[]>([]);
@@ -23,8 +23,7 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string; 
   useEffect(() => {
     if (!open) return;
     (async () => {
-      // Prefill from today's log, fallback to last log (e.g. ~28 days ago — same cycle phase)
-      const { data: todayLog } = await supabase.from("daily_logs").select("*").eq("user_id", userId).eq("log_date", today).maybeSingle();
+      const todayLog = await dataApi.getLog(userId, today);
       if (todayLog) {
         setMood(todayLog.mood ?? "");
         setEnergy(todayLog.energy_level ?? "");
@@ -32,9 +31,7 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string; 
         setNotes(todayLog.notes ?? "");
         return;
       }
-      const { data: prev } = await supabase
-        .from("daily_logs").select("*").eq("user_id", userId)
-        .order("log_date", { ascending: false }).limit(1).maybeSingle();
+      const prev = await dataApi.getLatestLog(userId);
       if (prev) {
         setMood(prev.mood ?? "");
         setEnergy(prev.energy_level ?? "");
@@ -48,13 +45,17 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string; 
 
   const save = async () => {
     setBusy(true);
-    const { error } = await supabase.from("daily_logs").upsert({
-      user_id: userId, log_date: today, mood: mood || null, energy_level: energy || null, symptoms, notes: notes || null,
-    }, { onConflict: "user_id,log_date" });
-    setBusy(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Eingetragen 🌿");
-    onOpenChange(false);
+    try {
+      await dataApi.upsertLog(userId, {
+        log_date: today, mood: mood || null, energy_level: energy || null, symptoms, notes: notes || null,
+      });
+      toast.success("Eingetragen 🌿");
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Fehler beim Speichern");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
