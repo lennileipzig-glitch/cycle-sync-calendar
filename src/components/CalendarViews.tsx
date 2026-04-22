@@ -138,7 +138,10 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
           const selected = isSameDay(d, selectedDate);
           const isToday = isSameDay(d, today);
           const key = fmtDate(d);
-          const events = eventsByDay[key] ?? [];
+          const allEvents = eventsByDay[key] ?? [];
+          const events = allEvents.filter(e => e.category !== "mahlzeit" && e.category !== "sport");
+          const hasMeal = allEvents.some(e => e.category === "mahlzeit");
+          const hasSport = allEvents.some(e => e.category === "sport");
           const todos = todosByDay[key] ?? [];
           const openTodos = todos.filter(t => !t.completed).length;
           const phaseColorVar = `hsl(var(--phase-${phase}))`;
