@@ -1,1 +1,7 @@
 project_id = "prjpstjmlahftpxioqfw"
+
+[functions.delete-account]
+verify_jwt = true
+
+[functions.cycle-recommendations]
+verify_jwt = false
