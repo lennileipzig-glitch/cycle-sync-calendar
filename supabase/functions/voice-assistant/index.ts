@@ -135,6 +135,66 @@ KATEGORIE-ZUORDNUNG (wichtig!):
             required: ["title", "date", "time", "confidence", "spoken_summary"],
           },
         },
+      {
+        type: "function",
+        function: {
+          name: "add_todo",
+          description: "Eine Aufgabe (To-do) für ein Datum eintragen – ohne feste Uhrzeit.",
+          parameters: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              date: { type: "string", description: "YYYY-MM-DD" },
+              energy_cost: { type: "number", description: "1-5, optional" },
+              confidence: { type: "string", enum: ["high", "medium", "low"] },
+              spoken_summary: { type: "string" },
+            },
+            required: ["title", "date", "confidence", "spoken_summary"],
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
+          name: "multi_action",
+          description: "Mehrere Aktionen aus einer Anweisung – ein Item pro erkanntem Sachverhalt.",
+          parameters: {
+            type: "object",
+            properties: {
+              items: {
+                type: "array",
+                minItems: 2,
+                items: {
+                  type: "object",
+                  properties: {
+                    kind: {
+                      type: "string",
+                      enum: ["meal", "sport", "appointment", "todo", "smart_plan_sport", "smart_plan_meal", "clarify_category"],
+                    },
+                    title: { type: "string" },
+                    date: { type: "string", description: "YYYY-MM-DD (Pflicht außer bei clarify_category ohne Hinweis)" },
+                    time: { type: "string", description: "HH:mm (nicht nötig für todo)" },
+                    duration_min: { type: "number" },
+                    energy_cost: { type: "number" },
+                    location: { type: "string" },
+                    details: { type: "string" },
+                    reasoning: { type: "string" },
+                    confidence: { type: "string", enum: ["high", "medium", "low"] },
+                    // Nur für kind=clarify_category:
+                    question: { type: "string" },
+                    options: {
+                      type: "array",
+                      items: { type: "string", enum: ["termin", "todo", "sport", "ernaehrung"] },
+                    },
+                  },
+                  required: ["kind", "title"],
+                },
+              },
+              spoken_summary: { type: "string", description: "Kurze deutsche Gesamt-Bestätigung." },
+            },
+            required: ["items", "spoken_summary"],
+          },
+        },
       },
       {
         type: "function",
