@@ -26,6 +26,7 @@ export type Database = {
           location: string | null
           recurrence_freq: string | null
           recurrence_until: string | null
+          shared_via: string | null
           source: string
           starts_at: string
           title: string
@@ -42,6 +43,7 @@ export type Database = {
           location?: string | null
           recurrence_freq?: string | null
           recurrence_until?: string | null
+          shared_via?: string | null
           source?: string
           starts_at: string
           title: string
@@ -58,10 +60,58 @@ export type Database = {
           location?: string | null
           recurrence_freq?: string | null
           recurrence_until?: string | null
+          shared_via?: string | null
           source?: string
           starts_at?: string
           title?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_shared_via_fkey"
+            columns: ["shared_via"]
+            isOneToOne: false
+            referencedRelation: "calendar_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_shares: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          id: string
+          invite_method: string
+          invite_token: string
+          owner_id: string
+          recipient_email: string | null
+          recipient_user_id: string | null
+          show_phases: boolean
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invite_method?: string
+          invite_token?: string
+          owner_id: string
+          recipient_email?: string | null
+          recipient_user_id?: string | null
+          show_phases?: boolean
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invite_method?: string
+          invite_token?: string
+          owner_id?: string
+          recipient_email?: string | null
+          recipient_user_id?: string | null
+          show_phases?: boolean
+          status?: string
         }
         Relationships: []
       }
@@ -205,7 +255,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_accepted_share: {
+        Args: { _owner: string; _viewer: string }
+        Returns: boolean
+      }
+      share_phase_visibility: {
+        Args: { _owner: string; _viewer: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
