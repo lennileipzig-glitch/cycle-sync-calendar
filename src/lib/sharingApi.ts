@@ -112,3 +112,10 @@ export const sharingApi = {
 
 export const buildShareLink = (token: string) =>
   `${window.location.origin}/share/${token}`;
+
+// Public iCal feed URL for Apple/Google Calendar subscriptions
+const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
+export const buildICalUrl = (token: string) =>
+  `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/calendar-feed/${token}.ics`;
+export const buildWebcalUrl = (token: string) =>
+  buildICalUrl(token).replace(/^https:\/\//, "webcal://");
