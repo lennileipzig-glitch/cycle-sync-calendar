@@ -45,12 +45,14 @@ const COST_LABEL = (c: number) => {
   return "sehr anstrengend";
 };
 
-export function EventDialog({ userId, date, open, onOpenChange, onCreated, event, initialTime }: Props) {
+export function EventDialog({ userId, date, open, onOpenChange, onCreated, event, initialTime, initialCategory, initialTitle, initialDetails }: Props) {
   const { guestMode } = useAuth();
   const { profile } = useProfile(userId ?? undefined, guestMode);
   const isEdit = !!event;
 
+  const [category, setCategory] = useState<EventCategory>("termin");
   const [title, setTitle] = useState("");
+  const [details, setDetails] = useState("");
   const [allDay, setAllDay] = useState(false);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
@@ -69,7 +71,9 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       const s = new Date(event.starts_at);
       const e = event.ends_at ? new Date(event.ends_at) : new Date(s.getTime() + 60 * 60 * 1000);
       const pad = (n: number) => n.toString().padStart(2, "0");
+      setCategory(event.category ?? "termin");
       setTitle(event.title ?? "");
+      setDetails(event.details ?? "");
       setAllDay(!!event.all_day);
       setStartTime(`${pad(s.getHours())}:${pad(s.getMinutes())}`);
       setEndTime(`${pad(e.getHours())}:${pad(e.getMinutes())}`);
@@ -79,24 +83,28 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       setRecurrence((event.recurrence_freq as Recurrence) ?? "none");
       setUntil(event.recurrence_until ?? "");
     } else {
-      setTitle("");
+      const cat: EventCategory = initialCategory ?? "termin";
+      setCategory(cat);
+      setTitle(initialTitle ?? "");
+      setDetails(initialDetails ?? "");
       setAllDay(false);
-      // Falls eine konkrete Uhrzeit übergeben wurde (z. B. Klick im Wochenraster)
-      const start = initialTime ?? "09:00";
-      setStartTime(start);
-      // Endzeit = +1h
-      const [h, m] = start.split(":").map(Number);
-      const endH = Math.min(23, h + 1);
+      // Sinnvolle Default-Zeiten je Kategorie
+      const defaultStart =
+        initialTime ?? (cat === "mahlzeit" ? "12:00" : cat === "sport" ? "18:00" : "09:00");
+      setStartTime(defaultStart);
+      const [h, m] = defaultStart.split(":").map(Number);
+      const durH = cat === "mahlzeit" ? 1 : cat === "sport" ? 1 : 1;
+      const endH = Math.min(23, h + durH);
       setEndTime(`${endH.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`);
       setLocation("");
-      setCost(3);
+      setCost(cat === "sport" ? 3.5 : cat === "mahlzeit" ? 1.5 : 3);
       setFlexible(false);
       setRecurrence("none");
       const u = new Date(date);
       u.setMonth(u.getMonth() + 3);
       setUntil(fmtDate(u));
     }
-  }, [open, date, event, initialTime]);
+  }, [open, date, event, initialTime, initialCategory, initialTitle, initialDetails]);
 
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const targetDate = flexible
