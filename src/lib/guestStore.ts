@@ -33,6 +33,8 @@ export interface GuestTodo {
   is_flexible?: boolean;
 }
 
+export type EventCategory = "termin" | "mahlzeit" | "sport";
+
 export interface GuestEvent {
   id: string;
   title: string;
@@ -47,6 +49,8 @@ export interface GuestEvent {
   recurrence_until?: string | null;
   user_id?: string | null;
   shared_via?: string | null;
+  category?: EventCategory;
+  details?: string | null;
   // UI-only Felder
   _shared_owner_name?: string | null;
   _shared_show_phases?: boolean;
