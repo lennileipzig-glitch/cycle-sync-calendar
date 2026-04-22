@@ -48,12 +48,15 @@ const NOTIFICATION_TOPIC_OPTIONS = [
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const { user, loading: authLoading, guestMode } = useAuth();
   const guest = guestMode || isGuest();
   const userId = user?.id ?? null;
   const { profile, update, loading } = useProfile(user?.id, guest);
 
   const [importKind, setImportKind] = useState<"csv" | "ics" | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [rated, setRated] = useState(false);
 
   // Lokale Form-States
   const [name, setName] = useState("");
