@@ -357,6 +357,14 @@ const Index = () => {
 
       <TrackerDialog userId={userId} open={trackerOpen} onOpenChange={setTrackerOpen} />
 
+      <EventDialog
+        userId={userId}
+        date={selectedDate}
+        open={eventDialogOpen}
+        onOpenChange={setEventDialogOpen}
+        onCreated={async () => setAllEvents(await dataApi.getEvents(userId))}
+      />
+
       <OnboardingDialog
         open={showOnboarding}
         initialName={profile.display_name}
