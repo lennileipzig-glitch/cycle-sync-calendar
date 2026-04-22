@@ -606,9 +606,18 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
                 </Card>
               )}
               <DialogFooter className="flex-wrap gap-2 sm:gap-2">
-                <Button variant="outline" onClick={() => { setPendingAction(null); setEditMode(false); setTranscript(""); }}>
+                <Button variant="outline" onClick={() => { setPendingAction(null); setEditMode(false); setQueue([]); setQueueProgress(null); setTranscript(""); setOpen(false); }}>
                   <X className="h-4 w-4 mr-1" /> Verwerfen
                 </Button>
+                {queue.length > 0 && (
+                  <Button variant="ghost" onClick={async () => {
+                    setPendingAction(null);
+                    setEditMode(false);
+                    await processNextAction(queue, (a) => executeActionRef.current(a));
+                  }}>
+                    Überspringen
+                  </Button>
+                )}
                 <Button variant="secondary" onClick={() => setEditMode((v) => !v)}>
                   <Pencil className="h-4 w-4 mr-1" /> {editMode ? "Fertig" : "Bearbeiten"}
                 </Button>
