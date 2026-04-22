@@ -30,7 +30,21 @@ const loadFridge = (): string[] => {
   try { const v = localStorage.getItem(FRIDGE_KEY); return v ? JSON.parse(v) : []; } catch { return []; }
 };
 
-export function Recommendations({ phase, energy, symptoms }: { phase: PhaseInfo; energy?: string | null; symptoms?: string[] }) {
+export function Recommendations({
+  phase,
+  energy,
+  symptoms,
+  selectedDate,
+  userId,
+  onEventAdded,
+}: {
+  phase: PhaseInfo;
+  energy?: string | null;
+  symptoms?: string[];
+  selectedDate: Date;
+  userId: string | null;
+  onEventAdded?: () => void;
+}) {
   const { user, guestMode } = useAuth();
   const { profile } = useProfile(user?.id, guestMode || isGuest());
   const [recipes, setRecipes] = useState<RecipeItem[]>([]);
