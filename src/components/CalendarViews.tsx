@@ -225,8 +225,8 @@ interface WeekProps extends DataMaps, QuickAdd {
   onSelectEvent?: (e: GuestEvent) => void;
 }
 
-const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 7:00 – 21:00
-const ROW_HEIGHT = 44; // px pro Stunde
+const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0:00 – 23:00 (ganzer Tag)
+const ROW_HEIGHT = 36; // px pro Stunde
 const ENERGY_LABEL: Record<string, string> = {
   "1": "sehr schlecht", "2": "schlecht", "3": "mittel", "4": "gut", "5": "sehr gut",
   niedrig: "schlecht", mittel: "mittel", hoch: "gut",
