@@ -1,24 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, CalendarDays, ListTodo, StickyNote, Activity } from "lucide-react";
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine,
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine,
 } from "recharts";
 import {
-  format, addDays, subDays, addWeeks, subWeeks, addMonths, subMonths, addYears, subYears,
-  startOfDay, startOfWeek, startOfMonth, startOfYear, endOfMonth, endOfYear, endOfWeek,
-  eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, isSameDay,
+  format, addWeeks, subWeeks, addMonths, subMonths, addYears, subYears,
+  startOfWeek, startOfMonth, startOfYear, endOfMonth, endOfYear, endOfWeek,
+  eachDayOfInterval, eachWeekOfInterval, subYears as subY,
 } from "date-fns";
 import { de } from "date-fns/locale";
 import { dataApi, type DailyLog } from "@/lib/dataApi";
 import { fmtDate } from "@/lib/cycle";
 import { cn } from "@/lib/utils";
 
-type Range = "day" | "week" | "month" | "year";
-const RANGES: Range[] = ["day", "week", "month", "year"];
-const RANGE_LABELS: Record<Range, string> = { day: "Tag", week: "Woche", month: "Monat", year: "Jahr" };
+type Range = "week" | "month" | "year";
+const RANGES: Range[] = ["week", "month", "year"];
+const RANGE_LABELS: Record<Range, string> = { week: "Woche", month: "Monat", year: "Jahr" };
 const ENERGY_LABELS = ["sehr schlecht", "schlecht", "mittel", "gut", "sehr gut"];
+const ENERGY_SHORT = ["😞", "😕", "😐", "🙂", "🤩"];
 
 const energyToNum = (raw: string | null | undefined): number | null => {
   if (!raw) return null;
@@ -41,17 +42,11 @@ export function EnergyChart({ userId }: { userId: string | null }) {
   const [selectedTodos, setSelectedTodos] = useState<{ id: string; title: string; completed: boolean }[]>([]);
   const [selectedEvents, setSelectedEvents] = useState<{ id: string; title: string; starts_at: string; all_day: boolean }[]>([]);
 
-  // Lade ALLE Logs einmalig (clientseitig gefiltert; bei Bedarf später paginieren)
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // Nutze einen breiten Bereich: letzte 2 Jahre
       const end = new Date();
-      const start = subYears(end, 2);
-      const days = eachDayOfInterval({ start, end });
-      const out: DailyLog[] = [];
-      // Wir holen pro Tag (langsam für Supabase) – effizienter wäre ein Range-Query.
-      // Für jetzt: ein Bulk-Query.
+      const start = subY(end, 2);
       const all = await fetchLogsBulk(userId, fmtDate(start), fmtDate(end));
       if (cancelled) return;
       setLogs(all);
@@ -59,25 +54,23 @@ export function EnergyChart({ userId }: { userId: string | null }) {
     return () => { cancelled = true; };
   }, [userId]);
 
-  const { data, domain, viewLabel } = useMemo(() => buildSeries(range, anchor, logs), [range, anchor, logs]);
+  const { data, viewLabel, stats } = useMemo(() => buildSeries(range, anchor, logs), [range, anchor, logs]);
 
   const handlePrev = () => {
-    if (range === "day") setAnchor(d => subDays(d, 1));
-    else if (range === "week") setAnchor(d => subWeeks(d, 1));
+    if (range === "week") setAnchor(d => subWeeks(d, 1));
     else if (range === "month") setAnchor(d => subMonths(d, 1));
     else setAnchor(d => subYears(d, 1));
   };
   const handleNext = () => {
-    if (range === "day") setAnchor(d => addDays(d, 1));
-    else if (range === "week") setAnchor(d => addWeeks(d, 1));
+    if (range === "week") setAnchor(d => addWeeks(d, 1));
     else if (range === "month") setAnchor(d => addMonths(d, 1));
     else setAnchor(d => addYears(d, 1));
   };
 
-  // Punkt-Klick → Drilldown-Card
   const handleClick = async (e: { activePayload?: Array<{ payload: Point }> } | null) => {
     if (!e?.activePayload?.[0]) return;
     const p = e.activePayload[0].payload;
+    if (range === "year") return; // Jahresansicht: keine Tagesdetails
     const d = new Date(p.date);
     setSelected(d);
     const dateStr = fmtDate(d);
@@ -92,21 +85,26 @@ export function EnergyChart({ userId }: { userId: string | null }) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="space-y-5">
+      {/* Header: Navigation + Range Switch */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={handlePrev} aria-label="Zurück"><ChevronLeft className="h-4 w-4" /></Button>
-          <h4 className="text-base px-2 min-w-[200px] text-center capitalize">{viewLabel}</h4>
-          <Button variant="ghost" size="icon" onClick={handleNext} aria-label="Vor"><ChevronRight className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" onClick={handlePrev} aria-label="Zurück" className="h-8 w-8 rounded-full">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h4 className="text-sm font-medium px-2 min-w-[180px] text-center capitalize tracking-tight">{viewLabel}</h4>
+          <Button variant="ghost" size="icon" onClick={handleNext} aria-label="Vor" className="h-8 w-8 rounded-full">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
-        <div className="flex items-center gap-1 bg-muted rounded-full p-1">
+        <div className="flex items-center gap-0.5 bg-muted/60 backdrop-blur rounded-full p-1 border border-border/50">
           {RANGES.map(r => (
             <Button
               key={r}
               variant={range === r ? "default" : "ghost"}
               size="sm"
-              className="rounded-full"
-              onClick={() => setRange(r)}
+              className={cn("rounded-full h-7 px-4 text-xs transition-all", range === r && "shadow-sm")}
+              onClick={() => { setRange(r); setSelected(null); }}
             >
               {RANGE_LABELS[r]}
             </Button>
@@ -114,73 +112,121 @@ export function EnergyChart({ userId }: { userId: string | null }) {
         </div>
       </div>
 
-      <div className="h-[260px] w-full">
-        <ResponsiveContainer>
-          <LineChart data={data} onClick={handleClick} margin={{ top: 10, right: 12, bottom: 0, left: -20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} interval="preserveStartEnd" />
-            <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tickFormatter={(v) => ENERGY_LABELS[v - 1] ?? ""} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} width={90} />
-            <Tooltip
-              contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
-              formatter={(v: number) => [v ? `${ENERGY_LABELS[v - 1]} (${v}/5)` : "—", "Energie"]}
-              labelFormatter={(l) => l}
-            />
-            <ReferenceLine y={3} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 4" />
-            <Line
-              type="monotone"
-              dataKey="energy"
-              stroke="hsl(var(--primary))"
-              strokeWidth={2}
-              dot={{ r: 3, fill: "hsl(var(--primary))" }}
-              activeDot={{ r: 6 }}
-              connectNulls
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      {/* Stats Strip */}
+      <div className="grid grid-cols-3 gap-2">
+        <StatPill label="Ø Energie" value={stats.avg !== null ? `${stats.avg.toFixed(1)}/5` : "—"} icon={<Activity className="h-3.5 w-3.5" />} />
+        <StatPill label="Bester Tag" value={stats.bestLabel ?? "—"} accent />
+        <StatPill label="Erfasst" value={`${stats.tracked}/${stats.total}`} />
       </div>
 
-      <p className="text-[11px] text-muted-foreground text-center">
-        Tipp: Klicke einen Punkt an, um die Tagesdetails zu sehen.
-      </p>
+      {/* Chart */}
+      <Card className="p-3 pt-5 bg-gradient-to-br from-card via-card to-primary/[0.03] border-border/60 shadow-sm">
+        <div className="h-[260px] w-full">
+          <ResponsiveContainer>
+            <AreaChart data={data} onClick={handleClick} margin={{ top: 10, right: 16, bottom: 0, left: -24 }}>
+              <defs>
+                <linearGradient id="energyFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" vertical={false} opacity={0.5} />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                interval="preserveStartEnd"
+                axisLine={false}
+                tickLine={false}
+                dy={6}
+              />
+              <YAxis
+                domain={[1, 5]}
+                ticks={[1, 2, 3, 4, 5]}
+                tickFormatter={(v) => ENERGY_SHORT[v - 1] ?? ""}
+                tick={{ fontSize: 14 }}
+                axisLine={false}
+                tickLine={false}
+                width={36}
+              />
+              <Tooltip
+                cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "3 3", opacity: 0.4 }}
+                contentStyle={{
+                  background: "hsl(var(--popover))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: 12,
+                  fontSize: 12,
+                  boxShadow: "0 8px 24px -8px hsl(var(--primary) / 0.15)",
+                  padding: "8px 12px",
+                }}
+                formatter={(v: number) => [v ? `${ENERGY_SHORT[Math.round(v) - 1]} ${ENERGY_LABELS[Math.round(v) - 1]} (${v}/5)` : "—", "Energie"]}
+                labelFormatter={(l) => l}
+              />
+              <ReferenceLine y={3} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 4" opacity={0.4} />
+              <Area
+                type="monotone"
+                dataKey="energy"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2.5}
+                fill="url(#energyFill)"
+                dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                activeDot={{ r: 6, stroke: "hsl(var(--background))", strokeWidth: 2 }}
+                connectNulls
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
 
+        {range !== "year" && (
+          <p className="text-[10px] text-muted-foreground/80 text-center mt-2 flex items-center justify-center gap-1">
+            <Sparkles className="h-3 w-3" /> Tippe einen Punkt für Tagesdetails
+          </p>
+        )}
+      </Card>
+
+      {/* Drilldown */}
       {selected && (
-        <Card className="p-4 space-y-3 border-primary/30">
+        <Card className="p-5 space-y-4 border-primary/30 bg-gradient-to-br from-card to-primary/5 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="flex items-center justify-between">
-            <h4 className="font-medium capitalize">{format(selected, "EEEE, d. MMMM yyyy", { locale: de })}</h4>
-            <Button variant="ghost" size="sm" onClick={() => setSelected(null)}>Schließen</Button>
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-primary/70 font-medium">Tagesdetails</div>
+              <h4 className="font-medium capitalize text-base mt-0.5">{format(selected, "EEEE, d. MMMM yyyy", { locale: de })}</h4>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setSelected(null)} className="rounded-full">Schließen</Button>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-3 text-sm">
-            <div className="p-3 rounded-lg bg-muted/40">
-              <div className="text-xs text-muted-foreground mb-1">Energie</div>
-              <div className="font-medium capitalize">
-                {selectedLog?.energy_level
-                  ? `${ENERGY_LABELS[(energyToNum(selectedLog.energy_level) ?? 3) - 1]} (${energyToNum(selectedLog.energy_level)}/5)`
-                  : "Nicht erfasst"}
-              </div>
-            </div>
-            <div className="p-3 rounded-lg bg-muted/40">
-              <div className="text-xs text-muted-foreground mb-1">Beschwerden</div>
-              <div className="font-medium">
-                {selectedLog?.symptoms?.length ? selectedLog.symptoms.join(", ") : "Keine"}
-              </div>
-            </div>
+            <DetailTile
+              icon={<Activity className="h-4 w-4" />}
+              label="Energie"
+              value={selectedLog?.energy_level
+                ? `${ENERGY_SHORT[(energyToNum(selectedLog.energy_level) ?? 3) - 1]} ${ENERGY_LABELS[(energyToNum(selectedLog.energy_level) ?? 3) - 1]} (${energyToNum(selectedLog.energy_level)}/5)`
+                : "Nicht erfasst"}
+            />
+            <DetailTile
+              icon={<Sparkles className="h-4 w-4" />}
+              label="Beschwerden"
+              value={selectedLog?.symptoms?.length ? selectedLog.symptoms.join(", ") : "Keine"}
+            />
           </div>
 
           {selectedLog?.notes && (
-            <div className="p-3 rounded-lg bg-muted/40 text-sm">
-              <div className="text-xs text-muted-foreground mb-1">Notiz an mich</div>
-              <div className="whitespace-pre-wrap">{selectedLog.notes}</div>
+            <div className="p-4 rounded-xl bg-muted/40 border border-border/50">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                <StickyNote className="h-3.5 w-3.5" /> Notiz an mich
+              </div>
+              <div className="whitespace-pre-wrap text-sm leading-relaxed">{selectedLog.notes}</div>
             </div>
           )}
 
           <div className="grid sm:grid-cols-2 gap-3 text-sm">
-            <div className="p-3 rounded-lg bg-muted/40">
-              <div className="text-xs text-muted-foreground mb-2">Termine</div>
+            <div className="p-4 rounded-xl bg-muted/40 border border-border/50">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5" /> Termine
+              </div>
               {selectedEvents.length === 0
-                ? <div className="italic text-muted-foreground">Keine</div>
+                ? <div className="italic text-muted-foreground text-xs">Keine</div>
                 : <ul className="space-y-1">{selectedEvents.map(e => (
-                    <li key={e.id} className="truncate">
+                    <li key={e.id} className="truncate text-sm">
                       • {e.title}
                       <span className="text-muted-foreground text-xs ml-1">
                         {e.all_day ? "ganztägig" : format(new Date(e.starts_at), "HH:mm")}
@@ -188,12 +234,14 @@ export function EnergyChart({ userId }: { userId: string | null }) {
                     </li>
                   ))}</ul>}
             </div>
-            <div className="p-3 rounded-lg bg-muted/40">
-              <div className="text-xs text-muted-foreground mb-2">To-dos</div>
+            <div className="p-4 rounded-xl bg-muted/40 border border-border/50">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                <ListTodo className="h-3.5 w-3.5" /> To-dos
+              </div>
               {selectedTodos.length === 0
-                ? <div className="italic text-muted-foreground">Keine</div>
+                ? <div className="italic text-muted-foreground text-xs">Keine</div>
                 : <ul className="space-y-1">{selectedTodos.map(t => (
-                    <li key={t.id} className={cn("truncate", t.completed && "line-through text-muted-foreground")}>• {t.title}</li>
+                    <li key={t.id} className={cn("truncate text-sm", t.completed && "line-through text-muted-foreground")}>• {t.title}</li>
                   ))}</ul>}
             </div>
           </div>
@@ -203,11 +251,36 @@ export function EnergyChart({ userId }: { userId: string | null }) {
   );
 }
 
+// ---- Subcomponents ----
+
+function StatPill({ label, value, icon, accent }: { label: string; value: string; icon?: React.ReactNode; accent?: boolean }) {
+  return (
+    <div className={cn(
+      "rounded-xl px-3 py-2.5 border transition-colors",
+      accent ? "bg-primary/10 border-primary/30" : "bg-muted/40 border-border/50"
+    )}>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+        {icon}{label}
+      </div>
+      <div className={cn("text-sm font-semibold mt-0.5 truncate", accent && "text-primary")}>{value}</div>
+    </div>
+  );
+}
+
+function DetailTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="p-4 rounded-xl bg-muted/40 border border-border/50">
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5 flex items-center gap-1.5">
+        {icon}{label}
+      </div>
+      <div className="font-medium capitalize text-sm">{value}</div>
+    </div>
+  );
+}
+
 // ---- Helpers ----
 
 async function fetchLogsBulk(userId: string | null, fromDate: string, toDate: string): Promise<DailyLog[]> {
-  // Verwende die SDK-Funktion direkt: getLog ist pro Tag — wir bauen einen einfachen Range-Loader.
-  // Für Supabase: filter, für Guest: alle aus Store.
   const { isGuest, guestStore } = await import("@/lib/guestStore");
   if (isGuest()) {
     return guestStore.getLogs()
@@ -226,59 +299,42 @@ async function fetchLogsBulk(userId: string | null, fromDate: string, toDate: st
   return (data as DailyLog[]) ?? [];
 }
 
-function buildSeries(range: Range, anchor: Date, logs: DailyLog[]): { data: Point[]; domain: [Date, Date]; viewLabel: string } {
+interface SeriesResult {
+  data: Point[];
+  viewLabel: string;
+  stats: { avg: number | null; bestLabel: string | null; tracked: number; total: number };
+}
+
+function buildSeries(range: Range, anchor: Date, logs: DailyLog[]): SeriesResult {
   const logsByDay = new Map<string, DailyLog>();
   logs.forEach(l => logsByDay.set(l.log_date, l));
 
-  if (range === "day") {
-    // Einzelner Tag: zeige diesen Tag + 6 Tage drumherum (kontextuelle Mini-Serie)
-    const start = subDays(anchor, 3);
-    const end = addDays(anchor, 3);
-    const days = eachDayOfInterval({ start, end });
-    return {
-      data: days.map(d => {
-        const log = logsByDay.get(fmtDate(d));
-        return { date: fmtDate(d), label: format(d, "EEE d.", { locale: de }), energy: energyToNum(log?.energy_level), raw: log };
-      }),
-      domain: [start, end],
-      viewLabel: format(anchor, "EEEE, d. MMMM yyyy", { locale: de }),
-    };
-  }
+  let data: Point[] = [];
+  let viewLabel = "";
 
   if (range === "week") {
     const start = startOfWeek(anchor, { weekStartsOn: 1 });
     const end = endOfWeek(anchor, { weekStartsOn: 1 });
     const days = eachDayOfInterval({ start, end });
-    return {
-      data: days.map(d => {
-        const log = logsByDay.get(fmtDate(d));
-        return { date: fmtDate(d), label: format(d, "EEE d.", { locale: de }), energy: energyToNum(log?.energy_level), raw: log };
-      }),
-      domain: [start, end],
-      viewLabel: `KW ${format(anchor, "I", { locale: de })} · ${format(start, "d. MMM", { locale: de })} – ${format(end, "d. MMM yyyy", { locale: de })}`,
-    };
-  }
-
-  if (range === "month") {
+    data = days.map(d => {
+      const log = logsByDay.get(fmtDate(d));
+      return { date: fmtDate(d), label: format(d, "EEE d.", { locale: de }), energy: energyToNum(log?.energy_level), raw: log };
+    });
+    viewLabel = `KW ${format(anchor, "I", { locale: de })} · ${format(start, "d. MMM", { locale: de })} – ${format(end, "d. MMM yyyy", { locale: de })}`;
+  } else if (range === "month") {
     const start = startOfMonth(anchor);
     const end = endOfMonth(anchor);
     const days = eachDayOfInterval({ start, end });
-    return {
-      data: days.map(d => {
-        const log = logsByDay.get(fmtDate(d));
-        return { date: fmtDate(d), label: format(d, "d.", { locale: de }), energy: energyToNum(log?.energy_level), raw: log };
-      }),
-      domain: [start, end],
-      viewLabel: format(anchor, "MMMM yyyy", { locale: de }),
-    };
-  }
-
-  // year: Wochenmittelwerte über 52 Wochen
-  const start = startOfYear(anchor);
-  const end = endOfYear(anchor);
-  const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
-  return {
-    data: weeks.map(wkStart => {
+    data = days.map(d => {
+      const log = logsByDay.get(fmtDate(d));
+      return { date: fmtDate(d), label: format(d, "d.", { locale: de }), energy: energyToNum(log?.energy_level), raw: log };
+    });
+    viewLabel = format(anchor, "MMMM yyyy", { locale: de });
+  } else {
+    const start = startOfYear(anchor);
+    const end = endOfYear(anchor);
+    const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+    data = weeks.map(wkStart => {
       const wkEnd = endOfWeek(wkStart, { weekStartsOn: 1 });
       const days = eachDayOfInterval({ start: wkStart, end: wkEnd });
       const vals = days.map(d => energyToNum(logsByDay.get(fmtDate(d))?.energy_level)).filter((v): v is number => v !== null);
@@ -288,8 +344,19 @@ function buildSeries(range: Range, anchor: Date, logs: DailyLog[]): { data: Poin
         label: format(wkStart, "MMM", { locale: de }),
         energy: avg !== null ? Math.round(avg * 10) / 10 : null,
       };
-    }),
-    domain: [start, end],
-    viewLabel: format(anchor, "yyyy"),
+    });
+    viewLabel = format(anchor, "yyyy");
+  }
+
+  // Stats
+  const valid = data.filter(p => p.energy !== null) as (Point & { energy: number })[];
+  const avg = valid.length ? valid.reduce((s, p) => s + p.energy, 0) / valid.length : null;
+  const best = valid.reduce<(Point & { energy: number }) | null>((acc, p) => (!acc || p.energy > acc.energy) ? p : acc, null);
+  const bestLabel = best ? best.label : null;
+
+  return {
+    data,
+    viewLabel,
+    stats: { avg, bestLabel, tracked: valid.length, total: data.length },
   };
 }
