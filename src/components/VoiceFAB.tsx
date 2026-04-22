@@ -496,10 +496,18 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
                   </Button>
                 ))}
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => { setPendingAction(null); setTranscript(""); }}>
+              <DialogFooter className="flex-wrap gap-2">
+                <Button variant="outline" onClick={() => { setPendingAction(null); setQueue([]); setQueueProgress(null); setTranscript(""); setOpen(false); }}>
                   <X className="h-4 w-4 mr-1" /> Abbrechen
                 </Button>
+                {queue.length > 0 && (
+                  <Button variant="ghost" onClick={async () => {
+                    setPendingAction(null);
+                    await processNextAction(queue, (a) => executeActionRef.current(a));
+                  }}>
+                    Überspringen
+                  </Button>
+                )}
               </DialogFooter>
             </div>
           )}
