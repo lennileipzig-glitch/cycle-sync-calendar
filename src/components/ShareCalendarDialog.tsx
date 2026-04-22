@@ -96,6 +96,15 @@ export function ShareCalendarDialog({ ownerId, open, onOpenChange }: Props) {
     toast.success("Link kopiert");
   };
 
+  const copyICal = async (token: string) => {
+    await navigator.clipboard.writeText(buildICalUrl(token));
+    toast.success("iCal-Link kopiert – in Apple/Google Kalender als Abo einfügen");
+  };
+
+  const openInExternal = (token: string) => {
+    window.location.href = buildWebcalUrl(token);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
