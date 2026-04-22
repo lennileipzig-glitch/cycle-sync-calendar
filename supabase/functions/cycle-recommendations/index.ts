@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
                   title: { type: "string" },
                   why: { type: "string", description: "Warum jetzt passend (1 Satz)" },
                   nutrients: { type: "array", items: { type: "string" } },
+                  uses_from_fridge: { type: "array", items: { type: "string" }, description: "Welche der vorhandenen Kühlschrank-Zutaten verwendet werden" },
                 },
                 required: ["title", "why", "nutrients"],
               },
