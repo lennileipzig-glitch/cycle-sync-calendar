@@ -29,6 +29,8 @@ export interface GuestTodo {
   todo_date: string;
   title: string;
   completed: boolean;
+  energy_cost?: number | null;
+  is_flexible?: boolean;
 }
 
 export interface GuestEvent {
@@ -39,6 +41,10 @@ export interface GuestEvent {
   all_day: boolean;
   location: string | null;
   source: string;
+  energy_cost?: number | null;
+  is_flexible?: boolean;
+  recurrence_freq?: "daily" | "weekly" | "monthly" | null;
+  recurrence_until?: string | null;
 }
 
 const read = <T>(key: string, fallback: T): T => {
