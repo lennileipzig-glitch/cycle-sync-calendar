@@ -39,6 +39,7 @@ const Index = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<GuestEvent | null>(null);
   const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
+  const [quickAddTime, setQuickAddTime] = useState<string | null>(null);
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null>(null);
   const [allEvents, setAllEvents] = useState<GuestEvent[]>([]);
   const [weekTodos, setWeekTodos] = useState<{ id: string; title: string; completed: boolean; todo_date: string }[]>([]);
