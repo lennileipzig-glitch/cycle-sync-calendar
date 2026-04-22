@@ -2,21 +2,30 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Salad, Dumbbell, Refrigerator, X, Plus, CalendarPlus } from "lucide-react";
+import { Sparkles, Loader2, Salad, Dumbbell, Refrigerator, X, Plus, CalendarPlus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import type { PhaseInfo } from "@/lib/cycle";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
-import { isGuest } from "@/lib/guestStore";
+import { isGuest, type GuestEvent } from "@/lib/guestStore";
 import { dataApi } from "@/lib/dataApi";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { InlineAddMeal } from "@/components/InlineAddMeal";
 import { InlineAddSport } from "@/components/InlineAddSport";
+import { cn } from "@/lib/utils";
 
 interface RecipeItem { title: string; why: string; nutrients: string[]; uses_from_fridge?: string[]; }
 interface WorkoutItem { title: string; duration: string; intensity: string; why: string; }
+
+const intensityWord = (v: number) => {
+  if (v <= 1.5) return "sehr leicht";
+  if (v <= 2.5) return "leicht";
+  if (v <= 3.5) return "mittel";
+  if (v <= 4.5) return "intensiv";
+  return "sehr intensiv";
+};
 
 const FRIDGE_KEY = "fravia-fridge-items";
 
