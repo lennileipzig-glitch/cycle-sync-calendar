@@ -143,11 +143,12 @@ export function EnergyChart({ userId }: { userId: string | null }) {
               <YAxis
                 domain={[1, 5]}
                 ticks={[1, 2, 3, 4, 5]}
-                tickFormatter={(v) => ENERGY_SHORT[v - 1] ?? ""}
-                tick={{ fontSize: 14 }}
+                tickFormatter={(v) => ENERGY_LABELS[v - 1] ?? ""}
+                tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false}
                 tickLine={false}
-                width={36}
+                width={68}
+                interval={0}
               />
               <Tooltip
                 cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "3 3", opacity: 0.4 }}
