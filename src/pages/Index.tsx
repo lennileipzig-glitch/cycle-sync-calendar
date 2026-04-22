@@ -330,6 +330,10 @@ const Index = () => {
           )}
         </div>
 
+        {(zoom === "week" || zoom === "month") && (
+          <PhaseLegend className="px-1" />
+        )}
+
         {zoom === "day" && (
           <>
             {/* Phasen-Info kompakt: nur Phase, Tag in Phase, kurzer Text */}
