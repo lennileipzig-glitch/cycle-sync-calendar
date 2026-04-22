@@ -649,17 +649,43 @@ interface DayProps extends DataMaps {
   onAddEvent?: () => void;
   onAddTodo?: () => void;
   onEditEvent?: (e: GuestEvent) => void;
+  /** Optional: User-ID für Inline-Anlegen von Mahlzeit/Sport */
+  userId?: string | null;
+  /** Wird aufgerufen, wenn eine Mahlzeit/Sport-Einheit hinzugefügt oder gelöscht wurde */
+  onEventChanged?: () => void;
 }
 
 const energyToNum = (raw?: string | null) => energyToFloat(raw);
 
-export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker, onAddEvent, onAddTodo, onEditEvent }: DayProps) {
+const intensityWord = (v: number) => {
+  if (v <= 1.5) return "sehr leicht";
+  if (v <= 2.5) return "leicht";
+  if (v <= 3.5) return "mittel";
+  if (v <= 4.5) return "intensiv";
+  return "sehr intensiv";
+};
+
+export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker, onAddEvent, onAddTodo, onEditEvent, userId, onEventChanged }: DayProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const today = new Date();
   const energy = energyToNum(log?.energy_level);
   const phase = phaseForDate(selectedDate, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+
+  const meals = events.filter(e => e.category === "mahlzeit");
+  const sports = events.filter(e => e.category === "sport");
+  const termine = events.filter(e => e.category !== "mahlzeit" && e.category !== "sport");
+
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm("Wirklich löschen?")) return;
+    try {
+      await dataApi.deleteEvent(userId ?? null, id);
+      onEventChanged?.();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <div className="animate-fade-in space-y-4">
