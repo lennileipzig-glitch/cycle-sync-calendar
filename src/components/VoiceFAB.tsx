@@ -208,7 +208,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
     const p = pendingAction.payload;
     const today = format(new Date(), "yyyy-MM-dd");
     const date = p.suggested_date ?? today;
-    const title = p.suggested_title ?? transcript.trim().slice(0, 80) || "Neuer Eintrag";
+    const title = p.suggested_title ?? (transcript.trim().slice(0, 80) || "Neuer Eintrag");
 
     // To-do direkt anlegen (ohne Edge-Function-Roundtrip)
     if (choice === "todo") {
@@ -235,7 +235,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
   }, [pendingAction, transcript, userId, onChanged, toast, sendToAssistant]);
 
   const executeAction = useCallback(async (act: VoiceAction) => {
-    if (act.action === "clarify" || act.action === "suggest_recipe") return;
+    if (act.action === "clarify" || act.action === "clarify_category" || act.action === "suggest_recipe") return;
     const p = act.payload;
     const category: "termin" | "mahlzeit" | "sport" =
       act.action === "add_meal" || act.action === "smart_plan_meal" ? "mahlzeit" :
