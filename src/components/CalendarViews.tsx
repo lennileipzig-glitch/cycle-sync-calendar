@@ -225,7 +225,8 @@ interface WeekProps extends DataMaps, QuickAdd {
   onSelectEvent?: (e: GuestEvent) => void;
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0:00 – 23:00 (ganzer Tag)
+const HOURS = Array.from({ length: 24 }, (_, i) => i); // klickbare Slots: 0:00 – 23:00
+const HOUR_LABELS = Array.from({ length: 25 }, (_, i) => i); // Labels: 0:00 – 24:00
 const ROW_HEIGHT = 36; // px pro Stunde
 const ENERGY_LABEL: Record<string, string> = {
   "1": "sehr schlecht", "2": "schlecht", "3": "mittel", "4": "gut", "5": "sehr gut",
@@ -343,10 +344,10 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
       {/* Stundenraster (scrollbar, ganzer Tag 0–24h) */}
       <div className="rounded-lg border border-border/40 overflow-hidden">
         <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 relative max-h-[60vh] overflow-y-auto">
-          {/* Zeit-Spalte */}
+          {/* Zeit-Spalte (inkl. 24:00 als Endmarker) */}
           <div className="flex flex-col sticky left-0 bg-background z-10">
-            {HOURS.map(h => (
-              <div key={h} style={{ height: ROW_HEIGHT }} className="text-[10px] text-muted-foreground text-right pr-1 -mt-1.5">
+            {HOUR_LABELS.map(h => (
+              <div key={h} style={{ height: h === 24 ? 0 : ROW_HEIGHT }} className="text-[10px] text-muted-foreground text-right pr-1 -mt-1.5">
                 {h.toString().padStart(2, "0")}:00
               </div>
             ))}
@@ -484,7 +485,47 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
         </div>
       </div>
 
-      {/* Mahlzeiten-Zeile (zwischen Stundenraster und To-dos) */}
+      {/* Post-It Reihe für Todos pro Tag */}
+      <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 pt-1">
+        <div className="text-[10px] text-muted-foreground self-start text-right pr-1 pt-1 leading-tight">
+          To-dos
+        </div>
+        {days.map(d => {
+          const key = fmtDate(d);
+          const todos = todosByDay[key] ?? [];
+          return (
+            <div key={d.toISOString()} className="min-h-[3rem]">
+              {todos.length === 0 ? (
+                <button
+                  onClick={() => onAddTodoForDate?.(d)}
+                  className="w-full h-full min-h-[3rem] rounded-md border border-dashed border-border/50 text-[10px] text-muted-foreground/60 hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center"
+                  aria-label="Aufgabe hinzufügen"
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
+              ) : (
+                <div
+                  className="rounded-md p-1.5 shadow-sm border bg-accent/50 border-accent"
+                  style={{ transform: "rotate(-0.5deg)" }}
+                >
+                  <ul className="space-y-0.5">
+                    {todos.slice(0, 3).map(t => (
+                      <li key={t.id} className={cn("text-[10px] leading-tight truncate", t.completed && "line-through opacity-60")}>
+                        • {t.title}
+                      </li>
+                    ))}
+                    {todos.length > 3 && (
+                      <li className="text-[9px] text-muted-foreground">+{todos.length - 3} weitere</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Mahlzeiten-Zeile (unter den To-dos) */}
       <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 pt-1">
         <div className="text-[10px] text-muted-foreground self-start text-right pr-1 pt-1 leading-tight">
           Mahlzeiten
@@ -538,46 +579,6 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                       + weitere
                     </button>
                   )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Post-It Reihe für Todos pro Tag */}
-      <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 pt-1">
-        <div className="text-[10px] text-muted-foreground self-start text-right pr-1 pt-1 leading-tight">
-          To-dos
-        </div>
-        {days.map(d => {
-          const key = fmtDate(d);
-          const todos = todosByDay[key] ?? [];
-          return (
-            <div key={d.toISOString()} className="min-h-[3rem]">
-              {todos.length === 0 ? (
-                <button
-                  onClick={() => onAddTodoForDate?.(d)}
-                  className="w-full h-full min-h-[3rem] rounded-md border border-dashed border-border/50 text-[10px] text-muted-foreground/60 hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center"
-                  aria-label="Aufgabe hinzufügen"
-                >
-                  <Plus className="h-3 w-3" />
-                </button>
-              ) : (
-                <div
-                  className="rounded-md p-1.5 shadow-sm border bg-accent/50 border-accent"
-                  style={{ transform: "rotate(-0.5deg)" }}
-                >
-                  <ul className="space-y-0.5">
-                    {todos.slice(0, 3).map(t => (
-                      <li key={t.id} className={cn("text-[10px] leading-tight truncate", t.completed && "line-through opacity-60")}>
-                        • {t.title}
-                      </li>
-                    ))}
-                    {todos.length > 3 && (
-                      <li className="text-[9px] text-muted-foreground">+{todos.length - 3} weitere</li>
-                    )}
-                  </ul>
                 </div>
               )}
             </div>
