@@ -3,9 +3,9 @@ import { de } from "date-fns/locale";
 import { phaseForDate } from "@/lib/cycle";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/hooks/useProfile";
-import type { GuestEvent } from "@/lib/guestStore";
+import type { GuestEvent, EventCategory } from "@/lib/guestStore";
 import { fmtDate } from "@/lib/cycle";
-import { CheckCircle2, Circle, Plus, CalendarPlus, ListPlus } from "lucide-react";
+import { CheckCircle2, Circle, Plus, CalendarPlus, ListPlus, UtensilsCrossed, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
