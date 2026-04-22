@@ -186,7 +186,7 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
     setDeleting(true);
     try {
       await dataApi.deleteEvent(userId, event.id);
-      toast.success("Termin gelöscht");
+      toast.success("Gelöscht");
       onOpenChange(false);
       onCreated?.();
     } catch (e) {
@@ -197,18 +197,66 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
     }
   };
 
+  const titleByCat: Record<EventCategory, string> = {
+    termin: isEdit ? "Termin bearbeiten" : "Neuer Termin",
+    mahlzeit: isEdit ? "Mahlzeit bearbeiten" : "Mahlzeit hinzufügen",
+    sport: isEdit ? "Sport-Einheit bearbeiten" : "Sport-Einheit hinzufügen",
+  };
+  const placeholderByCat: Record<EventCategory, string> = {
+    termin: "z. B. Yoga, Arzttermin",
+    mahlzeit: "z. B. Quark mit Beeren",
+    sport: "z. B. Boxkurs, Spaziergang",
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Termin bearbeiten" : "Neuer Termin"}</DialogTitle>
+          <DialogTitle>{titleByCat[category]}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="ev-title">Titel</Label>
-            <Input id="ev-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="z. B. Yoga, Arzttermin" autoFocus />
+          {/* Kategorie-Auswahl */}
+          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg bg-muted">
+            {([
+              { v: "termin", icon: CalendarCheck, label: "Termin" },
+              { v: "mahlzeit", icon: UtensilsCrossed, label: "Mahlzeit" },
+              { v: "sport", icon: Dumbbell, label: "Sport" },
+            ] as const).map(({ v, icon: Icon, label }) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setCategory(v)}
+                className={`flex items-center justify-center gap-1.5 text-xs py-1.5 rounded-md transition-colors ${
+                  category === v
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="ev-title">Titel</Label>
+            <Input id="ev-title" value={title} onChange={e => setTitle(e.target.value)} placeholder={placeholderByCat[category]} autoFocus />
+          </div>
+
+          {category !== "termin" && (
+            <div className="space-y-2">
+              <Label htmlFor="ev-details">
+                {category === "mahlzeit" ? "Notizen / Rezept" : "Beschreibung / Übungen"} <span className="text-muted-foreground text-xs">(optional)</span>
+              </Label>
+              <Textarea
+                id="ev-details"
+                value={details}
+                onChange={e => setDetails(e.target.value)}
+                placeholder={category === "mahlzeit" ? "Zutaten, Zubereitung, …" : "z. B. 3×10 Liegestütze, Cardio-Block …"}
+                rows={3}
+              />
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <Label htmlFor="ev-allday">Ganztägig</Label>
             <Switch id="ev-allday" checked={allDay} onCheckedChange={setAllDay} />
