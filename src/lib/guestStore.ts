@@ -45,6 +45,11 @@ export interface GuestEvent {
   is_flexible?: boolean;
   recurrence_freq?: "daily" | "weekly" | "monthly" | null;
   recurrence_until?: string | null;
+  user_id?: string | null;
+  shared_via?: string | null;
+  // UI-only Felder
+  _shared_owner_name?: string | null;
+  _shared_show_phases?: boolean;
 }
 
 const read = <T>(key: string, fallback: T): T => {
