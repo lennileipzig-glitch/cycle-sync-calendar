@@ -408,20 +408,39 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
 export function YearView({ selectedDate, onSelectDate, profile }: { selectedDate: Date; onSelectDate: (d: Date) => void; profile: Profile | null }) {
   const months = Array.from({ length: 12 }, (_, i) => new Date(selectedDate.getFullYear(), i, 1));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
+  const today = new Date();
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-fade-in">
       {months.map(m => {
         const start = startOfWeek(startOfMonth(m), { weekStartsOn: 1 });
         const end = endOfWeek(endOfMonth(m), { weekStartsOn: 1 });
         const days = eachDayOfInterval({ start, end });
+        const isCurrentMonth = m.getFullYear() === today.getFullYear() && m.getMonth() === today.getMonth();
         return (
           <button key={m.toISOString()} onClick={() => onSelectDate(m)}
-            className="bg-card rounded-2xl p-3 hover:shadow-elevated transition-all text-left">
-            <div className="text-sm font-medium mb-2 capitalize">{format(m, "MMMM", { locale: de })}</div>
+            className={cn(
+              "bg-card rounded-2xl p-3 hover:shadow-elevated transition-all text-left",
+              isCurrentMonth && "ring-2 ring-primary bg-primary/5",
+            )}>
+            <div className={cn("text-sm font-medium mb-2 capitalize flex items-center gap-1.5", isCurrentMonth && "text-primary")}>
+              {format(m, "MMMM", { locale: de })}
+              {isCurrentMonth && <span className="text-[9px] uppercase tracking-wider px-1.5 py-px rounded-full bg-primary text-primary-foreground">heute</span>}
+            </div>
             <div className="grid grid-cols-7 gap-0.5">
               {days.map(d => {
                 const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
-                return <div key={d.toISOString()} className={cn("aspect-square rounded-sm", phaseFill[phase], !isSameMonth(d, m) && "opacity-20")} />;
+                const isToday = isSameDay(d, today);
+                return (
+                  <div
+                    key={d.toISOString()}
+                    className={cn(
+                      "aspect-square rounded-sm relative",
+                      phaseFill[phase],
+                      !isSameMonth(d, m) && "opacity-20",
+                      isToday && "ring-2 ring-primary ring-offset-1 ring-offset-card z-10",
+                    )}
+                  />
+                );
               })}
             </div>
           </button>
