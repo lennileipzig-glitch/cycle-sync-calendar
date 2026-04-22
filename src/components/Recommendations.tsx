@@ -10,14 +10,15 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { isGuest } from "@/lib/guestStore";
 import { dataApi } from "@/lib/dataApi";
-import { fmtDate } from "@/lib/cycle";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { InlineAddMeal } from "@/components/InlineAddMeal";
+import { InlineAddSport } from "@/components/InlineAddSport";
 
 interface RecipeItem { title: string; why: string; nutrients: string[]; uses_from_fridge?: string[]; }
 interface WorkoutItem { title: string; duration: string; intensity: string; why: string; }
 
-const FRIDGE_KEY = "luna-fridge-items";
+const FRIDGE_KEY = "fravia-fridge-items";
 
 const energyLabel = (raw?: string | null) => {
   if (!raw) return null;
@@ -143,7 +144,6 @@ export function Recommendations({
     onEventAdded?.();
   };
 
-
   const personalNote = () => {
     const parts: string[] = [];
     if (energy) parts.push(`Energie: ${energyLabel(energy)}`);
@@ -158,27 +158,51 @@ export function Recommendations({
           Vorschläge berücksichtigen: {personalNote()}
         </p>
       )}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="p-5 bg-gradient-warm/40">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="flex items-center gap-2 text-lg"><Salad className="h-5 w-5 text-primary" />Ernährung</h3>
-            <Button size="sm" variant="ghost" onClick={() => fetchRec("recipes")} disabled={loadingR}>
-              {loadingR ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            </Button>
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* === ERNÄHRUNG (Salbei) === */}
+        <Card
+          className="p-5 border-2 space-y-4"
+          style={{
+            background: "hsl(var(--tile-nutrition) / 0.18)",
+            borderColor: "hsl(var(--tile-nutrition) / 0.45)",
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-lg" style={{ color: "hsl(var(--tile-nutrition))" }}>
+              <Salad className="h-5 w-5" />Ernährung
+            </h3>
           </div>
 
-          {/* Kühlschrank-Eingabe */}
-          <div className="mb-4 p-3 rounded-lg bg-card/60 border border-border/50">
+          {/* 1. Mahlzeit aktiv hinzufügen */}
+          <div className="rounded-lg bg-card/70 border border-border/50 p-3">
+            <div className="text-xs font-medium mb-2 text-foreground/80">Mahlzeit für heute eintragen</div>
+            <InlineAddMeal userId={userId} date={selectedDate} onCreated={onEventAdded} />
+          </div>
+
+          {/* 2. Kühlschrank */}
+          <div className="rounded-lg bg-card/70 border border-border/50 p-3">
             <div className="flex items-center gap-2 mb-2">
-              <Refrigerator className="h-4 w-4 text-primary" />
+              <Refrigerator className="h-4 w-4" style={{ color: "hsl(var(--tile-nutrition))" }} />
               <span className="text-xs font-medium">In meinem Kühlschrank</span>
             </div>
             {fridge.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {fridge.map(item => (
-                  <span key={item} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full text-xs bg-primary/10 border border-primary/20">
+                  <span
+                    key={item}
+                    className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full text-xs border"
+                    style={{
+                      background: "hsl(var(--tile-nutrition) / 0.15)",
+                      borderColor: "hsl(var(--tile-nutrition) / 0.35)",
+                    }}
+                  >
                     {item}
-                    <button type="button" onClick={() => removeFridge(item)} className="h-4 w-4 inline-flex items-center justify-center rounded-full hover:bg-primary/20" aria-label={`${item} entfernen`}>
+                    <button
+                      type="button"
+                      onClick={() => removeFridge(item)}
+                      className="h-4 w-4 inline-flex items-center justify-center rounded-full hover:bg-foreground/10"
+                      aria-label={`${item} entfernen`}
+                    >
                       <X className="h-2.5 w-2.5" />
                     </button>
                   </span>
@@ -193,82 +217,166 @@ export function Recommendations({
                 placeholder="z.B. Spinat, Eier, Kichererbsen…"
                 className="h-8 text-sm"
               />
-              <Button type="button" size="icon" variant="secondary" onClick={() => addFridge(fridgeInput)} className="h-8 w-8 shrink-0" aria-label="Hinzufügen">
+              <Button
+                type="button"
+                size="icon"
+                variant="secondary"
+                onClick={() => addFridge(fridgeInput)}
+                className="h-8 w-8 shrink-0"
+                aria-label="Hinzufügen"
+              >
                 <Plus className="h-3.5 w-3.5" />
               </Button>
             </div>
             {fridge.length === 0 && (
-              <p className="text-[10px] text-muted-foreground mt-1.5 italic">Vorhandene Zutaten werden in den Rezepten bevorzugt.</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5 italic">
+                Vorhandene Zutaten werden in den Rezept-Vorschlägen bevorzugt.
+              </p>
             )}
           </div>
 
-          {recipes.length === 0 ? (
-            <div>
-              <p className="text-sm text-muted-foreground mb-3">Was deinem Körper jetzt guttut:</p>
-              <ul className="space-y-1.5 text-sm">
-                {phase.nutrition.map(n => <li key={n} className="flex gap-2"><span className="text-primary">·</span>{n}</li>)}
-              </ul>
-              <Button variant="link" size="sm" onClick={() => fetchRec("recipes")} className="mt-3 px-0">
-                <Sparkles className="h-3 w-3 mr-1" /> Personalisierte Rezepte
-              </Button>
+          {/* 3. Phasen-Empfehlungen */}
+          <div>
+            <div className="text-xs font-medium mb-2 text-foreground/80">
+              Was deinem Körper in dieser Phase guttut
             </div>
-          ) : (
-            <ul className="space-y-3">
-              {recipes.map((r, i) => (
-                <li key={i} className="border-l-2 border-primary/40 pl-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="font-medium text-sm">{r.title}</div>
-                    <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] -mr-2 shrink-0" onClick={() => addRecipeToDay(r)}>
-                      <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
-                    </Button>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{r.why}</div>
-                  <div className="text-xs text-primary/80 mt-1">{r.nutrients.join(" · ")}</div>
-                  {r.uses_from_fridge && r.uses_from_fridge.length > 0 && (
-                    <div className="text-[11px] mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                      <Refrigerator className="h-3 w-3" />
-                      Aus deinem Kühlschrank: {r.uses_from_fridge.join(", ")}
-                    </div>
-                  )}
+            <ul className="space-y-1 text-sm">
+              {phase.nutrition.length === 0 ? (
+                <li className="text-muted-foreground text-xs italic">Trage deinen letzten Zyklusstart ein.</li>
+              ) : phase.nutrition.map(n => (
+                <li key={n} className="flex gap-2">
+                  <span style={{ color: "hsl(var(--tile-nutrition))" }}>·</span>{n}
                 </li>
               ))}
             </ul>
-          )}
+          </div>
+
+          {/* 4. KI-Rezepte */}
+          <div className="pt-2 border-t border-border/40">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchRec("recipes")}
+              disabled={loadingR}
+              className="w-full"
+              style={{ borderColor: "hsl(var(--tile-nutrition) / 0.5)" }}
+            >
+              {loadingR
+                ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Suche Rezepte…</>
+                : <><Sparkles className="h-4 w-4 mr-2" /> Personalisierte Rezepte vorschlagen</>}
+            </Button>
+            {recipes.length > 0 && (
+              <ul className="space-y-3 mt-3">
+                {recipes.map((r, i) => (
+                  <li key={i} className="border-l-2 pl-3" style={{ borderColor: "hsl(var(--tile-nutrition) / 0.6)" }}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="font-medium text-sm">{r.title}</div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2 text-[11px] -mr-2 shrink-0"
+                        onClick={() => addRecipeToDay(r)}
+                      >
+                        <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
+                      </Button>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{r.why}</div>
+                    <div className="text-xs mt-1" style={{ color: "hsl(var(--tile-nutrition))" }}>
+                      {r.nutrients.join(" · ")}
+                    </div>
+                    {r.uses_from_fridge && r.uses_from_fridge.length > 0 && (
+                      <div
+                        className="text-[11px] mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded"
+                        style={{
+                          background: "hsl(var(--tile-nutrition) / 0.18)",
+                          color: "hsl(var(--tile-nutrition))",
+                        }}
+                      >
+                        <Refrigerator className="h-3 w-3" />
+                        Aus deinem Kühlschrank: {r.uses_from_fridge.join(", ")}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </Card>
 
-        <Card className="p-5 bg-gradient-phase">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="flex items-center gap-2 text-lg"><Dumbbell className="h-5 w-5 text-primary" />Bewegung</h3>
-            <Button size="sm" variant="ghost" onClick={() => fetchRec("workouts")} disabled={loadingW}>
-              {loadingW ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            </Button>
+        {/* === BEWEGUNG (Teal) === */}
+        <Card
+          className="p-5 border-2 space-y-4"
+          style={{
+            background: "hsl(var(--tile-movement) / 0.18)",
+            borderColor: "hsl(var(--tile-movement) / 0.45)",
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-lg" style={{ color: "hsl(var(--tile-movement))" }}>
+              <Dumbbell className="h-5 w-5" />Bewegung
+            </h3>
           </div>
-          {workouts.length === 0 ? (
-            <div>
-              <p className="text-sm text-muted-foreground mb-3">Passend zu deiner Phase:</p>
-              <ul className="space-y-1.5 text-sm">
-                {phase.exercise.map(n => <li key={n} className="flex gap-2"><span className="text-primary">·</span>{n}</li>)}
-              </ul>
-              <Button variant="link" size="sm" onClick={() => fetchRec("workouts")} className="mt-3 px-0">
-                <Sparkles className="h-3 w-3 mr-1" /> Personalisiertes Workout
-              </Button>
+
+          {/* 1. Sport aktiv hinzufügen */}
+          <div className="rounded-lg bg-card/70 border border-border/50 p-3">
+            <div className="text-xs font-medium mb-2 text-foreground/80">Sport / Bewegung für heute eintragen</div>
+            <InlineAddSport userId={userId} date={selectedDate} onCreated={onEventAdded} />
+          </div>
+
+          {/* 2. Phasen-Empfehlungen */}
+          <div>
+            <div className="text-xs font-medium mb-2 text-foreground/80">
+              Passend zu deiner Zyklusphase
             </div>
-          ) : (
-            <ul className="space-y-3">
-              {workouts.map((w, i) => (
-                <li key={i} className="border-l-2 border-primary/40 pl-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="font-medium text-sm">{w.title}</div>
-                    <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] -mr-2 shrink-0" onClick={() => addWorkoutToDay(w)}>
-                      <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
-                    </Button>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{w.why}</div>
-                  <div className="text-xs text-primary/80 mt-1">{w.duration} · {w.intensity}</div>
+            <ul className="space-y-1 text-sm">
+              {phase.exercise.length === 0 ? (
+                <li className="text-muted-foreground text-xs italic">Trage deinen letzten Zyklusstart ein.</li>
+              ) : phase.exercise.map(n => (
+                <li key={n} className="flex gap-2">
+                  <span style={{ color: "hsl(var(--tile-movement))" }}>·</span>{n}
                 </li>
               ))}
             </ul>
-          )}
+          </div>
+
+          {/* 3. KI-Workouts */}
+          <div className="pt-2 border-t border-border/40">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchRec("workouts")}
+              disabled={loadingW}
+              className="w-full"
+              style={{ borderColor: "hsl(var(--tile-movement) / 0.5)" }}
+            >
+              {loadingW
+                ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Suche Workouts…</>
+                : <><Sparkles className="h-4 w-4 mr-2" /> Personalisiertes Workout vorschlagen</>}
+            </Button>
+            {workouts.length > 0 && (
+              <ul className="space-y-3 mt-3">
+                {workouts.map((w, i) => (
+                  <li key={i} className="border-l-2 pl-3" style={{ borderColor: "hsl(var(--tile-movement) / 0.6)" }}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="font-medium text-sm">{w.title}</div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2 text-[11px] -mr-2 shrink-0"
+                        onClick={() => addWorkoutToDay(w)}
+                      >
+                        <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
+                      </Button>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{w.why}</div>
+                    <div className="text-xs mt-1" style={{ color: "hsl(var(--tile-movement))" }}>
+                      {w.duration} · {w.intensity}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </Card>
       </div>
     </div>
