@@ -74,3 +74,37 @@ export function phaseForDate(date: Date, lastPeriodStart: Date | null, cycleLeng
 
 export const fmtDate = (d: Date) => format(d, "yyyy-MM-dd");
 export const addDaysFn = addDays;
+
+/**
+ * Mapping Energieaufwand (1–5) → bevorzugte Zyklusphasen.
+ * Hoch (≥3.5) → Ovulation + Follikel
+ * Niedrig (≤2.5) → Menstruation + Luteal
+ * Mittel → alle (kein Filter)
+ */
+export function preferredPhasesForEnergyCost(cost: number): Phase[] {
+  if (cost >= 3.5) return ["ovulation", "follicular"];
+  if (cost <= 2.5) return ["menstrual", "luteal"];
+  return ["menstrual", "follicular", "ovulation", "luteal"];
+}
+
+/**
+ * Findet den nächstbesten Tag im laufenden Zyklus, dessen Phase zum Aufwand passt.
+ * Sucht ab `from` bis zu `lookaheadDays` voraus. Fällt auf `from` zurück, wenn nichts passt.
+ */
+export function findNextDateForEnergyCost(
+  from: Date,
+  cost: number,
+  lastPeriodStart: Date | null,
+  cycleLength = 28,
+  periodLength = 5,
+  lookaheadDays = 35,
+): Date {
+  if (!lastPeriodStart) return from;
+  const preferred = new Set(preferredPhasesForEnergyCost(cost));
+  for (let i = 0; i <= lookaheadDays; i++) {
+    const d = addDays(from, i);
+    const ph = phaseForDate(d, lastPeriodStart, cycleLength, periodLength);
+    if (preferred.has(ph)) return d;
+  }
+  return from;
+}
