@@ -216,7 +216,12 @@ export function Recommendations({
             <ul className="space-y-3">
               {recipes.map((r, i) => (
                 <li key={i} className="border-l-2 border-primary/40 pl-3">
-                  <div className="font-medium text-sm">{r.title}</div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-medium text-sm">{r.title}</div>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] -mr-2 shrink-0" onClick={() => addRecipeToDay(r)}>
+                      <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
+                    </Button>
+                  </div>
                   <div className="text-xs text-muted-foreground mt-0.5">{r.why}</div>
                   <div className="text-xs text-primary/80 mt-1">{r.nutrients.join(" · ")}</div>
                   {r.uses_from_fridge && r.uses_from_fridge.length > 0 && (
@@ -252,7 +257,12 @@ export function Recommendations({
             <ul className="space-y-3">
               {workouts.map((w, i) => (
                 <li key={i} className="border-l-2 border-primary/40 pl-3">
-                  <div className="font-medium text-sm">{w.title}</div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-medium text-sm">{w.title}</div>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] -mr-2 shrink-0" onClick={() => addWorkoutToDay(w)}>
+                      <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
+                    </Button>
+                  </div>
                   <div className="text-xs text-muted-foreground mt-0.5">{w.why}</div>
                   <div className="text-xs text-primary/80 mt-1">{w.duration} · {w.intensity}</div>
                 </li>
