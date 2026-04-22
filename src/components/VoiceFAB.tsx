@@ -258,17 +258,19 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
 
           {!pendingAction && (
             <div className="space-y-3">
-              <Card className="p-4 min-h-[100px] bg-muted/40">
-                {transcript || interim ? (
-                  <p className="text-sm">
-                    {transcript} <span className="text-muted-foreground italic">{interim}</span>
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">
-                    {listening ? "Ich höre dich…" : "Tippe auf das Mikrofon und sprich."}
-                  </p>
-                )}
-              </Card>
+              <div className="space-y-1.5">
+                <Label htmlFor="voice-transcript" className="text-xs text-muted-foreground">
+                  Transkript {listening && <span className="italic">· Ich höre dich…</span>}
+                </Label>
+                <Textarea
+                  id="voice-transcript"
+                  value={transcript + (interim ? " " + interim : "")}
+                  onChange={(e) => { setTranscript(e.target.value); setInterim(""); }}
+                  placeholder="Tippe auf das Mikrofon und sprich – oder schreibe direkt hier rein."
+                  className="min-h-[110px] bg-muted/40"
+                />
+                <p className="text-[11px] text-muted-foreground">Tipp: Du kannst den Text vor dem Senden noch anpassen (z. B. Uhrzeit korrigieren).</p>
+              </div>
 
               <div className="flex items-center justify-center gap-2">
                 {!listening ? (
