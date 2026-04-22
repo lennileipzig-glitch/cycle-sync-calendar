@@ -38,6 +38,8 @@ interface DataMaps {
 interface QuickAdd {
   onAddEventForDate?: (d: Date) => void;
   onAddTodoForDate?: (d: Date) => void;
+  /** Optional: Termin an einem bestimmten Tag + Uhrzeit (HH:mm) anlegen */
+  onAddEventAtTime?: (d: Date, time: string) => void;
 }
 
 function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
