@@ -194,6 +194,18 @@ export default function Profile() {
               </div>
 
               <Button onClick={saveProfileBasics} className="w-full"><Save className="h-4 w-4 mr-2" /> Speichern</Button>
+
+              {!guest && (
+                <div className="pt-3 border-t border-border space-y-2">
+                  <div>
+                    <Label>Kalender teilen</Label>
+                    <p className="text-xs text-muted-foreground">Lade Personen ein, deinen Kalender zu sehen. Du entscheidest pro Person, ob deine Zyklusphasen sichtbar sind (Standard: aus).</p>
+                  </div>
+                  <Button variant="outline" className="w-full justify-start" onClick={() => setShareOpen(true)}>
+                    <Share2 className="h-4 w-4 mr-2" /> Freigaben verwalten
+                  </Button>
+                </div>
+              )}
             </Card>
           </TabsContent>
 
@@ -284,6 +296,8 @@ export default function Profile() {
           toast.success(`${events.length} Termine importiert`);
         }}
       />
+
+      <ShareCalendarDialog ownerId={userId} open={shareOpen} onOpenChange={setShareOpen} />
     </div>
   );
 }
