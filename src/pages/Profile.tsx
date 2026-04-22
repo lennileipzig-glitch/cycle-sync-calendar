@@ -382,6 +382,132 @@ export default function Profile() {
               <Button onClick={saveNotifications} className="w-full"><Save className="h-4 w-4 mr-2" /> Speichern</Button>
             </Card>
           </TabsContent>
+
+          {/* SETTINGS */}
+          <TabsContent value="settings">
+            <div className="space-y-4">
+              {/* Sprache */}
+              <Card className="p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <Globe className="h-5 w-5 mt-0.5 text-primary" />
+                  <div className="flex-1">
+                    <h2 className="text-lg">{t("settings.language")}</h2>
+                    <p className="text-sm text-muted-foreground">{t("settings.language_desc")}</p>
+                  </div>
+                </div>
+                <Select value={i18n.language?.split("-")[0] ?? "de"} onValueChange={(v) => changeLanguage(v as LangCode)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_LANGUAGES.map(l => (
+                      <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Card>
+
+              {/* Datenschutz */}
+              <Card className="p-5 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Shield className="h-5 w-5 mt-0.5 text-primary" />
+                  <div className="flex-1">
+                    <h2 className="text-lg">{t("settings.privacy")}</h2>
+                    <p className="text-sm text-muted-foreground">{t("settings.privacy_body")}</p>
+                  </div>
+                </div>
+                <Button
+                  variant="link"
+                  className="p-0 h-auto justify-start"
+                  onClick={() => window.open("/privacy", "_blank")}
+                >
+                  {t("settings.privacy_link")} <ExternalLink className="h-3 w-3 ml-1" />
+                </Button>
+              </Card>
+
+              {/* Konto */}
+              <Card className="p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <UserIcon className="h-5 w-5 mt-0.5 text-primary" />
+                  <div className="flex-1">
+                    <h2 className="text-lg">{t("settings.account")}</h2>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{guest ? t("app.guest_clear") : t("app.sign_out")}</div>
+                    <div className="text-xs text-muted-foreground">{t("settings.sign_out_desc")}</div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4 mr-2" /> {guest ? t("app.guest_clear") : t("app.sign_out")}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-destructive">{t("settings.delete_profile")}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {guest ? t("settings.guest_delete_desc") : t("settings.delete_profile_desc")}
+                    </div>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" disabled={deleting}>
+                        <Trash2 className="h-4 w-4 mr-2" /> {t("settings.delete_profile")}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t("settings.delete_confirm_title")}</AlertDialogTitle>
+                        <AlertDialogDescription>{t("settings.delete_confirm_body")}</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t("settings.delete_cancel")}</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteAccount}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {t("settings.delete_confirm_action")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </Card>
+
+              {/* Zahlung */}
+              <Card className="p-5 space-y-3">
+                <div className="flex items-start gap-3">
+                  <CreditCard className="h-5 w-5 mt-0.5 text-primary" />
+                  <div className="flex-1">
+                    <h2 className="text-lg">{t("settings.payments")}</h2>
+                    <p className="text-sm text-muted-foreground">{t("settings.payments_body")}</p>
+                  </div>
+                </div>
+                <Button variant="outline" disabled className="w-full">
+                  {t("settings.payments_cta")} · {t("settings.payments_soon")}
+                </Button>
+              </Card>
+
+              {/* App bewerten */}
+              <Card className="p-5 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Star className="h-5 w-5 mt-0.5 text-primary" />
+                  <div className="flex-1">
+                    <h2 className="text-lg">{t("settings.rate")}</h2>
+                    <p className="text-sm text-muted-foreground">{t("settings.rate_body")}</p>
+                  </div>
+                </div>
+                <Button
+                  variant="default"
+                  className="w-full"
+                  onClick={() => { setRated(true); toast.success(t("settings.rate_thanks")); }}
+                  disabled={rated}
+                >
+                  <Star className="h-4 w-4 mr-2" /> {rated ? t("settings.rate_thanks") : t("settings.rate_cta")}
+                </Button>
+              </Card>
+            </div>
+          </TabsContent>
         </Tabs>
       </main>
 
