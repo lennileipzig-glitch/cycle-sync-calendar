@@ -386,14 +386,16 @@ const Index = () => {
         date={quickAddDate}
         initialTime={quickAddTime}
         initialCategory={quickAddCategory}
+        lockCategory={lockEventCategory}
         open={eventDialogOpen}
-        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) { setEditEvent(null); setQuickAddTime(null); setQuickAddCategory("termin"); } }}
+        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) { setEditEvent(null); setQuickAddTime(null); setQuickAddCategory("termin"); setLockEventCategory(false); } }}
         event={editEvent}
         onCreated={async () => {
           setAllEvents(await dataApi.getEvents(userId));
           setEditEvent(null);
           setQuickAddTime(null);
           setQuickAddCategory("termin");
+          setLockEventCategory(false);
         }}
       />
 
