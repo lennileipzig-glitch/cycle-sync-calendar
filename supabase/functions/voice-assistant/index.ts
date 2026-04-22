@@ -135,6 +135,7 @@ KATEGORIE-ZUORDNUNG (wichtig!):
             required: ["title", "date", "time", "confidence", "spoken_summary"],
           },
         },
+      },
       {
         type: "function",
         function: {
