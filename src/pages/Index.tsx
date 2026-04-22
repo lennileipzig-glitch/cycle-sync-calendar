@@ -7,7 +7,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { getPhase, fmtDate } from "@/lib/cycle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, ListTodo, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, ListTodo, User, Settings as SettingsIcon } from "lucide-react";
 import { MonthView, WeekView, YearView, DayView } from "@/components/CalendarViews";
 import { TodoList } from "@/components/TodoList";
 import { TrackerDialog } from "@/components/TrackerDialog";
@@ -204,6 +204,9 @@ const Index = () => {
             </Button>
             <Button variant="ghost" size="icon" onClick={() => navigate("/profile")} aria-label="Profil">
               <User className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} aria-label="Einstellungen">
+              <SettingsIcon className="h-5 w-5" />
             </Button>
           </div>
         </div>
