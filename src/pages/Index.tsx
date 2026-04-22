@@ -294,8 +294,9 @@ const Index = () => {
                 eventsByDay={eventsByDay}
                 moodByDay={weekMood}
                 todosByDay={todosByDay}
-                onAddEventForDate={(d) => { setQuickAddDate(d); setEventDialogOpen(true); }}
+                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddTime(null); setEditEvent(null); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
+                onAddEventAtTime={(d, time) => { setQuickAddDate(d); setQuickAddTime(time); setEditEvent(null); setEventDialogOpen(true); }}
               />
             </Card>
           )}
