@@ -1,6 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, LogOut, Upload, Calendar as CalendarIcon, TrendingUp, Settings, Apple, Dumbbell, Bell, User as UserIcon, Save } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { ArrowLeft, LogOut, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, Bell, User as UserIcon, Save, Globe, Shield, Trash2, CreditCard, Star, ExternalLink } from "lucide-react";
+import { SUPPORTED_LANGUAGES, type LangCode } from "@/i18n";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, type DietStyle, type SportLevel } from "@/hooks/useProfile";
 import { isGuest, guestStore } from "@/lib/guestStore";
@@ -42,12 +48,15 @@ const NOTIFICATION_TOPIC_OPTIONS = [
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const { user, loading: authLoading, guestMode } = useAuth();
   const guest = guestMode || isGuest();
   const userId = user?.id ?? null;
   const { profile, update, loading } = useProfile(user?.id, guest);
 
   const [importKind, setImportKind] = useState<"csv" | "ics" | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [rated, setRated] = useState(false);
 
   // Lokale Form-States
   const [name, setName] = useState("");
@@ -88,7 +97,7 @@ export default function Profile() {
   }, [authLoading, user, guest, navigate]);
 
   if (loading || !profile) {
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Lade Profil...</div>;
+    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">{t("app.loading_profile")}</div>;
   }
 
   const saveProfileBasics = async () => {
@@ -125,6 +134,34 @@ export default function Profile() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      if (guest) {
+        guestStore.clearAll();
+        toast.success(t("settings.delete_success"));
+        navigate("/auth", { replace: true });
+        window.location.reload();
+        return;
+      }
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      await supabase.auth.signOut();
+      toast.success(t("settings.delete_success"));
+      navigate("/auth", { replace: true });
+    } catch (e) {
+      console.error(e);
+      toast.error(t("settings.delete_error"));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const changeLanguage = (lng: LangCode) => {
+    i18n.changeLanguage(lng);
+    localStorage.setItem("luna-lang", lng);
+  };
+
   const toggleTopic = (id: string) => {
     setNotifTopics(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
   };
@@ -134,15 +171,15 @@ export default function Profile() {
       <header className="border-b border-border/60 bg-card/50 backdrop-blur sticky top-0 z-10">
         <div className="container max-w-4xl flex items-center justify-between py-4">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Zurück">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label={t("app.back")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-xl">Dein Profil</h1>
-              <p className="text-xs text-muted-foreground">{profile.display_name ?? "Hallo schön"}{guest && " · Gast-Modus"}</p>
+              <h1 className="text-xl">{t("app.profile")}</h1>
+              <p className="text-xs text-muted-foreground">{profile.display_name ?? t("app.greeting_default")}{guest && ` · ${t("app.guest_mode")}`}</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleSignOut} title={guest ? "Lokale Daten löschen" : "Abmelden"}>
+          <Button variant="ghost" size="icon" onClick={handleSignOut} title={guest ? t("app.guest_clear") : t("app.sign_out")}>
             <LogOut className="h-5 w-5" />
           </Button>
         </div>
@@ -150,12 +187,13 @@ export default function Profile() {
 
       <main className="container max-w-4xl py-6">
         <Tabs defaultValue="energy" className="space-y-6">
-          <TabsList className="grid grid-cols-5 w-full">
-            <TabsTrigger value="energy"><TrendingUp className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Energie</span></TabsTrigger>
-            <TabsTrigger value="basics"><UserIcon className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Zyklus</span></TabsTrigger>
-            <TabsTrigger value="diet"><Apple className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Ernährung</span></TabsTrigger>
-            <TabsTrigger value="sport"><Dumbbell className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Sport</span></TabsTrigger>
-            <TabsTrigger value="notifs"><Bell className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Benachr.</span></TabsTrigger>
+          <TabsList className="grid grid-cols-6 w-full">
+            <TabsTrigger value="energy"><TrendingUp className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.energy")}</span></TabsTrigger>
+            <TabsTrigger value="basics"><UserIcon className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.cycle")}</span></TabsTrigger>
+            <TabsTrigger value="diet"><Apple className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.diet")}</span></TabsTrigger>
+            <TabsTrigger value="sport"><Dumbbell className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.sport")}</span></TabsTrigger>
+            <TabsTrigger value="notifs"><Bell className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.notifs")}</span></TabsTrigger>
+            <TabsTrigger value="settings"><SettingsIcon className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.settings")}</span></TabsTrigger>
           </TabsList>
 
           {/* ENERGIEKURVE */}
@@ -343,6 +381,132 @@ export default function Profile() {
 
               <Button onClick={saveNotifications} className="w-full"><Save className="h-4 w-4 mr-2" /> Speichern</Button>
             </Card>
+          </TabsContent>
+
+          {/* SETTINGS */}
+          <TabsContent value="settings">
+            <div className="space-y-4">
+              {/* Sprache */}
+              <Card className="p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <Globe className="h-5 w-5 mt-0.5 text-primary" />
+                  <div className="flex-1">
+                    <h2 className="text-lg">{t("settings.language")}</h2>
+                    <p className="text-sm text-muted-foreground">{t("settings.language_desc")}</p>
+                  </div>
+                </div>
+                <Select value={i18n.language?.split("-")[0] ?? "de"} onValueChange={(v) => changeLanguage(v as LangCode)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_LANGUAGES.map(l => (
+                      <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Card>
+
+              {/* Datenschutz */}
+              <Card className="p-5 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Shield className="h-5 w-5 mt-0.5 text-primary" />
+                  <div className="flex-1">
+                    <h2 className="text-lg">{t("settings.privacy")}</h2>
+                    <p className="text-sm text-muted-foreground">{t("settings.privacy_body")}</p>
+                  </div>
+                </div>
+                <Button
+                  variant="link"
+                  className="p-0 h-auto justify-start"
+                  onClick={() => window.open("/privacy", "_blank")}
+                >
+                  {t("settings.privacy_link")} <ExternalLink className="h-3 w-3 ml-1" />
+                </Button>
+              </Card>
+
+              {/* Konto */}
+              <Card className="p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <UserIcon className="h-5 w-5 mt-0.5 text-primary" />
+                  <div className="flex-1">
+                    <h2 className="text-lg">{t("settings.account")}</h2>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{guest ? t("app.guest_clear") : t("app.sign_out")}</div>
+                    <div className="text-xs text-muted-foreground">{t("settings.sign_out_desc")}</div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4 mr-2" /> {guest ? t("app.guest_clear") : t("app.sign_out")}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-destructive">{t("settings.delete_profile")}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {guest ? t("settings.guest_delete_desc") : t("settings.delete_profile_desc")}
+                    </div>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" disabled={deleting}>
+                        <Trash2 className="h-4 w-4 mr-2" /> {t("settings.delete_profile")}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t("settings.delete_confirm_title")}</AlertDialogTitle>
+                        <AlertDialogDescription>{t("settings.delete_confirm_body")}</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t("settings.delete_cancel")}</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteAccount}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {t("settings.delete_confirm_action")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </Card>
+
+              {/* Zahlung */}
+              <Card className="p-5 space-y-3">
+                <div className="flex items-start gap-3">
+                  <CreditCard className="h-5 w-5 mt-0.5 text-primary" />
+                  <div className="flex-1">
+                    <h2 className="text-lg">{t("settings.payments")}</h2>
+                    <p className="text-sm text-muted-foreground">{t("settings.payments_body")}</p>
+                  </div>
+                </div>
+                <Button variant="outline" disabled className="w-full">
+                  {t("settings.payments_cta")} · {t("settings.payments_soon")}
+                </Button>
+              </Card>
+
+              {/* App bewerten */}
+              <Card className="p-5 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Star className="h-5 w-5 mt-0.5 text-primary" />
+                  <div className="flex-1">
+                    <h2 className="text-lg">{t("settings.rate")}</h2>
+                    <p className="text-sm text-muted-foreground">{t("settings.rate_body")}</p>
+                  </div>
+                </div>
+                <Button
+                  variant="default"
+                  className="w-full"
+                  onClick={() => { setRated(true); toast.success(t("settings.rate_thanks")); }}
+                  disabled={rated}
+                >
+                  <Star className="h-4 w-4 mr-2" /> {rated ? t("settings.rate_thanks") : t("settings.rate_cta")}
+                </Button>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </main>
