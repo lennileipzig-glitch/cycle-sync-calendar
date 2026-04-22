@@ -20,6 +20,7 @@ const RANGES: Range[] = ["week", "month", "year"];
 const RANGE_LABELS: Record<Range, string> = { week: "Woche", month: "Monat", year: "Jahr" };
 const ENERGY_LABELS = ["sehr schlecht", "schlecht", "mittel", "gut", "sehr gut"];
 const ENERGY_SHORT = ["😞", "😕", "😐", "🙂", "🤩"];
+const ENERGY_AXIS = ["sehr\nschlecht", "schlecht", "mittel", "gut", "sehr\ngut"];
 
 const energyToNum = (raw: string | null | undefined): number | null => {
   if (!raw) return null;
