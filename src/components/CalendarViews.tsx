@@ -5,8 +5,11 @@ import { cn } from "@/lib/utils";
 import type { Profile } from "@/hooks/useProfile";
 import type { GuestEvent, EventCategory } from "@/lib/guestStore";
 import { fmtDate } from "@/lib/cycle";
-import { CheckCircle2, Circle, Plus, CalendarPlus, ListPlus, UtensilsCrossed, Dumbbell } from "lucide-react";
+import { CheckCircle2, Circle, Plus, CalendarPlus, ListPlus, UtensilsCrossed, Dumbbell, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InlineAddMeal } from "@/components/InlineAddMeal";
+import { InlineAddSport } from "@/components/InlineAddSport";
+import { dataApi } from "@/lib/dataApi";
 import {
   DropdownMenu,
   DropdownMenuContent,
