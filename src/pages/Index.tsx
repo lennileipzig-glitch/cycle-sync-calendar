@@ -41,6 +41,7 @@ const Index = () => {
   const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
   const [quickAddTime, setQuickAddTime] = useState<string | null>(null);
   const [quickAddCategory, setQuickAddCategory] = useState<"termin" | "mahlzeit" | "sport">("termin");
+  const [lockEventCategory, setLockEventCategory] = useState(false);
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null>(null);
   const [allEvents, setAllEvents] = useState<GuestEvent[]>([]);
   const [weekTodos, setWeekTodos] = useState<{ id: string; title: string; completed: boolean; todo_date: string }[]>([]);
