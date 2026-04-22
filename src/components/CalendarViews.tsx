@@ -338,7 +338,7 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                 </button>
               ) : (
                 <div
-                  className="rounded-md p-1.5 shadow-sm border border-yellow-300/50 bg-yellow-100/70 dark:bg-yellow-200/15 dark:border-yellow-200/20"
+                  className="rounded-md p-1.5 shadow-sm border bg-accent/50 border-accent"
                   style={{ transform: "rotate(-0.5deg)" }}
                 >
                   <ul className="space-y-0.5">

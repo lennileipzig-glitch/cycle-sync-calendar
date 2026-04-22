@@ -123,8 +123,8 @@ const Index = () => {
   }, [allEvents]);
 
   const todosByDay = useMemo(() => {
-    const m: Record<string, { id: string; completed: boolean }[]> = {};
-    weekTodos.forEach(t => { (m[t.todo_date] ??= []).push({ id: t.id, completed: t.completed }); });
+    const m: Record<string, { id: string; title: string; completed: boolean }[]> = {};
+    weekTodos.forEach(t => { (m[t.todo_date] ??= []).push({ id: t.id, title: t.title, completed: t.completed }); });
     return m;
   }, [weekTodos]);
 
