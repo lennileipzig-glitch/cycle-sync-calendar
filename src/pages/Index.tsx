@@ -221,30 +221,6 @@ const Index = () => {
       </header>
 
       <main className="container max-w-7xl py-6 space-y-6">
-        {/* Phasenkarte */}
-        <Card className="p-6 shadow-soft" style={{ background: `linear-gradient(135deg, ${phase.color}22, hsl(var(--card)))` }}>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-3 h-3 rounded-full" style={{ background: phase.color }} />
-                <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                  {profile.in_menopause ? "Menopause" : (phase.dayInCycle ? `Tag ${phase.dayInCycle} von ${phase.cycleLength}` : "Profil unvollständig")}
-                </span>
-              </div>
-              <h2 className="text-3xl mb-1">{profile.in_menopause ? "Im Wandel" : phase.label}</h2>
-              <p className="text-sm text-muted-foreground max-w-xl">
-                {profile.in_menopause
-                  ? "Höre auf deinen Körper. Luna richtet die Empfehlungen auf Energie und Wohlbefinden aus."
-                  : phase.description}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-muted-foreground">Ausgewählt</div>
-              <div className="text-lg font-medium capitalize">{format(selectedDate, "EEEE, d. MMMM", { locale: de })}</div>
-            </div>
-          </div>
-        </Card>
-
         {/* Kalender-Steuerung */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-1">
