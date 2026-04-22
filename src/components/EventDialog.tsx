@@ -36,9 +36,10 @@ const COST_LABEL = (c: number) => {
   return "sehr anstrengend";
 };
 
-export function EventDialog({ userId, date, open, onOpenChange, onCreated }: Props) {
+export function EventDialog({ userId, date, open, onOpenChange, onCreated, event }: Props) {
   const { guestMode } = useAuth();
   const { profile } = useProfile(userId ?? undefined, guestMode);
+  const isEdit = !!event;
 
   const [title, setTitle] = useState("");
   const [allDay, setAllDay] = useState(false);
@@ -50,9 +51,25 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated }: Pro
   const [recurrence, setRecurrence] = useState<Recurrence>("none");
   const [until, setUntil] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    if (event) {
+      // Edit: Vorbefüllen
+      const s = new Date(event.starts_at);
+      const e = event.ends_at ? new Date(event.ends_at) : new Date(s.getTime() + 60 * 60 * 1000);
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      setTitle(event.title ?? "");
+      setAllDay(!!event.all_day);
+      setStartTime(`${pad(s.getHours())}:${pad(s.getMinutes())}`);
+      setEndTime(`${pad(e.getHours())}:${pad(e.getMinutes())}`);
+      setLocation(event.location ?? "");
+      setCost(event.energy_cost ?? 3);
+      setFlexible(!!event.is_flexible);
+      setRecurrence((event.recurrence_freq as Recurrence) ?? "none");
+      setUntil(event.recurrence_until ?? "");
+    } else {
       setTitle("");
       setAllDay(false);
       setStartTime("09:00");
@@ -61,12 +78,11 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated }: Pro
       setCost(3);
       setFlexible(false);
       setRecurrence("none");
-      // default until = +3 Monate
       const u = new Date(date);
       u.setMonth(u.getMonth() + 3);
       setUntil(fmtDate(u));
     }
-  }, [open, date]);
+  }, [open, date, event]);
 
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const targetDate = flexible
