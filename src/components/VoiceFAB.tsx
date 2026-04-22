@@ -106,6 +106,8 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
   const [interim, setInterim] = useState("");
   const [processing, setProcessing] = useState(false);
   const [pendingAction, setPendingAction] = useState<VoiceAction | null>(null);
+  const [queue, setQueue] = useState<VoiceAction[]>([]);
+  const [queueProgress, setQueueProgress] = useState<{ done: number; total: number } | null>(null);
   const [editMode, setEditMode] = useState(false);
   const recRef = useRef<SpeechRecognitionInstance | null>(null);
 
@@ -160,6 +162,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
     if (!open) {
       stopListening();
       setTranscript(""); setInterim(""); setPendingAction(null); setProcessing(false); setEditMode(false);
+      setQueue([]); setQueueProgress(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
