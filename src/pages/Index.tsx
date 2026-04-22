@@ -37,6 +37,7 @@ const Index = () => {
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [todoDialogOpen, setTodoDialogOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [editEvent, setEditEvent] = useState<GuestEvent | null>(null);
   const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null>(null);
   const [allEvents, setAllEvents] = useState<GuestEvent[]>([]);
