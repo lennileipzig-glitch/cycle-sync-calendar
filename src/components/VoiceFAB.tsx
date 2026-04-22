@@ -408,7 +408,9 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
               Sprich mit Fravia
             </DialogTitle>
             <DialogDescription>
-              Z. B. „Ich habe morgen 18 Uhr Yoga“ oder „Schlag mir ein Rezept mit Spinat vor“.
+              {queueProgress
+                ? `Sachverhalt ${queueProgress.done} von ${queueProgress.total}`
+                : "Z. B. „Morgen 18 Uhr Yoga, danach einkaufen, 21 Uhr Telefonat mit Boss"."}
             </DialogDescription>
           </DialogHeader>
 
