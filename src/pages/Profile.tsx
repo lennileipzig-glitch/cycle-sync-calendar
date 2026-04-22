@@ -97,7 +97,7 @@ export default function Profile() {
   }, [authLoading, user, guest, navigate]);
 
   if (loading || !profile) {
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Lade Profil...</div>;
+    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">{t("app.loading_profile")}</div>;
   }
 
   const saveProfileBasics = async () => {
@@ -134,6 +134,34 @@ export default function Profile() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      if (guest) {
+        guestStore.clearAll();
+        toast.success(t("settings.delete_success"));
+        navigate("/auth", { replace: true });
+        window.location.reload();
+        return;
+      }
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      await supabase.auth.signOut();
+      toast.success(t("settings.delete_success"));
+      navigate("/auth", { replace: true });
+    } catch (e) {
+      console.error(e);
+      toast.error(t("settings.delete_error"));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const changeLanguage = (lng: LangCode) => {
+    i18n.changeLanguage(lng);
+    localStorage.setItem("luna-lang", lng);
+  };
+
   const toggleTopic = (id: string) => {
     setNotifTopics(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
   };
@@ -143,15 +171,15 @@ export default function Profile() {
       <header className="border-b border-border/60 bg-card/50 backdrop-blur sticky top-0 z-10">
         <div className="container max-w-4xl flex items-center justify-between py-4">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Zurück">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label={t("app.back")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-xl">Dein Profil</h1>
-              <p className="text-xs text-muted-foreground">{profile.display_name ?? "Hallo schön"}{guest && " · Gast-Modus"}</p>
+              <h1 className="text-xl">{t("app.profile")}</h1>
+              <p className="text-xs text-muted-foreground">{profile.display_name ?? t("app.greeting_default")}{guest && ` · ${t("app.guest_mode")}`}</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleSignOut} title={guest ? "Lokale Daten löschen" : "Abmelden"}>
+          <Button variant="ghost" size="icon" onClick={handleSignOut} title={guest ? t("app.guest_clear") : t("app.sign_out")}>
             <LogOut className="h-5 w-5" />
           </Button>
         </div>
@@ -159,12 +187,13 @@ export default function Profile() {
 
       <main className="container max-w-4xl py-6">
         <Tabs defaultValue="energy" className="space-y-6">
-          <TabsList className="grid grid-cols-5 w-full">
-            <TabsTrigger value="energy"><TrendingUp className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Energie</span></TabsTrigger>
-            <TabsTrigger value="basics"><UserIcon className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Zyklus</span></TabsTrigger>
-            <TabsTrigger value="diet"><Apple className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Ernährung</span></TabsTrigger>
-            <TabsTrigger value="sport"><Dumbbell className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Sport</span></TabsTrigger>
-            <TabsTrigger value="notifs"><Bell className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Benachr.</span></TabsTrigger>
+          <TabsList className="grid grid-cols-6 w-full">
+            <TabsTrigger value="energy"><TrendingUp className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.energy")}</span></TabsTrigger>
+            <TabsTrigger value="basics"><UserIcon className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.cycle")}</span></TabsTrigger>
+            <TabsTrigger value="diet"><Apple className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.diet")}</span></TabsTrigger>
+            <TabsTrigger value="sport"><Dumbbell className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.sport")}</span></TabsTrigger>
+            <TabsTrigger value="notifs"><Bell className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.notifs")}</span></TabsTrigger>
+            <TabsTrigger value="settings"><SettingsIcon className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.settings")}</span></TabsTrigger>
           </TabsList>
 
           {/* ENERGIEKURVE */}
