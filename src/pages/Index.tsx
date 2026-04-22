@@ -310,9 +310,9 @@ const Index = () => {
                 <div>
                   <div className="flex items-baseline gap-2 flex-wrap">
                     <h3 className="text-lg font-medium">{profile.in_menopause ? "Im Wandel" : phase.label}</h3>
-                    {!profile.in_menopause && phase.dayInPhase && phase.phaseLength && (
+                    {!profile.in_menopause && phase.dayInCycle > 0 && (
                       <span className="text-xs text-muted-foreground">
-                        Tag {phase.dayInPhase} von {phase.phaseLength}
+                        Tag {phase.dayInCycle} im Zyklus
                       </span>
                     )}
                   </div>
