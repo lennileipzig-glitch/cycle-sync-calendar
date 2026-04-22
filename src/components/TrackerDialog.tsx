@@ -33,7 +33,7 @@ const loadCustomSymptoms = (): string[] => {
 const saveCustomSymptoms = (list: string[]) => localStorage.setItem(CUSTOM_SYMPTOMS_KEY, JSON.stringify(list.slice(-30)));
 
 export function TrackerDialog({ userId, open, onOpenChange }: { userId: string | null; open: boolean; onOpenChange: (o: boolean) => void }) {
-  const [mood, setMood] = useState<string>("");
+  
   const [energy, setEnergy] = useState<number>(3);
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [customSymptoms, setCustomSymptoms] = useState<string[]>([]);
@@ -48,13 +48,13 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string |
     (async () => {
       const todayLog = await dataApi.getLog(userId, today);
       if (todayLog) {
-        setMood(todayLog.mood ?? "");
+        
         setEnergy(energyToNum(todayLog.energy_level));
         setSymptoms(todayLog.symptoms ?? []);
         setNotes(todayLog.notes ?? "");
       } else {
         // Frischer Tag: keine Vorbelegung — Nutzerin entscheidet selbst
-        setMood("");
+        
         setEnergy(3);
         setSymptoms([]);
         setNotes("");
@@ -89,7 +89,7 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string |
     try {
       await dataApi.upsertLog(userId, {
         log_date: today,
-        mood: mood || null,
+        mood: null,
         energy_level: String(energy),
         symptoms,
         notes: notes || null,
