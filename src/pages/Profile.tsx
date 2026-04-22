@@ -69,9 +69,6 @@ export default function Profile() {
     setSports(profile.sports);
     setSportLevel(profile.sport_level);
     setSportFreq(profile.sport_frequency_per_week);
-    setNotifEnabled(profile.notifications_enabled);
-    setNotifTime(profile.notification_time?.slice(0, 5) ?? "09:00");
-    setNotifTopics(profile.notification_topics);
   }, [profile]);
 
   useEffect(() => {
@@ -100,53 +97,6 @@ export default function Profile() {
     await update({ sports, sport_level: sportLevel, sport_frequency_per_week: sportFreq });
     toast.success("Sport gespeichert");
   };
-  const saveNotifications = async () => {
-    await update({ notifications_enabled: notifEnabled, notification_time: notifTime, notification_topics: notifTopics });
-    toast.success("Benachrichtigungen gespeichert");
-  };
-
-  const handleSignOut = async () => {
-    if (guest) {
-      guestStore.clearAll();
-      navigate("/auth", { replace: true });
-      window.location.reload();
-    } else {
-      await supabase.auth.signOut();
-      navigate("/auth", { replace: true });
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    setDeleting(true);
-    try {
-      if (guest) {
-        guestStore.clearAll();
-        toast.success(t("settings.delete_success"));
-        navigate("/auth", { replace: true });
-        window.location.reload();
-        return;
-      }
-      const { error } = await supabase.functions.invoke("delete-account");
-      if (error) throw error;
-      await supabase.auth.signOut();
-      toast.success(t("settings.delete_success"));
-      navigate("/auth", { replace: true });
-    } catch (e) {
-      console.error(e);
-      toast.error(t("settings.delete_error"));
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const changeLanguage = (lng: LangCode) => {
-    i18n.changeLanguage(lng);
-    localStorage.setItem("luna-lang", lng);
-  };
-
-  const toggleTopic = (id: string) => {
-    setNotifTopics(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -161,8 +111,8 @@ export default function Profile() {
               <p className="text-xs text-muted-foreground">{profile.display_name ?? t("app.greeting_default")}{guest && ` · ${t("app.guest_mode")}`}</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleSignOut} title={guest ? t("app.guest_clear") : t("app.sign_out")}>
-            <LogOut className="h-5 w-5" />
+          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} title={t("settings.title")} aria-label={t("settings.title")}>
+            <SettingsIcon className="h-5 w-5" />
           </Button>
         </div>
       </header>
