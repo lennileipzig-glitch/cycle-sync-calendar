@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, User as UserIcon, Save } from "lucide-react";
+import { ArrowLeft, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, User as UserIcon, Save, Share2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, type DietStyle, type SportLevel } from "@/hooks/useProfile";
 import { isGuest } from "@/lib/guestStore";
@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { ImportDialog } from "@/components/ImportDialog";
 import { EnergyChart } from "@/components/profile/EnergyChart";
 import { TagInput } from "@/components/profile/TagInput";
+import { ShareCalendarDialog } from "@/components/ShareCalendarDialog";
 
 const DIET_STYLES: { value: DietStyle; label: string }[] = [
   { value: "omnivore", label: "Omnivor (alles)" },
@@ -42,6 +43,7 @@ export default function Profile() {
   const { profile, update, loading } = useProfile(user?.id, guest);
 
   const [importKind, setImportKind] = useState<"csv" | "ics" | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Lokale Form-States
   const [name, setName] = useState("");
