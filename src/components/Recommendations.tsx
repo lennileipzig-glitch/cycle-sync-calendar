@@ -2,13 +2,17 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Salad, Dumbbell, Refrigerator, X, Plus } from "lucide-react";
+import { Sparkles, Loader2, Salad, Dumbbell, Refrigerator, X, Plus, CalendarPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import type { PhaseInfo } from "@/lib/cycle";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { isGuest } from "@/lib/guestStore";
+import { dataApi } from "@/lib/dataApi";
+import { fmtDate } from "@/lib/cycle";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
 
 interface RecipeItem { title: string; why: string; nutrients: string[]; uses_from_fridge?: string[]; }
 interface WorkoutItem { title: string; duration: string; intensity: string; why: string; }
