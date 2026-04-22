@@ -4,64 +4,75 @@ import { format, addMonths, subMonths, addWeeks, subWeeks } from "date-fns";
 import { de } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { getPhase } from "@/lib/cycle";
+import { getPhase, fmtDate } from "@/lib/cycle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Sparkles, MapPin } from "lucide-react";
 import { MonthView, WeekView, YearView } from "@/components/CalendarViews";
 import { TodoList } from "@/components/TodoList";
 import { TrackerDialog } from "@/components/TrackerDialog";
 import { Recommendations } from "@/components/Recommendations";
 import { ProfileSettings } from "@/components/ProfileSettings";
-import { supabase } from "@/integrations/supabase/client";
-import { fmtDate } from "@/lib/cycle";
+import { OnboardingDialog } from "@/components/OnboardingDialog";
+import { dataApi } from "@/lib/dataApi";
+import { isGuest } from "@/lib/guestStore";
+import type { GuestEvent } from "@/lib/guestStore";
 
 type Zoom = "year" | "month" | "week";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
-  const { profile, update } = useProfile(user?.id);
+  const { user, loading: authLoading, guestMode } = useAuth();
+  const guest = guestMode || isGuest();
+  const { profile, update } = useProfile(user?.id, guest);
+  const userId = user?.id ?? null;
+
   const [zoom, setZoom] = useState<Zoom>("month");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [trackerOpen, setTrackerOpen] = useState(false);
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null } | null>(null);
+  const [dayEvents, setDayEvents] = useState<GuestEvent[]>([]);
 
+  // Wenn weder eingeloggt noch Guest: zur Auth-Seite
   useEffect(() => {
-    if (!authLoading && !user) navigate("/auth", { replace: true });
-  }, [authLoading, user, navigate]);
+    if (!authLoading && !user && !guest) navigate("/auth", { replace: true });
+  }, [authLoading, user, guest, navigate]);
 
-  // Auto-open tracker once per session if not yet logged today
+  const showOnboarding = !!profile && !profile.onboarding_completed;
+
+  // Auto-Tracker einmal pro Tag (erst nach Onboarding)
   useEffect(() => {
-    if (!user) return;
+    if (!profile || showOnboarding) return;
     const key = `tracker-shown-${fmtDate(new Date())}`;
     if (sessionStorage.getItem(key)) return;
     (async () => {
-      const { data } = await supabase.from("daily_logs").select("id").eq("user_id", user.id).eq("log_date", fmtDate(new Date())).maybeSingle();
-      if (!data) {
+      const log = await dataApi.getLog(userId, fmtDate(new Date()));
+      if (!log) {
         setTrackerOpen(true);
         sessionStorage.setItem(key, "1");
       }
     })();
-  }, [user]);
+  }, [profile, showOnboarding, userId]);
 
-  // Load today's log for recommendations context
+  // Heutiger Log für Empfehlungen
   useEffect(() => {
-    if (!user) return;
-    (async () => {
-      const { data } = await supabase.from("daily_logs").select("energy_level,symptoms")
-        .eq("user_id", user.id).eq("log_date", fmtDate(new Date())).maybeSingle();
-      setTodayLog(data);
-    })();
-  }, [user, trackerOpen]);
+    if (!profile) return;
+    (async () => setTodayLog(await dataApi.getLog(userId, fmtDate(new Date()))))();
+  }, [profile, userId, trackerOpen]);
+
+  // Termine für ausgewählten Tag
+  useEffect(() => {
+    if (!profile) return;
+    (async () => setDayEvents(await dataApi.getEventsForDate(userId, fmtDate(selectedDate))))();
+  }, [profile, userId, selectedDate]);
 
   const phase = useMemo(() => getPhase(
     selectedDate,
     profile?.last_period_start ? new Date(profile.last_period_start) : null,
-    profile?.avg_cycle_length, profile?.avg_period_length
+    profile?.avg_cycle_length, profile?.avg_period_length,
   ), [selectedDate, profile]);
 
-  if (authLoading || !user || !profile) {
+  if (authLoading || (!user && !guest) || !profile) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Lade...</div>;
   }
 
@@ -88,30 +99,36 @@ const Index = () => {
         <div className="container max-w-6xl flex items-center justify-between py-4">
           <div>
             <h1 className="text-2xl">Luna</h1>
-            <p className="text-xs text-muted-foreground">Hallo {profile.display_name ?? "schön"}, schön dass du da bist.</p>
+            <p className="text-xs text-muted-foreground">
+              Hallo {profile.display_name ?? "schön"}, schön dass du da bist.
+              {guest && <span className="ml-1 italic">· Gast-Modus (lokal gespeichert)</span>}
+            </p>
           </div>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="sm" onClick={() => setTrackerOpen(true)}>
               <Sparkles className="h-4 w-4 mr-1" /> Tracken
             </Button>
-            <ProfileSettings profile={profile} onSave={update} />
+            <ProfileSettings profile={profile} userId={userId} onSave={update} />
           </div>
         </div>
       </header>
 
       <main className="container max-w-6xl py-6 space-y-6">
-        {/* Phase summary */}
         <Card className="p-6 shadow-soft" style={{ background: `linear-gradient(135deg, ${phase.color}22, hsl(var(--card)))` }}>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-3 h-3 rounded-full" style={{ background: phase.color }} />
                 <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                  {phase.dayInCycle ? `Tag ${phase.dayInCycle} von ${phase.cycleLength}` : "Profil unvollständig"}
+                  {profile.in_menopause ? "Menopause" : (phase.dayInCycle ? `Tag ${phase.dayInCycle} von ${phase.cycleLength}` : "Profil unvollständig")}
                 </span>
               </div>
-              <h2 className="text-3xl mb-1">{phase.label}</h2>
-              <p className="text-sm text-muted-foreground max-w-xl">{phase.description}</p>
+              <h2 className="text-3xl mb-1">{profile.in_menopause ? "Im Wandel" : phase.label}</h2>
+              <p className="text-sm text-muted-foreground max-w-xl">
+                {profile.in_menopause
+                  ? "Höre auf deinen Körper. Luna richtet die Empfehlungen auf Energie und Wohlbefinden aus."
+                  : phase.description}
+              </p>
             </div>
             <div className="text-right">
               <div className="text-xs text-muted-foreground">Ausgewählt</div>
@@ -120,7 +137,6 @@ const Index = () => {
           </div>
         </Card>
 
-        {/* Calendar controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={navigatePrev}><ChevronLeft className="h-4 w-4" /></Button>
@@ -146,11 +162,26 @@ const Index = () => {
           {zoom === "week" && <WeekView selectedDate={selectedDate} onSelectDate={setSelectedDate} profile={profile} />}
         </Card>
 
-        {/* Day view */}
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="p-5 shadow-soft">
-            <h3 className="text-lg mb-3 capitalize">To-dos · {format(selectedDate, "EEEE", { locale: de })}</h3>
-            <TodoList userId={user.id} date={selectedDate} />
+            <h3 className="text-lg mb-3 capitalize">Termine & To-dos · {format(selectedDate, "EEEE", { locale: de })}</h3>
+            {dayEvents.length > 0 && (
+              <div className="mb-4 space-y-2">
+                {dayEvents.map(e => (
+                  <div key={e.id} className="flex items-start gap-2 p-2 rounded-lg bg-muted/40 text-sm">
+                    <div className="w-1 self-stretch rounded-full" style={{ background: phase.color }} />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{e.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {e.all_day ? "Ganztägig" : format(new Date(e.starts_at), "HH:mm", { locale: de })}
+                        {e.location && <span className="inline-flex items-center gap-1 ml-2"><MapPin className="h-3 w-3" />{e.location}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <TodoList userId={userId} date={selectedDate} />
           </Card>
           <Card className="p-5 shadow-soft">
             <h3 className="text-lg mb-3">Phasen-Cheat-Sheet</h3>
@@ -178,7 +209,31 @@ const Index = () => {
         </footer>
       </main>
 
-      <TrackerDialog userId={user.id} open={trackerOpen} onOpenChange={setTrackerOpen} />
+      <TrackerDialog userId={userId} open={trackerOpen} onOpenChange={setTrackerOpen} />
+
+      <OnboardingDialog
+        open={showOnboarding}
+        initialName={profile.display_name}
+        onComplete={async (data) => {
+          await update({
+            display_name: data.display_name,
+            in_menopause: data.in_menopause,
+            last_period_start: data.last_period_start,
+            avg_cycle_length: data.avg_cycle_length,
+            avg_period_length: data.avg_period_length,
+            onboarding_completed: true,
+          });
+        }}
+        onImportLogs={async (logs, earliestPeriodStart) => {
+          await dataApi.bulkInsertLogs(userId, logs);
+          if (earliestPeriodStart) {
+            await update({ last_period_start: earliestPeriodStart });
+          }
+        }}
+        onImportEvents={async (events) => {
+          await dataApi.addEvents(userId, events.map(e => ({ ...e, source: "ics-import" })));
+        }}
+      />
     </div>
   );
 };
