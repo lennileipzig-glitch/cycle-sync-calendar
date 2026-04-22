@@ -54,6 +54,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
   const [interim, setInterim] = useState("");
   const [processing, setProcessing] = useState(false);
   const [pendingAction, setPendingAction] = useState<VoiceAction | null>(null);
+  const [editMode, setEditMode] = useState(false);
   const recRef = useRef<SpeechRecognitionInstance | null>(null);
 
   const speechSupported = useMemo(
