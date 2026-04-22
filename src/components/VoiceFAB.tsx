@@ -107,7 +107,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
     }
     if (!open) {
       stopListening();
-      setTranscript(""); setInterim(""); setPendingAction(null); setProcessing(false);
+      setTranscript(""); setInterim(""); setPendingAction(null); setProcessing(false); setEditMode(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
