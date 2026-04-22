@@ -8,12 +8,16 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { phase, energy, symptoms, kind } = await req.json();
+    const { phase, energy, symptoms, kind, fridge, dietStyle, intolerances, favoriteFoods } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const sys = `Du bist eine erfahrene Ernährungs- und Bewegungs-Coachin spezialisiert auf den weiblichen Zyklus. Antworte kurz, warmherzig, auf Deutsch. Liefere ausschließlich gültiges JSON gemäß Tool-Schema.`;
-    const userMsg = `Aktuelle Zyklusphase: ${phase}. Energielevel: ${energy ?? "unbekannt"}. Beschwerden: ${(symptoms ?? []).join(", ") || "keine"}. Erstelle ${kind === "recipes" ? "3 passende Rezeptideen mit kurzer Begründung warum sie jetzt guttun" : "3 passende Sport-/Bewegungsempfehlungen mit Dauer und Begründung"}.`;
+    const fridgeList: string[] = Array.isArray(fridge) ? fridge.filter((x: unknown) => typeof x === "string" && x.trim()) : [];
+    const recipeContext = kind === "recipes"
+      ? `\nErnährungsstil: ${dietStyle ?? "omnivor"}.${(intolerances ?? []).length ? ` Unverträglichkeiten/Verzicht: ${(intolerances ?? []).join(", ")}.` : ""}${(favoriteFoods ?? []).length ? ` Lieblingszutaten: ${(favoriteFoods ?? []).join(", ")}.` : ""}${fridgeList.length ? ` Verfügbare Zutaten im Kühlschrank, die bevorzugt verwendet werden sollen: ${fridgeList.join(", ")}. Nutze möglichst viele dieser Zutaten und ergänze nur das Nötigste.` : ""}`
+      : "";
+    const userMsg = `Aktuelle Zyklusphase: ${phase}. Energielevel: ${energy ?? "unbekannt"}. Beschwerden: ${(symptoms ?? []).join(", ") || "keine"}.${recipeContext} Erstelle ${kind === "recipes" ? "3 passende Rezeptideen mit kurzer Begründung warum sie jetzt guttun" : "3 passende Sport-/Bewegungsempfehlungen mit Dauer und Begründung"}.`;
 
     const tool = kind === "recipes" ? {
       type: "function",
@@ -31,6 +35,7 @@ Deno.serve(async (req) => {
                   title: { type: "string" },
                   why: { type: "string", description: "Warum jetzt passend (1 Satz)" },
                   nutrients: { type: "array", items: { type: "string" } },
+                  uses_from_fridge: { type: "array", items: { type: "string" }, description: "Welche der vorhandenen Kühlschrank-Zutaten verwendet werden" },
                 },
                 required: ["title", "why", "nutrients"],
               },
