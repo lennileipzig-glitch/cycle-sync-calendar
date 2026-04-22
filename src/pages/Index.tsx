@@ -118,6 +118,22 @@ const Index = () => {
     profile?.avg_cycle_length, profile?.avg_period_length,
   ), [selectedDate, profile]);
 
+  // Tag innerhalb der aktuellen Phase + Phasenlänge
+  const phaseProgress = useMemo(() => {
+    const cycleLen = profile?.avg_cycle_length ?? 28;
+    const periodLen = profile?.avg_period_length ?? 5;
+    const ovulationDay = cycleLen - 14;
+    const d = phase.dayInCycle;
+    if (!d) return null;
+    let phaseStart = 1, phaseLen = 1;
+    if (phase.phase === "menstrual") { phaseStart = 1; phaseLen = periodLen; }
+    else if (phase.phase === "follicular") { phaseStart = periodLen + 1; phaseLen = (ovulationDay - 1) - (periodLen + 1) + 1; }
+    else if (phase.phase === "ovulation") { phaseStart = ovulationDay - 1; phaseLen = 3; }
+    else if (phase.phase === "luteal") { phaseStart = ovulationDay + 2; phaseLen = cycleLen - phaseStart + 1; }
+    else return null;
+    return { dayInPhase: d - phaseStart + 1, phaseLen: Math.max(1, phaseLen) };
+  }, [phase, profile]);
+
   // Maps
   const eventsByDay = useMemo(() => {
     const m: Record<string, GuestEvent[]> = {};
