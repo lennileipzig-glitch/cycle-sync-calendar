@@ -48,6 +48,7 @@ REGELN:
 - "Ich habe X gegessen/Mahlzeit Y": tool=add_meal mit confidence=high wenn Zeit klar, sonst medium.
 - "Ich habe Sport gebucht/Kurs morgen 18 Uhr": tool=add_sport mit Zeit/Datum.
 - "Termin morgen 14 Uhr Zahnarzt": tool=add_appointment.
+- "Ich muss noch X machen / einkaufen / anrufen / erledigen": tool=add_todo (To-do für ein Datum).
 - "Schlag mir ein Rezept vor / was kann ich kochen": tool=suggest_recipe (nutzt Kühlschrank-Inhalt).
 - "Plane mir Sport diese Woche / find einen guten Tag für Yoga": tool=smart_plan_sport. Wähle einen Tag in den nächsten 7 Tagen mit wenig Belastung, der zur Phase passt (Krafttraining/HIIT in Follikel/Ovulation, Yoga/Spaziergänge in Menstruation/Luteal).
 - "Plane mir eine Mahlzeit": tool=smart_plan_meal.
@@ -55,15 +56,23 @@ REGELN:
 - Uhrzeiten als HH:mm (24h). Wenn keine Zeit genannt: für Mahlzeiten 12:00 (Mittag), 19:00 (Abend), 08:00 (Frühstück); für Sport 18:00; für Termine 09:00.
 - confidence: "high" wenn Datum, Zeit und Aktion eindeutig sind. "medium" wenn etwas geraten/abgeleitet wurde. "low" wenn vieles unklar.
 
-KATEGORIE-ZUORDNUNG (wichtig!):
-- Klar Sport/Bewegung (Yoga, Lauf, Gym, Pilates, Spaziergang, Schwimmen, Krafttraining, HIIT, Tanzen, Sportkurs ...) → tool=add_sport bzw. smart_plan_sport.
-- Klar Ernährung/Mahlzeit (gegessen, Frühstück, Mittag, Abendessen, Snack, Rezept, Kochen, Lebensmittel ...) → tool=add_meal bzw. smart_plan_meal / suggest_recipe.
-- Wenn die Aktion ein konkreter zeitgebundener Termin ist (Arzttermin, Meeting, Friseur, Treffen ...) → tool=add_appointment.
-- Wenn unklar ist, ob es ein TERMIN oder ein TO-DO ist (z. B. "Steuererklärung machen", "Mama anrufen", "Wohnung putzen") → tool=clarify_category mit options=["termin","todo"] und einer freundlichen Frage.
-- Wenn die Kategorie GAR NICHT erkennbar ist (zu vage, kein klares Thema) → tool=clarify_category mit options=["termin","todo","sport","ernaehrung"].
-- Nur wenn auch nach Kategorie-Klärung etwas ganz anderes unklar bleibt (z. B. fehlt das Datum) → tool=clarify (offene Rückfrage).
+MEHRERE SACHVERHALTE IN EINER ANWEISUNG (sehr wichtig!):
+- Wenn die Anweisung mehrere unabhängige Aktionen enthält (z. B. "Ich habe morgen 18 Uhr Yoga, muss danach einkaufen und um 21 Uhr Telefonat mit Boss"), rufe NUR EIN Tool auf: tool=multi_action.
+- "multi_action" enthält ein Array "items" – ein Item pro erkannter Aktion. Jedes Item hat ein Feld "kind" und die zugehörigen Felder.
+- Erlaubte kinds: "meal", "sport", "appointment", "todo", "smart_plan_sport", "smart_plan_meal", "clarify_category" (wenn ein einzelnes Item unklar ist – frag dann gezielt zu DIESEM Item nach).
+- Wende Zeit-/Datums-/Kategorie-Regeln pro Item separat an.
+- Wenn nur EINE Aktion enthalten ist, nutze die einzelnen Tools (add_meal, add_sport, ...) wie bisher – nicht multi_action.
 
-- title kurz und klar ("Yoga-Kurs", "Spaghetti mit Spinat").
+KATEGORIE-ZUORDNUNG (wichtig!):
+- Klar Sport/Bewegung (Yoga, Lauf, Gym, Pilates, Spaziergang, Schwimmen, Krafttraining, HIIT, Tanzen, Sportkurs ...) → kind=sport bzw. tool=add_sport.
+- Klar Ernährung/Mahlzeit (gegessen, Frühstück, Mittag, Abendessen, Snack, Rezept, Kochen ...) → kind=meal bzw. tool=add_meal.
+- Klar Aufgabe ohne feste Uhrzeit (einkaufen, Wäsche, anrufen, putzen, erledigen, besorgen) → kind=todo bzw. tool=add_todo.
+- Konkreter zeitgebundener Termin (Arzt, Meeting, Friseur, Telefonat um X Uhr, Treffen) → kind=appointment bzw. tool=add_appointment.
+- Wenn unklar zwischen TERMIN und TO-DO → kind=clarify_category mit options=["termin","todo"].
+- Kategorie GAR NICHT erkennbar → kind=clarify_category mit options=["termin","todo","sport","ernaehrung"].
+- Nur wenn anderes unklar (fehlt Datum o. ä.) → tool=clarify (offene Rückfrage, nur Single-Mode).
+
+- title kurz und klar ("Yoga-Kurs", "Spaghetti mit Spinat", "Einkaufen").
 - energy_cost (1-5): leicht=1-2, moderat=3, intensiv=4-5.`;
 
     const tools = [
