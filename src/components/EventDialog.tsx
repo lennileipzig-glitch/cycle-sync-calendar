@@ -171,7 +171,7 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Neuer Termin</DialogTitle>
+          <DialogTitle>{isEdit ? "Termin bearbeiten" : "Neuer Termin"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
