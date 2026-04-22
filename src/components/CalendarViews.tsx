@@ -281,6 +281,7 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
               )}
               role="button"
               tabIndex={0}
+              {...dropProps(d)}
             >
               <div className={cn("h-1.5 w-full", phaseStripe[phase])} />
               <div className="px-2 py-1.5 relative">
@@ -302,7 +303,7 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                   </div>
                 )}
                 <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} size="xs" />
+                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
                 </div>
               </div>
             </div>
