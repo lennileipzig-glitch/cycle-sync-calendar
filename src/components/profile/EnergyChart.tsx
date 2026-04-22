@@ -20,6 +20,7 @@ const RANGES: Range[] = ["week", "month", "year"];
 const RANGE_LABELS: Record<Range, string> = { week: "Woche", month: "Monat", year: "Jahr" };
 const ENERGY_LABELS = ["sehr schlecht", "schlecht", "mittel", "gut", "sehr gut"];
 const ENERGY_SHORT = ["😞", "😕", "😐", "🙂", "🤩"];
+const ENERGY_AXIS = ["sehr\nschlecht", "schlecht", "mittel", "gut", "sehr\ngut"];
 
 const energyToNum = (raw: string | null | undefined): number | null => {
   if (!raw) return null;
@@ -115,7 +116,7 @@ export function EnergyChart({ userId }: { userId: string | null }) {
       {/* Stats Strip */}
       <div className="grid grid-cols-3 gap-2">
         <StatPill label="Ø Energie" value={stats.avg !== null ? `${stats.avg.toFixed(1)}/5` : "—"} icon={<Activity className="h-3.5 w-3.5" />} />
-        <StatPill label="Bester Tag" value={stats.bestLabel ?? "—"} accent />
+        <StatPill label={range === "year" ? "Bester Monat" : "Bester Tag"} value={stats.bestLabel ?? "—"} accent />
         <StatPill label="Erfasst" value={`${stats.tracked}/${stats.total}`} />
       </div>
 
@@ -123,7 +124,7 @@ export function EnergyChart({ userId }: { userId: string | null }) {
       <Card className="p-3 pt-5 bg-gradient-to-br from-card via-card to-primary/[0.03] border-border/60 shadow-sm">
         <div className="h-[260px] w-full">
           <ResponsiveContainer>
-            <AreaChart data={data} onClick={handleClick} margin={{ top: 10, right: 16, bottom: 0, left: -24 }}>
+            <AreaChart data={data} onClick={handleClick} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="energyFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
@@ -142,11 +143,12 @@ export function EnergyChart({ userId }: { userId: string | null }) {
               <YAxis
                 domain={[1, 5]}
                 ticks={[1, 2, 3, 4, 5]}
-                tickFormatter={(v) => ENERGY_SHORT[v - 1] ?? ""}
-                tick={{ fontSize: 14 }}
+                tickFormatter={(v) => ENERGY_LABELS[v - 1] ?? ""}
+                tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false}
                 tickLine={false}
-                width={36}
+                width={68}
+                interval={0}
               />
               <Tooltip
                 cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "3 3", opacity: 0.4 }}
@@ -351,8 +353,35 @@ function buildSeries(range: Range, anchor: Date, logs: DailyLog[]): SeriesResult
   // Stats
   const valid = data.filter(p => p.energy !== null) as (Point & { energy: number })[];
   const avg = valid.length ? valid.reduce((s, p) => s + p.energy, 0) / valid.length : null;
-  const best = valid.reduce<(Point & { energy: number }) | null>((acc, p) => (!acc || p.energy > acc.energy) ? p : acc, null);
-  const bestLabel = best ? best.label : null;
+
+  let bestLabel: string | null = null;
+  if (range === "year") {
+    // Bester Monat = Monat mit höchstem Tagesdurchschnitt im Jahr
+    const yearStart = startOfYear(anchor);
+    const yearEnd = endOfYear(anchor);
+    const monthBuckets = new Map<number, number[]>();
+    logs.forEach(l => {
+      const d = new Date(l.log_date);
+      if (d < yearStart || d > yearEnd) return;
+      const v = energyToNum(l.energy_level);
+      if (v === null) return;
+      const m = d.getMonth();
+      if (!monthBuckets.has(m)) monthBuckets.set(m, []);
+      monthBuckets.get(m)!.push(v);
+    });
+    let bestM = -1; let bestAvg = -Infinity;
+    monthBuckets.forEach((vals, m) => {
+      const a = vals.reduce((s, x) => s + x, 0) / vals.length;
+      if (a > bestAvg) { bestAvg = a; bestM = m; }
+    });
+    if (bestM >= 0) {
+      const monthDate = new Date(anchor.getFullYear(), bestM, 1);
+      bestLabel = format(monthDate, "MMMM", { locale: de });
+    }
+  } else {
+    const best = valid.reduce<(Point & { energy: number }) | null>((acc, p) => (!acc || p.energy > acc.energy) ? p : acc, null);
+    bestLabel = best ? format(new Date(best.date), "d. MMM", { locale: de }) : null;
+  }
 
   return {
     data,
