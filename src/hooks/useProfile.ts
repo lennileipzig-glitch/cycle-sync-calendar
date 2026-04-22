@@ -2,6 +2,9 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { isGuest, guestStore } from "@/lib/guestStore";
 
+export type DietStyle = "omnivore" | "vegetarian" | "vegan" | "pescetarian";
+export type SportLevel = "beginner" | "regular" | "athletic";
+
 export interface Profile {
   id: string;
   display_name: string | null;
@@ -10,6 +13,20 @@ export interface Profile {
   last_period_start: string | null;
   onboarding_completed: boolean;
   in_menopause: boolean;
+  // Ernährung
+  diet_style: DietStyle;
+  diet_intolerances: string[];
+  favorite_foods: string[];
+  // Sport
+  sports: string[];
+  sport_level: SportLevel;
+  sport_frequency_per_week: number;
+  // Notifications (nur UI-Vorbereitung, kein Versand)
+  notifications_enabled: boolean;
+  notification_time: string; // "HH:MM"
+  notification_topics: string[];
+  // Eigene gespeicherte Beschwerden
+  custom_symptoms: string[];
 }
 
 const guestId = "guest-local";

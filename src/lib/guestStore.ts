@@ -48,10 +48,26 @@ const write = (key: string, v: unknown) => localStorage.setItem(key, JSON.string
 
 export const guestStore = {
   getProfile(): GuestProfile {
-    return read<GuestProfile>(PROFILE_KEY, {
-      display_name: "Gast", avg_cycle_length: 28, avg_period_length: 5,
-      last_period_start: null, onboarding_completed: false, in_menopause: false,
-    });
+    const stored = read<Partial<GuestProfile>>(PROFILE_KEY, {} as Partial<GuestProfile>);
+    const defaults: GuestProfile = {
+      display_name: "Gast",
+      avg_cycle_length: 28,
+      avg_period_length: 5,
+      last_period_start: null,
+      onboarding_completed: false,
+      in_menopause: false,
+      diet_style: "omnivore",
+      diet_intolerances: [],
+      favorite_foods: [],
+      sports: [],
+      sport_level: "regular",
+      sport_frequency_per_week: 3,
+      notifications_enabled: false,
+      notification_time: "09:00",
+      notification_topics: ["energy_forecast", "checkin"],
+      custom_symptoms: [],
+    };
+    return { ...defaults, ...stored };
   },
   updateProfile(patch: Partial<GuestProfile>) {
     const p = { ...this.getProfile(), ...patch };
