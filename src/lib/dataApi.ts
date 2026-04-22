@@ -196,4 +196,23 @@ export const dataApi = {
     if (!userId) return;
     await supabase.from("calendar_events").delete().eq("id", id);
   },
+
+  /** Verschiebt ein Event auf ein anderes Datum (Drag & Drop). Uhrzeit bleibt erhalten. */
+  async moveEventToDate(userId: string | null, event: GuestEvent, newDateStr: string): Promise<void> {
+    const oldStart = new Date(event.starts_at);
+    const oldEnd = event.ends_at ? new Date(event.ends_at) : null;
+    const [y, m, d] = newDateStr.split("-").map(Number);
+    const newStart = new Date(oldStart);
+    newStart.setFullYear(y, m - 1, d);
+    let newEnd: Date | null = null;
+    if (oldEnd) {
+      const durMs = oldEnd.getTime() - oldStart.getTime();
+      newEnd = new Date(newStart.getTime() + durMs);
+    }
+    const patch: Partial<GuestEvent> = {
+      starts_at: newStart.toISOString(),
+      ends_at: newEnd ? newEnd.toISOString() : null,
+    };
+    await this.updateEvent(userId, event.id, patch);
+  },
 };
