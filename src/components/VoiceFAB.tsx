@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Mic, MicOff, Loader2, Sparkles, X, Check } from "lucide-react";
+import { Mic, MicOff, Loader2, Sparkles, X, Check, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +54,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
   const [interim, setInterim] = useState("");
   const [processing, setProcessing] = useState(false);
   const [pendingAction, setPendingAction] = useState<VoiceAction | null>(null);
+  const [editMode, setEditMode] = useState(false);
   const recRef = useRef<SpeechRecognitionInstance | null>(null);
 
   const speechSupported = useMemo(
@@ -103,7 +107,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
     }
     if (!open) {
       stopListening();
-      setTranscript(""); setInterim(""); setPendingAction(null); setProcessing(false);
+      setTranscript(""); setInterim(""); setPendingAction(null); setProcessing(false); setEditMode(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -254,17 +258,19 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
 
           {!pendingAction && (
             <div className="space-y-3">
-              <Card className="p-4 min-h-[100px] bg-muted/40">
-                {transcript || interim ? (
-                  <p className="text-sm">
-                    {transcript} <span className="text-muted-foreground italic">{interim}</span>
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">
-                    {listening ? "Ich höre dich…" : "Tippe auf das Mikrofon und sprich."}
-                  </p>
-                )}
-              </Card>
+              <div className="space-y-1.5">
+                <Label htmlFor="voice-transcript" className="text-xs text-muted-foreground">
+                  Transkript {listening && <span className="italic">· Ich höre dich…</span>}
+                </Label>
+                <Textarea
+                  id="voice-transcript"
+                  value={transcript + (interim ? " " + interim : "")}
+                  onChange={(e) => { setTranscript(e.target.value); setInterim(""); }}
+                  placeholder="Tippe auf das Mikrofon und sprich – oder schreibe direkt hier rein."
+                  className="min-h-[110px] bg-muted/40"
+                />
+                <p className="text-[11px] text-muted-foreground">Tipp: Du kannst den Text vor dem Senden noch anpassen (z. B. Uhrzeit korrigieren).</p>
+              </div>
 
               <div className="flex items-center justify-center gap-2">
                 {!listening ? (
@@ -315,21 +321,84 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
 
           {pendingAction && pendingAction.action !== "suggest_recipe" && pendingAction.action !== "clarify" && (
             <div className="space-y-3">
-              <Card className="p-4 bg-primary/5 border-primary/30">
-                <p className="text-sm font-medium">{pendingAction.payload.spoken_summary}</p>
-                <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
-                  <p>📅 {format(new Date(`${pendingAction.payload.date}T${pendingAction.payload.time}:00`), "EEEE, d. MMMM · HH:mm 'Uhr'", { locale: de })}</p>
-                  <p>📝 {pendingAction.payload.title}</p>
-                  {"reasoning" in pendingAction.payload && pendingAction.payload.reasoning && (
-                    <p className="italic mt-1">💡 {pendingAction.payload.reasoning}</p>
+              {!editMode ? (
+                <Card className="p-4 bg-primary/5 border-primary/30">
+                  <p className="text-sm font-medium">{pendingAction.payload.spoken_summary}</p>
+                  <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
+                    <p>📅 {format(new Date(`${pendingAction.payload.date}T${pendingAction.payload.time}:00`), "EEEE, d. MMMM · HH:mm 'Uhr'", { locale: de })}</p>
+                    <p>📝 {pendingAction.payload.title}</p>
+                    {"duration_min" in pendingAction.payload && pendingAction.payload.duration_min && (
+                      <p>⏱️ {pendingAction.payload.duration_min} Min.</p>
+                    )}
+                    {"location" in pendingAction.payload && pendingAction.payload.location && (
+                      <p>📍 {pendingAction.payload.location}</p>
+                    )}
+                    {"reasoning" in pendingAction.payload && pendingAction.payload.reasoning && (
+                      <p className="italic mt-1">💡 {pendingAction.payload.reasoning}</p>
+                    )}
+                  </div>
+                </Card>
+              ) : (
+                <Card className="p-4 bg-primary/5 border-primary/30 space-y-2.5">
+                  <div className="space-y-1">
+                    <Label htmlFor="edit-title" className="text-xs">Titel</Label>
+                    <Input
+                      id="edit-title"
+                      value={pendingAction.payload.title}
+                      onChange={(e) => setPendingAction({ ...pendingAction, payload: { ...pendingAction.payload, title: e.target.value } } as VoiceAction)}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="edit-date" className="text-xs">Datum</Label>
+                      <Input
+                        id="edit-date"
+                        type="date"
+                        value={pendingAction.payload.date}
+                        onChange={(e) => setPendingAction({ ...pendingAction, payload: { ...pendingAction.payload, date: e.target.value } } as VoiceAction)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="edit-time" className="text-xs">Uhrzeit</Label>
+                      <Input
+                        id="edit-time"
+                        type="time"
+                        value={pendingAction.payload.time}
+                        onChange={(e) => setPendingAction({ ...pendingAction, payload: { ...pendingAction.payload, time: e.target.value } } as VoiceAction)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="edit-duration" className="text-xs">Dauer (Min.)</Label>
+                    <Input
+                      id="edit-duration"
+                      type="number"
+                      min={5}
+                      step={5}
+                      value={("duration_min" in pendingAction.payload && pendingAction.payload.duration_min) || ""}
+                      onChange={(e) => setPendingAction({ ...pendingAction, payload: { ...pendingAction.payload, duration_min: e.target.value ? Number(e.target.value) : undefined } } as VoiceAction)}
+                    />
+                  </div>
+                  {"location" in pendingAction.payload && (
+                    <div className="space-y-1">
+                      <Label htmlFor="edit-location" className="text-xs">Ort</Label>
+                      <Input
+                        id="edit-location"
+                        value={pendingAction.payload.location ?? ""}
+                        onChange={(e) => setPendingAction({ ...pendingAction, payload: { ...pendingAction.payload, location: e.target.value } } as VoiceAction)}
+                      />
+                    </div>
                   )}
-                </div>
-              </Card>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => { setPendingAction(null); setTranscript(""); }}>
+                </Card>
+              )}
+              <DialogFooter className="flex-wrap gap-2 sm:gap-2">
+                <Button variant="outline" onClick={() => { setPendingAction(null); setEditMode(false); setTranscript(""); }}>
                   <X className="h-4 w-4 mr-1" /> Verwerfen
                 </Button>
-                <Button onClick={() => executeAction(pendingAction)} disabled={processing}>
+                <Button variant="secondary" onClick={() => setEditMode((v) => !v)}>
+                  <Pencil className="h-4 w-4 mr-1" /> {editMode ? "Fertig" : "Bearbeiten"}
+                </Button>
+                <Button onClick={() => { setEditMode(false); executeAction(pendingAction); }} disabled={processing}>
                   {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
                   Ja, eintragen
                 </Button>
