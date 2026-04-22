@@ -106,9 +106,31 @@ export const dataApi = {
   async getEvents(userId: string | null): Promise<GuestEvent[]> {
     if (isGuest()) return guestStore.getEvents();
     if (!userId) return [];
-    const { data } = await supabase.from("calendar_events").select("*")
-      .eq("user_id", userId).order("starts_at");
-    return (data as GuestEvent[]) ?? [];
+    // RLS lädt automatisch eigene + akzeptiert geteilte Events
+    const { data: events } = await supabase.from("calendar_events").select("*").order("starts_at");
+    const list = (events ?? []) as GuestEvent[];
+
+    // Owner-Namen + Phasen-Sichtbarkeit für geteilte Events ergänzen
+    const foreignOwnerIds = Array.from(new Set(
+      list.filter(e => e.user_id && e.user_id !== userId).map(e => e.user_id as string),
+    ));
+    if (foreignOwnerIds.length > 0) {
+      const [{ data: profilesData }, { data: sharesData }] = await Promise.all([
+        supabase.from("profiles").select("id, display_name").in("id", foreignOwnerIds),
+        supabase.from("calendar_shares").select("owner_id, show_phases").eq("status", "accepted").in("owner_id", foreignOwnerIds),
+      ]);
+      const nameMap = new Map((profilesData ?? []).map(p => [p.id, p.display_name as string | null]));
+      const phaseMap = new Map((sharesData ?? []).map(s => [s.owner_id, s.show_phases as boolean]));
+      return list.map(e => {
+        if (!e.user_id || e.user_id === userId) return e;
+        return {
+          ...e,
+          _shared_owner_name: nameMap.get(e.user_id) ?? "geteilt",
+          _shared_show_phases: phaseMap.get(e.user_id) ?? false,
+        };
+      });
+    }
+    return list;
   },
 
   async getEventsForDate(userId: string | null, date: string): Promise<GuestEvent[]> {
@@ -116,7 +138,7 @@ export const dataApi = {
     return all.filter(e => e.starts_at.slice(0, 10) === date);
   },
 
-  async addEvents(userId: string | null, events: Omit<GuestEvent, "id">[]): Promise<void> {
+  async addEvents(userId: string | null, events: Omit<GuestEvent, "id">[], opts?: { sharedVia?: string; ownerUserId?: string }): Promise<void> {
     // Wiederkehrende Termine zu Einzel-Events expandieren
     const expanded: Omit<GuestEvent, "id">[] = [];
     for (const e of events) {
@@ -151,7 +173,13 @@ export const dataApi = {
     }
     if (isGuest()) { guestStore.addEvents(expanded); return; }
     if (!userId || expanded.length === 0) return;
-    const rows = expanded.map(e => ({ user_id: userId, ...e }));
+    // UI-only Felder rausstrippen + Owner setzen (bei Beitrag in fremdem Kalender)
+    const targetOwner = opts?.ownerUserId ?? userId;
+    const rows = expanded.map(({ _shared_owner_name, _shared_show_phases, user_id, shared_via, ...rest }) => ({
+      ...rest,
+      user_id: targetOwner,
+      shared_via: opts?.sharedVia ?? null,
+    }));
     await supabase.from("calendar_events").insert(rows);
   },
 };

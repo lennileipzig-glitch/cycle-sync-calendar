@@ -131,9 +131,12 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                 {events.slice(0, 2).map((e) => (
                   <div
                     key={e.id}
-                    className="text-[9px] leading-tight px-1 py-0.5 rounded truncate text-left border-l-2"
+                    className={cn(
+                      "text-[9px] leading-tight px-1 py-0.5 rounded truncate text-left border-l-2",
+                      e._shared_owner_name && "border-dashed",
+                    )}
                     style={{ background: `${phaseColorVar.replace(')', ' / 0.18)')}`, borderLeftColor: phaseColorVar }}
-                    title={e.title}
+                    title={e._shared_owner_name ? `${e.title} · von ${e._shared_owner_name}` : e.title}
                   >
                     {!e.all_day && (
                       <span className="text-muted-foreground mr-0.5">
@@ -141,6 +144,7 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                       </span>
                     )}
                     {e.title}
+                    {e._shared_owner_name && <span className="opacity-60"> · {e._shared_owner_name}</span>}
                   </div>
                 ))}
                 {events.length > 2 && (
@@ -515,7 +519,14 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
             <ul className="space-y-2">
               {events.map(e => (
                 <li key={e.id} className="text-sm">
-                  <div className="font-medium">{e.title}</div>
+                  <div className="font-medium">
+                    {e.title}
+                    {e._shared_owner_name && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground border border-dashed border-border rounded px-1 py-px">
+                        von {e._shared_owner_name}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     {e.all_day ? "Ganztägig" : format(new Date(e.starts_at), "HH:mm")}
                     {e.location && ` · ${e.location}`}

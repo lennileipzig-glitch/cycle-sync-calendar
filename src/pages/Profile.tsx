@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, User as UserIcon, Save } from "lucide-react";
+import { ArrowLeft, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, User as UserIcon, Save, Share2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, type DietStyle, type SportLevel } from "@/hooks/useProfile";
 import { isGuest } from "@/lib/guestStore";
@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { ImportDialog } from "@/components/ImportDialog";
 import { EnergyChart } from "@/components/profile/EnergyChart";
 import { TagInput } from "@/components/profile/TagInput";
+import { ShareCalendarDialog } from "@/components/ShareCalendarDialog";
 
 const DIET_STYLES: { value: DietStyle; label: string }[] = [
   { value: "omnivore", label: "Omnivor (alles)" },
@@ -42,6 +43,7 @@ export default function Profile() {
   const { profile, update, loading } = useProfile(user?.id, guest);
 
   const [importKind, setImportKind] = useState<"csv" | "ics" | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Lokale Form-States
   const [name, setName] = useState("");
@@ -192,6 +194,18 @@ export default function Profile() {
               </div>
 
               <Button onClick={saveProfileBasics} className="w-full"><Save className="h-4 w-4 mr-2" /> Speichern</Button>
+
+              {!guest && (
+                <div className="pt-3 border-t border-border space-y-2">
+                  <div>
+                    <Label>Kalender teilen</Label>
+                    <p className="text-xs text-muted-foreground">Lade Personen ein, deinen Kalender zu sehen. Du entscheidest pro Person, ob deine Zyklusphasen sichtbar sind (Standard: aus).</p>
+                  </div>
+                  <Button variant="outline" className="w-full justify-start" onClick={() => setShareOpen(true)}>
+                    <Share2 className="h-4 w-4 mr-2" /> Freigaben verwalten
+                  </Button>
+                </div>
+              )}
             </Card>
           </TabsContent>
 
@@ -282,6 +296,8 @@ export default function Profile() {
           toast.success(`${events.length} Termine importiert`);
         }}
       />
+
+      <ShareCalendarDialog ownerId={userId} open={shareOpen} onOpenChange={setShareOpen} />
     </div>
   );
 }
