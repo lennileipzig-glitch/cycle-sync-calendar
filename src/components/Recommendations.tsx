@@ -78,12 +78,6 @@ export function Recommendations({
       onEventAdded?.();
     } catch (e) { console.error(e); }
   };
-  const [recipes, setRecipes] = useState<RecipeItem[]>([]);
-  const [workouts, setWorkouts] = useState<WorkoutItem[]>([]);
-  const [loadingR, setLoadingR] = useState(false);
-  const [loadingW, setLoadingW] = useState(false);
-  const [fridge, setFridge] = useState<string[]>(loadFridge());
-  const [fridgeInput, setFridgeInput] = useState("");
 
   useEffect(() => { localStorage.setItem(FRIDGE_KEY, JSON.stringify(fridge)); }, [fridge]);
 
