@@ -93,6 +93,57 @@ export function Recommendations({
 
   useEffect(() => { setRecipes([]); setWorkouts([]); }, [phase.phase, energy, JSON.stringify(symptoms)]);
 
+  const dayLabel = format(selectedDate, "EEEE, d. MMM", { locale: de });
+
+  const addRecipeToDay = async (r: RecipeItem) => {
+    const start = new Date(selectedDate); start.setHours(12, 0, 0, 0);
+    const end = new Date(selectedDate); end.setHours(13, 0, 0, 0);
+    const detailsParts: string[] = [r.why];
+    if (r.nutrients?.length) detailsParts.push(`Nährstoffe: ${r.nutrients.join(", ")}`);
+    if (r.uses_from_fridge?.length) detailsParts.push(`Aus Kühlschrank: ${r.uses_from_fridge.join(", ")}`);
+    await dataApi.addEvents(userId, [{
+      title: r.title,
+      starts_at: start.toISOString(),
+      ends_at: end.toISOString(),
+      all_day: false,
+      location: null,
+      source: "ai-recipe",
+      energy_cost: 1.5,
+      is_flexible: false,
+      recurrence_freq: null,
+      recurrence_until: null,
+      category: "mahlzeit",
+      details: detailsParts.join("\n"),
+    }]);
+    toast.success(`„${r.title}" zu ${dayLabel} hinzugefügt`);
+    onEventAdded?.();
+  };
+
+  const addWorkoutToDay = async (w: WorkoutItem) => {
+    const start = new Date(selectedDate); start.setHours(18, 0, 0, 0);
+    const minMatch = /(\d+)/.exec(w.duration);
+    const minutes = minMatch ? Math.min(180, parseInt(minMatch[1], 10)) : 45;
+    const end = new Date(start.getTime() + minutes * 60_000);
+    const intensityCost = w.intensity === "intensiv" ? 4.5 : w.intensity === "moderat" ? 3.5 : 2.5;
+    await dataApi.addEvents(userId, [{
+      title: w.title,
+      starts_at: start.toISOString(),
+      ends_at: end.toISOString(),
+      all_day: false,
+      location: null,
+      source: "ai-workout",
+      energy_cost: intensityCost,
+      is_flexible: false,
+      recurrence_freq: null,
+      recurrence_until: null,
+      category: "sport",
+      details: `${w.why}\nDauer: ${w.duration} · Intensität: ${w.intensity}`,
+    }]);
+    toast.success(`„${w.title}" zu ${dayLabel} hinzugefügt`);
+    onEventAdded?.();
+  };
+
+
   const personalNote = () => {
     const parts: string[] = [];
     if (energy) parts.push(`Energie: ${energyLabel(energy)}`);
