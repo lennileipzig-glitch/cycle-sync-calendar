@@ -388,6 +388,8 @@ const Index = () => {
           setAllEvents(await dataApi.getEvents(userId));
         }}
       />
+
+      <ShareCalendarDialog ownerId={userId} open={shareOpen} onOpenChange={setShareOpen} />
     </div>
   );
 };
