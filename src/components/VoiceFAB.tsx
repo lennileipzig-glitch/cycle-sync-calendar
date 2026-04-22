@@ -19,52 +19,10 @@ type CategoryOption = "termin" | "todo" | "sport" | "ernaehrung";
 
 type VoiceAction =
   | { action: "add_meal" | "add_sport" | "add_appointment"; payload: { title: string; date: string; time: string; duration_min?: number; energy_cost?: number; location?: string; details?: string; confidence: "high" | "medium" | "low"; spoken_summary: string } }
-  | { action: "add_todo"; payload: { title: string; date: string; energy_cost?: number; confidence: "high" | "medium" | "low"; spoken_summary: string } }
   | { action: "smart_plan_sport" | "smart_plan_meal"; payload: { title: string; date: string; time: string; duration_min?: number; energy_cost?: number; reasoning: string; confidence: "high" | "medium" | "low"; spoken_summary: string } }
   | { action: "suggest_recipe"; payload: { recipes: { title: string; why: string; uses_from_fridge?: string[]; short_steps?: string }[]; spoken_summary: string } }
   | { action: "clarify_category"; payload: { question: string; options: CategoryOption[]; suggested_title?: string; suggested_date?: string; suggested_time?: string; spoken_summary: string } }
   | { action: "clarify"; payload: { question: string; spoken_summary: string } };
-
-interface MultiItem {
-  kind: "meal" | "sport" | "appointment" | "todo" | "smart_plan_sport" | "smart_plan_meal" | "clarify_category";
-  title: string;
-  date?: string;
-  time?: string;
-  duration_min?: number;
-  energy_cost?: number;
-  location?: string;
-  details?: string;
-  reasoning?: string;
-  confidence?: "high" | "medium" | "low";
-  question?: string;
-  options?: CategoryOption[];
-}
-
-// Wandelt ein multi_action-Item in eine VoiceAction (Single-Action-Form) um.
-function multiItemToAction(item: MultiItem): VoiceAction | null {
-  const today = new Date().toISOString().slice(0, 10);
-  const date = item.date ?? today;
-  const conf = item.confidence ?? "medium";
-  const summary = item.title;
-  switch (item.kind) {
-    case "meal":
-      return { action: "add_meal", payload: { title: item.title, date, time: item.time ?? "12:00", duration_min: item.duration_min, energy_cost: item.energy_cost, details: item.details, confidence: conf, spoken_summary: summary } };
-    case "sport":
-      return { action: "add_sport", payload: { title: item.title, date, time: item.time ?? "18:00", duration_min: item.duration_min, energy_cost: item.energy_cost, details: item.details, confidence: conf, spoken_summary: summary } };
-    case "appointment":
-      return { action: "add_appointment", payload: { title: item.title, date, time: item.time ?? "09:00", duration_min: item.duration_min, location: item.location, details: item.details, confidence: conf, spoken_summary: summary } };
-    case "todo":
-      return { action: "add_todo", payload: { title: item.title, date, energy_cost: item.energy_cost, confidence: conf, spoken_summary: summary } };
-    case "smart_plan_sport":
-      return { action: "smart_plan_sport", payload: { title: item.title, date, time: item.time ?? "18:00", duration_min: item.duration_min, energy_cost: item.energy_cost, reasoning: item.reasoning ?? "", confidence: conf, spoken_summary: summary } };
-    case "smart_plan_meal":
-      return { action: "smart_plan_meal", payload: { title: item.title, date, time: item.time ?? "12:00", reasoning: item.reasoning ?? "", confidence: conf, spoken_summary: summary } };
-    case "clarify_category":
-      return { action: "clarify_category", payload: { question: item.question ?? `Wozu passt „${item.title}"?`, options: (item.options ?? ["termin", "todo", "sport", "ernaehrung"]) as CategoryOption[], suggested_title: item.title, suggested_date: item.date, suggested_time: item.time, spoken_summary: summary } };
-    default:
-      return null;
-  }
-}
 
 const CATEGORY_LABELS: Record<CategoryOption, string> = {
   termin: "Termin",
@@ -106,8 +64,6 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
   const [interim, setInterim] = useState("");
   const [processing, setProcessing] = useState(false);
   const [pendingAction, setPendingAction] = useState<VoiceAction | null>(null);
-  const [queue, setQueue] = useState<VoiceAction[]>([]);
-  const [queueProgress, setQueueProgress] = useState<{ done: number; total: number } | null>(null);
   const [editMode, setEditMode] = useState(false);
   const recRef = useRef<SpeechRecognitionInstance | null>(null);
 
@@ -162,7 +118,6 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
     if (!open) {
       stopListening();
       setTranscript(""); setInterim(""); setPendingAction(null); setProcessing(false); setEditMode(false);
-      setQueue([]); setQueueProgress(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -200,44 +155,6 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
     };
   }, [userId, profile]);
 
-  // Verarbeitet die nächste Action aus der Queue (für Multi-Action-Anweisungen).
-  const processNextAction = useCallback(async (
-    remaining: VoiceAction[],
-    runner: (act: VoiceAction) => Promise<void>,
-  ) => {
-    if (remaining.length === 0) {
-      setQueue([]);
-      setQueueProgress(null);
-      setPendingAction(null);
-      setProcessing(false);
-      setOpen(false);
-      return;
-    }
-    const [next, ...rest] = remaining;
-    setQueue(rest);
-    setQueueProgress((prev) => prev ? { done: prev.done + 1, total: prev.total } : null);
-
-    // Clarify, clarify_category und low/medium-confidence Aktionen brauchen User-Input.
-    const needsConfirmation =
-      next.action === "clarify_category" ||
-      ((next.action !== "suggest_recipe" && next.action !== "clarify") && next.payload.confidence !== "high");
-
-    if (needsConfirmation || next.action === "suggest_recipe") {
-      setPendingAction(next);
-      setProcessing(false);
-      return;
-    }
-    // High-confidence: direkt ausführen, dann weiter
-    await runner(next);
-  }, []);
-
-  const advanceQueue = useCallback(async () => {
-    await processNextAction(queue, (act) => executeActionRef.current(act));
-  }, [queue, processNextAction]);
-
-  // Ref-Trick um Zirkular-Abhängigkeit zwischen execute & advance zu vermeiden
-  const executeActionRef = useRef<(act: VoiceAction) => Promise<void>>(async () => {});
-
   const sendToAssistant = useCallback(async (text: string) => {
     setProcessing(true);
     try {
@@ -247,43 +164,33 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-
-      // Multi-Action: in Queue umwandeln und nacheinander abarbeiten
-      if (data?.action === "multi" || data?.action === "multi_action") {
-        const items: MultiItem[] = (data.payload?.items ?? []) as MultiItem[];
-        const actions = items.map(multiItemToAction).filter((a): a is VoiceAction => a !== null);
-        if (actions.length === 0) {
-          toast({ title: "Nichts erkannt", description: "Magst du es anders formulieren?" });
-          setProcessing(false);
-          return;
-        }
-        toast({ title: `${actions.length} Sachverhalte erkannt`, description: data.payload?.spoken_summary ?? "Ich arbeite sie nacheinander durch." });
-        setQueueProgress({ done: 0, total: actions.length });
-        await processNextAction(actions, (act) => executeActionRef.current(act));
-        return;
-      }
-
       const result = data as VoiceAction;
 
       if (result.action === "clarify") {
         toast({ title: "Fravia fragt nach", description: result.payload.question });
         setProcessing(false);
-        setTranscript("");
+        setTranscript(""); // erlauben, neu zu sprechen
         return;
       }
+
       if (result.action === "clarify_category") {
+        // Auswahl im Dialog anzeigen – Userin entscheidet manuell.
         setPendingAction(result);
         setProcessing(false);
         return;
       }
+
       if (result.action === "suggest_recipe") {
+        // Rezeptvorschläge nur anzeigen, nicht buchen
         setPendingAction(result);
         setProcessing(false);
         return;
       }
+
+      // Termin-/Mahlzeit-/Sport-Aktionen
       const conf = result.payload.confidence;
       if (conf === "high") {
-        await executeActionRef.current(result);
+        await executeAction(result);
       } else {
         setPendingAction(result);
         setProcessing(false);
@@ -293,51 +200,42 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
       toast({ title: "Fehler", description: e instanceof Error ? e.message : "Unbekannt", variant: "destructive" });
       setProcessing(false);
     }
-  }, [buildContext, toast, processNextAction]);
+  }, [buildContext, toast]);
 
-  // Handhabt die Auswahl in der Kategorie-Rückfrage (für ein einzelnes Item)
+  // Handhabt die Auswahl in der Kategorie-Rückfrage
   const handleCategoryChoice = useCallback(async (choice: CategoryOption) => {
     if (!pendingAction || pendingAction.action !== "clarify_category") return;
     const p = pendingAction.payload;
     const today = format(new Date(), "yyyy-MM-dd");
     const date = p.suggested_date ?? today;
     const title = p.suggested_title ?? (transcript.trim().slice(0, 80) || "Neuer Eintrag");
-    const time = p.suggested_time;
 
-    // Direkt eine konkrete Action bauen statt erneuten Roundtrip (besonders wichtig in Queue)
-    let nextAction: VoiceAction | null = null;
+    // To-do direkt anlegen (ohne Edge-Function-Roundtrip)
     if (choice === "todo") {
-      nextAction = { action: "add_todo", payload: { title, date, confidence: "high", spoken_summary: title } };
-    } else if (choice === "sport") {
-      nextAction = { action: "add_sport", payload: { title, date, time: time ?? "18:00", confidence: "high", spoken_summary: title } };
-    } else if (choice === "ernaehrung") {
-      nextAction = { action: "add_meal", payload: { title, date, time: time ?? "12:00", confidence: "high", spoken_summary: title } };
-    } else { // termin
-      nextAction = { action: "add_appointment", payload: { title, date, time: time ?? "09:00", confidence: "high", spoken_summary: title } };
-    }
-    setPendingAction(null);
-    await executeActionRef.current(nextAction);
-  }, [pendingAction, transcript]);
-
-  const executeAction = useCallback(async (act: VoiceAction) => {
-    if (act.action === "clarify" || act.action === "clarify_category" || act.action === "suggest_recipe") return;
-
-    // Sonderfall To-do: keine Uhrzeit, separate Tabelle
-    if (act.action === "add_todo") {
-      const p = act.payload;
       try {
-        await dataApi.addTodo(userId, p.date, p.title, { energy_cost: p.energy_cost ?? null });
+        await dataApi.addTodo(userId, date, title);
         await onChanged();
-        toast({ title: "To-do angelegt", description: `${p.title} · ${format(new Date(p.date), "EEE d.M.", { locale: de })}` });
+        toast({ title: "To-do angelegt", description: `${title} · ${format(new Date(date), "EEE d.M.", { locale: de })}` });
+        setPendingAction(null);
+        setOpen(false);
       } catch (e) {
         toast({ title: "Fehler", description: e instanceof Error ? e.message : "Unbekannt", variant: "destructive" });
       }
-      setPendingAction(null);
-      // Queue weiter abarbeiten oder Dialog schließen
-      await processNextAction(queue, (a) => executeActionRef.current(a));
       return;
     }
 
+    // Für Termin/Sport/Ernährung: Assistent erneut bitten – mit fixierter Kategorie
+    const categoryHint =
+      choice === "sport" ? "Es ist eine Sport-/Bewegungseinheit." :
+      choice === "ernaehrung" ? "Es ist eine Mahlzeit." :
+      "Es ist ein normaler Termin.";
+    const followUp = `${transcript.trim()} (Hinweis von der Nutzerin: ${categoryHint})`;
+    setPendingAction(null);
+    await sendToAssistant(followUp);
+  }, [pendingAction, transcript, userId, onChanged, toast, sendToAssistant]);
+
+  const executeAction = useCallback(async (act: VoiceAction) => {
+    if (act.action === "clarify" || act.action === "clarify_category" || act.action === "suggest_recipe") return;
     const p = act.payload;
     const category: "termin" | "mahlzeit" | "sport" =
       act.action === "add_meal" || act.action === "smart_plan_meal" ? "mahlzeit" :
@@ -358,30 +256,25 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
       details: ("details" in p && p.details) ? p.details : (("reasoning" in p && p.reasoning) ? p.reasoning : null),
     };
 
-    try {
-      const inserted = await dataApi.addEvents(userId, [eventInput]);
-      await onChanged();
-      const undoEventId = (inserted as unknown as { id?: string }[] | undefined)?.[0]?.id;
-      toast({
-        title: "Eingetragen",
-        description: `${p.title} · ${format(startsAt, "EEE d.M., HH:mm", { locale: de })}`,
-        action: undoEventId ? (
-          <Button variant="ghost" size="sm" onClick={async () => {
-            await dataApi.deleteEvent(userId, undoEventId);
-            await onChanged();
-          }}>Rückgängig</Button>
-        ) : undefined,
-      });
-    } catch (e) {
-      toast({ title: "Fehler", description: e instanceof Error ? e.message : "Unbekannt", variant: "destructive" });
-    }
+    const inserted = await dataApi.addEvents(userId, [eventInput]);
+    await onChanged();
+
+    // Toast mit Undo
+    const undoEventId = (inserted as unknown as { id?: string }[] | undefined)?.[0]?.id;
+    toast({
+      title: "Eingetragen",
+      description: `${p.title} · ${format(startsAt, "EEE d.M., HH:mm", { locale: de })}`,
+      action: undoEventId ? (
+        <Button variant="ghost" size="sm" onClick={async () => {
+          await dataApi.deleteEvent(userId, undoEventId);
+          await onChanged();
+        }}>Rückgängig</Button>
+      ) : undefined,
+    });
     setPendingAction(null);
-    await processNextAction(queue, (a) => executeActionRef.current(a));
-  }, [userId, onChanged, toast, queue, processNextAction]);
-
-  // executeActionRef immer aktuell halten
-  useEffect(() => { executeActionRef.current = executeAction; }, [executeAction]);
-
+    setProcessing(false);
+    setOpen(false);
+  }, [userId, onChanged, toast]);
 
   const handleSubmitTranscript = useCallback(() => {
     if (!transcript.trim()) return;
@@ -408,9 +301,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
               Sprich mit Fravia
             </DialogTitle>
             <DialogDescription>
-              {queueProgress
-                ? `Sachverhalt ${queueProgress.done} von ${queueProgress.total}`
-                : "Z. B. „Morgen 18 Uhr Yoga, danach einkaufen, 21 Uhr Telefonat mit Boss“."}
+              Z. B. „Ich habe morgen 18 Uhr Yoga“ oder „Schlag mir ein Rezept mit Spinat vor“.
             </DialogDescription>
           </DialogHeader>
 
@@ -496,44 +387,15 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
                   </Button>
                 ))}
               </div>
-              <DialogFooter className="flex-wrap gap-2">
-                <Button variant="outline" onClick={() => { setPendingAction(null); setQueue([]); setQueueProgress(null); setTranscript(""); setOpen(false); }}>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setPendingAction(null); setTranscript(""); }}>
                   <X className="h-4 w-4 mr-1" /> Abbrechen
                 </Button>
-                {queue.length > 0 && (
-                  <Button variant="ghost" onClick={async () => {
-                    setPendingAction(null);
-                    await processNextAction(queue, (a) => executeActionRef.current(a));
-                  }}>
-                    Überspringen
-                  </Button>
-                )}
               </DialogFooter>
             </div>
           )}
 
-          {pendingAction && pendingAction.action === "add_todo" && (
-            <div className="space-y-3">
-              <Card className="p-4 bg-primary/5 border-primary/30">
-                <p className="text-sm font-medium">{pendingAction.payload.spoken_summary}</p>
-                <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
-                  <p>✅ To-do · {format(new Date(pendingAction.payload.date), "EEEE, d. MMMM", { locale: de })}</p>
-                  <p>📝 {pendingAction.payload.title}</p>
-                </div>
-              </Card>
-              <DialogFooter className="flex-wrap gap-2">
-                <Button variant="outline" onClick={() => { setPendingAction(null); setQueue([]); setQueueProgress(null); setTranscript(""); }}>
-                  <X className="h-4 w-4 mr-1" /> Verwerfen
-                </Button>
-                <Button onClick={() => executeAction(pendingAction)} disabled={processing}>
-                  {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
-                  Als To-do anlegen
-                </Button>
-              </DialogFooter>
-            </div>
-          )}
-
-          {pendingAction && pendingAction.action !== "suggest_recipe" && pendingAction.action !== "clarify" && pendingAction.action !== "clarify_category" && pendingAction.action !== "add_todo" && (
+          {pendingAction && pendingAction.action !== "suggest_recipe" && pendingAction.action !== "clarify" && pendingAction.action !== "clarify_category" && (
             <div className="space-y-3">
               {!editMode ? (
                 <Card className="p-4 bg-primary/5 border-primary/30">
@@ -606,18 +468,9 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
                 </Card>
               )}
               <DialogFooter className="flex-wrap gap-2 sm:gap-2">
-                <Button variant="outline" onClick={() => { setPendingAction(null); setEditMode(false); setQueue([]); setQueueProgress(null); setTranscript(""); setOpen(false); }}>
+                <Button variant="outline" onClick={() => { setPendingAction(null); setEditMode(false); setTranscript(""); }}>
                   <X className="h-4 w-4 mr-1" /> Verwerfen
                 </Button>
-                {queue.length > 0 && (
-                  <Button variant="ghost" onClick={async () => {
-                    setPendingAction(null);
-                    setEditMode(false);
-                    await processNextAction(queue, (a) => executeActionRef.current(a));
-                  }}>
-                    Überspringen
-                  </Button>
-                )}
                 <Button variant="secondary" onClick={() => setEditMode((v) => !v)}>
                   <Pencil className="h-4 w-4 mr-1" /> {editMode ? "Fertig" : "Bearbeiten"}
                 </Button>

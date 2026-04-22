@@ -35,64 +35,21 @@ export function useProfile(userId: string | undefined, isGuestMode: boolean) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = useCallback(async () => {
-    if (!userId) return null;
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (error) {
-      console.error("profile fetch error", error, { userId });
-      throw error;
-    }
-
-    if (data) return data as Profile;
-
-    const { data: created, error: createError } = await supabase
-      .from("profiles")
-      .upsert({ id: userId }, { onConflict: "id" })
-      .select()
-      .maybeSingle();
-
-    if (createError) {
-      console.error("profile bootstrap error", createError, { userId });
-      throw createError;
-    }
-
-    return (created as Profile | null) ?? null;
-  }, [userId]);
-
   const reload = useCallback(async () => {
     setLoading(true);
-
-    try {
-      if (isGuestMode) {
-        const g = guestStore.getProfile();
-        setProfile({ id: guestId, ...g });
-        return;
-      }
-
-      if (!userId) {
-        setProfile(null);
-        return;
-      }
-
-      const nextProfile = await fetchProfile();
-      setProfile(nextProfile);
-    } catch (error) {
-      console.error("profile reload failed", error);
-      setProfile(null);
-    } finally {
+    if (isGuestMode) {
+      const g = guestStore.getProfile();
+      setProfile({ id: guestId, ...g });
       setLoading(false);
+      return;
     }
-  }, [fetchProfile, isGuestMode, userId]);
+    if (!userId) { setProfile(null); setLoading(false); return; }
+    const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+    setProfile(data as Profile | null);
+    setLoading(false);
+  }, [userId, isGuestMode]);
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  useEffect(() => { reload(); }, [reload]);
 
   const update = async (patch: Partial<Profile>) => {
     if (isGuest()) {
@@ -100,32 +57,9 @@ export function useProfile(userId: string | undefined, isGuestMode: boolean) {
       setProfile({ id: guestId, ...updated });
       return;
     }
-
     if (!userId) return;
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .upsert({ id: userId, ...patch }, { onConflict: "id" })
-      .select()
-      .maybeSingle();
-
-    if (error) {
-      console.error("profile update error", error, patch);
-      throw error;
-    }
-
-    if (data) {
-      setProfile(data as Profile);
-      return;
-    }
-
-    const fresh = await fetchProfile();
-    if (fresh) {
-      setProfile(fresh);
-      return;
-    }
-
-    throw new Error("Profil konnte nach dem Speichern nicht geladen werden.");
+    const { data } = await supabase.from("profiles").update(patch).eq("id", userId).select().single();
+    if (data) setProfile(data as Profile);
   };
 
   return { profile, loading, update, reload };
