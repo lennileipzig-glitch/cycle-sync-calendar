@@ -225,8 +225,8 @@ interface WeekProps extends DataMaps, QuickAdd {
   onSelectEvent?: (e: GuestEvent) => void;
 }
 
-const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 7:00 – 21:00
-const ROW_HEIGHT = 44; // px pro Stunde
+const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0:00 – 23:00 (ganzer Tag)
+const ROW_HEIGHT = 36; // px pro Stunde
 const ENERGY_LABEL: Record<string, string> = {
   "1": "sehr schlecht", "2": "schlecht", "3": "mittel", "4": "gut", "5": "sehr gut",
   niedrig: "schlecht", mittel: "mittel", hoch: "gut",
@@ -242,7 +242,7 @@ const energyToFloat = (raw?: string | null): number | null => {
   return null;
 };
 
-export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddEventAtTime, onAddMealForDate, onMoveEvent }: WeekProps) {
+export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddEventAtTime, onAddMealForDate, onMoveEvent, onSelectEvent }: WeekProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
@@ -340,80 +340,206 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
         })}
       </div>
 
-      {/* Stundenraster */}
-      <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 relative">
-        {/* Zeit-Spalte */}
-        <div className="flex flex-col">
-          {HOURS.map(h => (
-            <div key={h} style={{ height: ROW_HEIGHT }} className="text-[10px] text-muted-foreground text-right pr-1 -mt-1.5">
-              {h}:00
-            </div>
-          ))}
+      {/* Stundenraster (scrollbar, ganzer Tag 0–24h) */}
+      <div className="rounded-lg border border-border/40 overflow-hidden">
+        <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 relative max-h-[60vh] overflow-y-auto">
+          {/* Zeit-Spalte */}
+          <div className="flex flex-col sticky left-0 bg-background z-10">
+            {HOURS.map(h => (
+              <div key={h} style={{ height: ROW_HEIGHT }} className="text-[10px] text-muted-foreground text-right pr-1 -mt-1.5">
+                {h.toString().padStart(2, "0")}:00
+              </div>
+            ))}
+          </div>
+          {days.map(d => {
+            const key = fmtDate(d);
+            const events = eventsByDay[key] ?? [];
+            const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+            const isToday = isSameDay(d, today);
+
+            const slotDropFor = (h: number) => onMoveEvent ? {
+              onDragOver: (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; },
+              onDrop: (e: React.DragEvent) => {
+                e.preventDefault();
+                const data = e.dataTransfer.getData("application/x-luna-event");
+                if (!data) return;
+                try {
+                  const ev = JSON.parse(data) as GuestEvent;
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  const offsetY = e.clientY - rect.top;
+                  const minutes = Math.min(45, Math.max(0, Math.round(((offsetY / ROW_HEIGHT) * 60) / 15) * 15));
+                  const oldStart = new Date(ev.starts_at);
+                  const oldEnd = ev.ends_at ? new Date(ev.ends_at) : null;
+                  const durMs = oldEnd ? oldEnd.getTime() - oldStart.getTime() : 60 * 60 * 1000;
+                  const newStart = new Date(d);
+                  newStart.setHours(h, minutes, 0, 0);
+                  const newEnd = new Date(newStart.getTime() + durMs);
+                  const moved: GuestEvent = {
+                    ...ev,
+                    starts_at: newStart.toISOString(),
+                    ends_at: newEnd.toISOString(),
+                  };
+                  onMoveEvent(moved, fmtDate(d));
+                } catch { /* ignore */ }
+              },
+            } : {};
+
+            return (
+              <div
+                key={d.toISOString()}
+                className={cn(
+                  "relative bg-card/50 border-l border-border/30",
+                  isToday && "bg-primary/5 border-primary/40",
+                )}
+              >
+                {HOURS.map(h => (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      const offsetY = e.clientY - rect.top;
+                      const minutes = Math.round(((offsetY / ROW_HEIGHT) * 60) / 15) * 15;
+                      const mm = Math.min(45, Math.max(0, minutes));
+                      const time = `${h.toString().padStart(2, "0")}:${mm.toString().padStart(2, "0")}`;
+                      if (onAddEventAtTime) onAddEventAtTime(d, time);
+                      else onAddEventForDate?.(d);
+                    }}
+                    style={{ height: ROW_HEIGHT }}
+                    className="block w-full border-t border-border/30 first:border-t-0 hover:bg-primary/10 transition-colors group/slot relative text-left"
+                    aria-label={`Termin am ${format(d, "EEEE", { locale: de })} um ${h}:00 hinzufügen`}
+                    {...slotDropFor(h)}
+                  >
+                    <span className="absolute top-0.5 right-1 text-[9px] text-primary opacity-0 group-hover/slot:opacity-100 transition-opacity">
+                      +
+                    </span>
+                  </button>
+                ))}
+                {events.filter(ev => ev.category !== "mahlzeit").map(ev => {
+                  const startD = new Date(ev.starts_at);
+                  const endD = ev.ends_at ? new Date(ev.ends_at) : new Date(startD.getTime() + 60 * 60 * 1000);
+                  const Icon = categoryIcon(ev.category);
+                  const draggable = !ev._shared_owner_name && !!onMoveEvent;
+                  if (ev.all_day) {
+                    return (
+                      <div
+                        key={ev.id}
+                        draggable={draggable}
+                        onDragStart={draggable ? (e) => {
+                          e.stopPropagation();
+                          e.dataTransfer.effectAllowed = "move";
+                          e.dataTransfer.setData("application/x-luna-event", JSON.stringify(ev));
+                        } : undefined}
+                        onClick={(e) => { e.stopPropagation(); onSelectEvent?.(ev); }}
+                        className={cn(
+                          "absolute inset-x-0.5 top-0.5 px-1.5 py-0.5 rounded text-[10px] truncate cursor-pointer border-l-2",
+                          phaseFill[phase],
+                          categoryAccent(ev.category),
+                          draggable && "cursor-grab active:cursor-grabbing",
+                        )}
+                        style={{ borderLeftColor: `hsl(var(--phase-${phase}))` }}
+                      >
+                        {Icon && <Icon className="inline h-2.5 w-2.5 mr-0.5 opacity-70" />}
+                        {ev.title}
+                      </div>
+                    );
+                  }
+                  const startH = startD.getHours() + startD.getMinutes() / 60;
+                  const endH = endD.getHours() + endD.getMinutes() / 60;
+                  const top = (startH - HOURS[0]) * ROW_HEIGHT;
+                  const height = Math.max(20, (endH - startH) * ROW_HEIGHT);
+                  if (top < 0 || top > HOURS.length * ROW_HEIGHT) return null;
+                  return (
+                    <div
+                      key={ev.id}
+                      draggable={draggable}
+                      onDragStart={draggable ? (e) => {
+                        e.stopPropagation();
+                        e.dataTransfer.effectAllowed = "move";
+                        e.dataTransfer.setData("application/x-luna-event", JSON.stringify(ev));
+                      } : undefined}
+                      onClick={(e) => { e.stopPropagation(); onSelectEvent?.(ev); }}
+                      className={cn(
+                        "absolute inset-x-0.5 px-1.5 py-1 rounded text-[10px] overflow-hidden border-l-2 cursor-pointer hover:ring-1 hover:ring-primary/50",
+                        phaseFill[phase],
+                        categoryAccent(ev.category),
+                        draggable && "cursor-grab active:cursor-grabbing",
+                      )}
+                      style={{ top, height, borderLeftColor: `hsl(var(--phase-${phase}))` }}
+                    >
+                      <div className="font-medium truncate flex items-center gap-1">
+                        {Icon && <Icon className="h-2.5 w-2.5 shrink-0 opacity-70" />}
+                        <span className="truncate">{ev.title}</span>
+                      </div>
+                      <div className="text-[9px] text-muted-foreground">
+                        {format(startD, "HH:mm")}{ev.ends_at && `–${format(endD, "HH:mm")}`}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Mahlzeiten-Zeile (zwischen Stundenraster und To-dos) */}
+      <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 pt-1">
+        <div className="text-[10px] text-muted-foreground self-start text-right pr-1 pt-1 leading-tight">
+          Mahlzeiten
         </div>
         {days.map(d => {
           const key = fmtDate(d);
-          const events = eventsByDay[key] ?? [];
-          const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
-          const isToday = isSameDay(d, today);
+          const meals = (eventsByDay[key] ?? []).filter(e => e.category === "mahlzeit");
+          const draggableProps = (ev: GuestEvent) => {
+            const ok = !ev._shared_owner_name && !!onMoveEvent;
+            return ok ? {
+              draggable: true,
+              onDragStart: (e: React.DragEvent) => {
+                e.stopPropagation();
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("application/x-luna-event", JSON.stringify(ev));
+              },
+            } : {};
+          };
           return (
-            <div
-              key={d.toISOString()}
-              className={cn(
-                "relative bg-card/50 rounded-lg border border-border/30",
-                isToday && "bg-primary/5 border-primary/40 ring-1 ring-primary/30",
-              )}
-            >
-              {HOURS.map(h => (
+            <div key={d.toISOString()} className="min-h-[3rem]" {...dropProps(d)}>
+              {meals.length === 0 ? (
                 <button
-                  key={h}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                    const offsetY = e.clientY - rect.top;
-                    const minutes = Math.round(((offsetY / ROW_HEIGHT) * 60) / 15) * 15;
-                    const mm = Math.min(45, Math.max(0, minutes));
-                    const time = `${h.toString().padStart(2, "0")}:${mm.toString().padStart(2, "0")}`;
-                    if (onAddEventAtTime) onAddEventAtTime(d, time);
-                    else onAddEventForDate?.(d);
-                  }}
-                  style={{ height: ROW_HEIGHT }}
-                  className="block w-full border-t border-border/30 first:border-t-0 hover:bg-primary/10 transition-colors group/slot relative text-left"
-                  aria-label={`Termin am ${format(d, "EEEE", { locale: de })} um ${h}:00 hinzufügen`}
+                  onClick={() => onAddMealForDate?.(d)}
+                  className="w-full h-full min-h-[3rem] rounded-md border border-dashed border-amber-300/60 dark:border-amber-400/30 text-[10px] text-muted-foreground/70 hover:border-amber-500 hover:text-amber-700 dark:hover:text-amber-300 transition-colors flex items-center justify-center gap-1"
+                  aria-label="Mahlzeit hinzufügen"
                 >
-                  <span className="absolute top-0.5 right-1 text-[9px] text-primary opacity-0 group-hover/slot:opacity-100 transition-opacity">
-                    + Termin
-                  </span>
+                  <UtensilsCrossed className="h-3 w-3" /> <Plus className="h-3 w-3" />
                 </button>
-              ))}
-              {events.map(ev => {
-                const startD = new Date(ev.starts_at);
-                const endD = ev.ends_at ? new Date(ev.ends_at) : new Date(startD.getTime() + 60 * 60 * 1000);
-                if (ev.all_day) {
-                  return (
-                    <div key={ev.id} className={cn("absolute inset-x-0.5 top-0.5 px-1.5 py-0.5 rounded text-[10px] truncate", phaseFill[phase])}>
-                      {ev.title}
-                    </div>
-                  );
-                }
-                const startH = startD.getHours() + startD.getMinutes() / 60;
-                const endH = endD.getHours() + endD.getMinutes() / 60;
-                const top = (startH - HOURS[0]) * ROW_HEIGHT;
-                const height = Math.max(20, (endH - startH) * ROW_HEIGHT);
-                if (top < 0 || top > HOURS.length * ROW_HEIGHT) return null;
-                return (
-                  <div
-                    key={ev.id}
-                    className={cn("absolute inset-x-0.5 px-1.5 py-1 rounded text-[10px] overflow-hidden border-l-2", phaseFill[phase])}
-                    style={{ top, height, borderLeftColor: `hsl(var(--phase-${phase}))` }}
-                  >
-                    <div className="font-medium truncate">{ev.title}</div>
-                    <div className="text-[9px] text-muted-foreground">
-                      {format(startD, "HH:mm")}{ev.ends_at && `–${format(endD, "HH:mm")}`}
-                    </div>
-                  </div>
-                );
-              })}
+              ) : (
+                <div className="rounded-md p-1.5 border border-amber-300/60 bg-amber-100/40 dark:bg-amber-400/10 dark:border-amber-400/30 space-y-0.5">
+                  {meals.slice(0, 3).map(m => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onSelectEvent?.(m); }}
+                      className="w-full text-left text-[10px] leading-tight truncate flex items-center gap-1 hover:underline"
+                      {...draggableProps(m)}
+                    >
+                      <UtensilsCrossed className="h-2.5 w-2.5 shrink-0 opacity-70" />
+                      <span className="truncate">{m.title}</span>
+                    </button>
+                  ))}
+                  {meals.length > 3 && (
+                    <div className="text-[9px] text-muted-foreground">+{meals.length - 3} weitere</div>
+                  )}
+                  {onAddMealForDate && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onAddMealForDate(d); }}
+                      className="text-[9px] text-amber-700 dark:text-amber-300 hover:underline"
+                    >
+                      + weitere
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
