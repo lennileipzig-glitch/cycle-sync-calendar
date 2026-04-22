@@ -39,6 +39,7 @@ const Index = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<GuestEvent | null>(null);
   const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
+  const [quickAddTime, setQuickAddTime] = useState<string | null>(null);
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null>(null);
   const [allEvents, setAllEvents] = useState<GuestEvent[]>([]);
   const [weekTodos, setWeekTodos] = useState<{ id: string; title: string; completed: boolean; todo_date: string }[]>([]);
@@ -117,6 +118,22 @@ const Index = () => {
     profile?.last_period_start ? new Date(profile.last_period_start) : null,
     profile?.avg_cycle_length, profile?.avg_period_length,
   ), [selectedDate, profile]);
+
+  // Tag innerhalb der aktuellen Phase + Phasenlänge
+  const phaseProgress = useMemo(() => {
+    const cycleLen = profile?.avg_cycle_length ?? 28;
+    const periodLen = profile?.avg_period_length ?? 5;
+    const ovulationDay = cycleLen - 14;
+    const d = phase.dayInCycle;
+    if (!d) return null;
+    let phaseStart = 1, phaseLen = 1;
+    if (phase.phase === "menstrual") { phaseStart = 1; phaseLen = periodLen; }
+    else if (phase.phase === "follicular") { phaseStart = periodLen + 1; phaseLen = (ovulationDay - 1) - (periodLen + 1) + 1; }
+    else if (phase.phase === "ovulation") { phaseStart = ovulationDay - 1; phaseLen = 3; }
+    else if (phase.phase === "luteal") { phaseStart = ovulationDay + 2; phaseLen = cycleLen - phaseStart + 1; }
+    else return null;
+    return { dayInPhase: d - phaseStart + 1, phaseLen: Math.max(1, phaseLen) };
+  }, [phase, profile]);
 
   // Maps
   const eventsByDay = useMemo(() => {
@@ -221,30 +238,6 @@ const Index = () => {
       </header>
 
       <main className="container max-w-7xl py-6 space-y-6">
-        {/* Phasenkarte */}
-        <Card className="p-6 shadow-soft" style={{ background: `linear-gradient(135deg, ${phase.color}22, hsl(var(--card)))` }}>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-3 h-3 rounded-full" style={{ background: phase.color }} />
-                <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                  {profile.in_menopause ? "Menopause" : (phase.dayInCycle ? `Tag ${phase.dayInCycle} von ${phase.cycleLength}` : "Profil unvollständig")}
-                </span>
-              </div>
-              <h2 className="text-3xl mb-1">{profile.in_menopause ? "Im Wandel" : phase.label}</h2>
-              <p className="text-sm text-muted-foreground max-w-xl">
-                {profile.in_menopause
-                  ? "Höre auf deinen Körper. Luna richtet die Empfehlungen auf Energie und Wohlbefinden aus."
-                  : phase.description}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-muted-foreground">Ausgewählt</div>
-              <div className="text-lg font-medium capitalize">{format(selectedDate, "EEEE, d. MMMM", { locale: de })}</div>
-            </div>
-          </div>
-        </Card>
-
         {/* Kalender-Steuerung */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-1">
@@ -301,8 +294,9 @@ const Index = () => {
                 eventsByDay={eventsByDay}
                 moodByDay={weekMood}
                 todosByDay={todosByDay}
-                onAddEventForDate={(d) => { setQuickAddDate(d); setEventDialogOpen(true); }}
+                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddTime(null); setEditEvent(null); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
+                onAddEventAtTime={(d, time) => { setQuickAddDate(d); setQuickAddTime(time); setEditEvent(null); setEventDialogOpen(true); }}
               />
             </Card>
           )}
@@ -325,9 +319,36 @@ const Index = () => {
           )}
         </div>
 
-        <PhaseLegend className="px-1" />
+        {zoom === "day" && (
+          <>
+            {/* Phasen-Info kompakt: nur Phase, Tag in Phase, kurzer Text */}
+            <Card className="p-4 shadow-soft" style={{ background: `linear-gradient(135deg, ${phase.color}22, hsl(var(--card)))` }}>
+              <div className="flex items-start gap-3">
+                <div className="w-3 h-3 rounded-full mt-1.5 shrink-0" style={{ background: phase.color }} />
+                <div>
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <h3 className="text-lg font-medium">{profile.in_menopause ? "Im Wandel" : phase.label}</h3>
+                    {!profile.in_menopause && phaseProgress && (
+                      <span className="text-xs text-muted-foreground">
+                        Tag {phaseProgress.dayInPhase} von {phaseProgress.phaseLen} in dieser Phase
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {profile.in_menopause
+                      ? "Höre auf deinen Körper. Luna richtet die Empfehlungen auf Energie und Wohlbefinden aus."
+                      : phase.description}
+                  </p>
+                </div>
+              </div>
+            </Card>
 
-        <Recommendations phase={phase} energy={dayLog?.energy_level ?? todayLog?.energy_level} symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []} />
+            <PhaseLegend className="px-1" />
+
+            <Recommendations phase={phase} energy={dayLog?.energy_level ?? todayLog?.energy_level} symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []} />
+          </>
+        )}
+
 
         <footer className="text-center text-xs text-muted-foreground py-8">
           Luna · für dich, im Einklang mit deinem Zyklus
@@ -339,12 +360,14 @@ const Index = () => {
       <EventDialog
         userId={userId}
         date={quickAddDate}
+        initialTime={quickAddTime}
         open={eventDialogOpen}
-        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) setEditEvent(null); }}
+        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) { setEditEvent(null); setQuickAddTime(null); } }}
         event={editEvent}
         onCreated={async () => {
           setAllEvents(await dataApi.getEvents(userId));
           setEditEvent(null);
+          setQuickAddTime(null);
         }}
       />
 

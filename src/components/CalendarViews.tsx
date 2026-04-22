@@ -38,6 +38,8 @@ interface DataMaps {
 interface QuickAdd {
   onAddEventForDate?: (d: Date) => void;
   onAddTodoForDate?: (d: Date) => void;
+  /** Optional: Termin an einem bestimmten Tag + Uhrzeit (HH:mm) anlegen */
+  onAddEventAtTime?: (d: Date, time: string) => void;
 }
 
 function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
@@ -111,7 +113,8 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                 "group min-h-[5.5rem] rounded-lg overflow-hidden flex flex-col text-sm transition-all relative bg-card border border-border/40 cursor-pointer",
                 !inMonth && "opacity-40",
                 selected && "ring-2 ring-primary shadow-soft",
-                !selected && "hover:border-primary/40",
+                isToday && !selected && "ring-2 ring-primary/70 border-primary/40 bg-primary/5",
+                !selected && !isToday && "hover:border-primary/40",
               )}
               onClick={() => onSelectDate(d)}
               role="button"
@@ -122,10 +125,13 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                   <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} size="xs" />
                 </div>
-                <span className={cn(
-                  "text-xs leading-none",
-                  isToday && "font-bold text-primary",
-                )}>{format(d, "d")}</span>
+                {isToday ? (
+                  <span className="text-xs leading-none inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground font-bold">
+                    {format(d, "d")}
+                  </span>
+                ) : (
+                  <span className="text-xs leading-none">{format(d, "d")}</span>
+                )}
               </div>
               <div className="flex-1 flex flex-col gap-0.5 px-1 pb-1 mt-1 overflow-hidden">
                 {events.slice(0, 2).map((e) => (
@@ -190,7 +196,7 @@ const energyToFloat = (raw?: string | null): number | null => {
   return null;
 };
 
-export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate }: WeekProps) {
+export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddEventAtTime }: WeekProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
@@ -214,7 +220,8 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
               className={cn(
                 "group rounded-lg overflow-hidden bg-card border border-border/40 transition-all cursor-pointer",
                 selected && "ring-2 ring-primary shadow-soft",
-                !selected && "hover:border-primary/40",
+                isToday && !selected && "ring-2 ring-primary/70 border-primary/40 bg-primary/5",
+                !selected && !isToday && "hover:border-primary/40",
               )}
               role="button"
               tabIndex={0}
@@ -223,7 +230,13 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
               <div className="px-2 py-1.5 relative">
                 <div className="flex items-baseline justify-between">
                   <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{format(d, "EE", { locale: de })}</span>
-                  <span className={cn("text-base", isToday && "font-bold text-primary")}>{format(d, "d")}</span>
+                  {isToday ? (
+                    <span className="inline-flex items-center justify-center h-6 min-w-6 px-1 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                      {format(d, "d")}
+                    </span>
+                  ) : (
+                    <span className="text-base">{format(d, "d")}</span>
+                  )}
                 </div>
                 {m?.symptoms && m.symptoms.length > 0 && (
                   <div className="flex gap-0.5 mt-1">
@@ -284,10 +297,37 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
           const key = fmtDate(d);
           const events = eventsByDay[key] ?? [];
           const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+          const isToday = isSameDay(d, today);
           return (
-            <div key={d.toISOString()} className="relative bg-card/50 rounded-lg border border-border/30">
+            <div
+              key={d.toISOString()}
+              className={cn(
+                "relative bg-card/50 rounded-lg border border-border/30",
+                isToday && "bg-primary/5 border-primary/40 ring-1 ring-primary/30",
+              )}
+            >
               {HOURS.map(h => (
-                <div key={h} style={{ height: ROW_HEIGHT }} className="border-t border-border/30 first:border-t-0" />
+                <button
+                  key={h}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const offsetY = e.clientY - rect.top;
+                    const minutes = Math.round(((offsetY / ROW_HEIGHT) * 60) / 15) * 15;
+                    const mm = Math.min(45, Math.max(0, minutes));
+                    const time = `${h.toString().padStart(2, "0")}:${mm.toString().padStart(2, "0")}`;
+                    if (onAddEventAtTime) onAddEventAtTime(d, time);
+                    else onAddEventForDate?.(d);
+                  }}
+                  style={{ height: ROW_HEIGHT }}
+                  className="block w-full border-t border-border/30 first:border-t-0 hover:bg-primary/10 transition-colors group/slot relative text-left"
+                  aria-label={`Termin am ${format(d, "EEEE", { locale: de })} um ${h}:00 hinzufügen`}
+                >
+                  <span className="absolute top-0.5 right-1 text-[9px] text-primary opacity-0 group-hover/slot:opacity-100 transition-opacity">
+                    + Termin
+                  </span>
+                </button>
               ))}
               {events.map(ev => {
                 const startD = new Date(ev.starts_at);
@@ -368,20 +408,39 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
 export function YearView({ selectedDate, onSelectDate, profile }: { selectedDate: Date; onSelectDate: (d: Date) => void; profile: Profile | null }) {
   const months = Array.from({ length: 12 }, (_, i) => new Date(selectedDate.getFullYear(), i, 1));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
+  const today = new Date();
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-fade-in">
       {months.map(m => {
         const start = startOfWeek(startOfMonth(m), { weekStartsOn: 1 });
         const end = endOfWeek(endOfMonth(m), { weekStartsOn: 1 });
         const days = eachDayOfInterval({ start, end });
+        const isCurrentMonth = m.getFullYear() === today.getFullYear() && m.getMonth() === today.getMonth();
         return (
           <button key={m.toISOString()} onClick={() => onSelectDate(m)}
-            className="bg-card rounded-2xl p-3 hover:shadow-elevated transition-all text-left">
-            <div className="text-sm font-medium mb-2 capitalize">{format(m, "MMMM", { locale: de })}</div>
+            className={cn(
+              "bg-card rounded-2xl p-3 hover:shadow-elevated transition-all text-left",
+              isCurrentMonth && "ring-2 ring-primary bg-primary/5",
+            )}>
+            <div className={cn("text-sm font-medium mb-2 capitalize flex items-center gap-1.5", isCurrentMonth && "text-primary")}>
+              {format(m, "MMMM", { locale: de })}
+              {isCurrentMonth && <span className="text-[9px] uppercase tracking-wider px-1.5 py-px rounded-full bg-primary text-primary-foreground">heute</span>}
+            </div>
             <div className="grid grid-cols-7 gap-0.5">
               {days.map(d => {
                 const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
-                return <div key={d.toISOString()} className={cn("aspect-square rounded-sm", phaseFill[phase], !isSameMonth(d, m) && "opacity-20")} />;
+                const isToday = isSameDay(d, today);
+                return (
+                  <div
+                    key={d.toISOString()}
+                    className={cn(
+                      "aspect-square rounded-sm relative",
+                      phaseFill[phase],
+                      !isSameMonth(d, m) && "opacity-20",
+                      isToday && "ring-2 ring-primary ring-offset-1 ring-offset-card z-10",
+                    )}
+                  />
+                );
               })}
             </div>
           </button>
@@ -455,12 +514,21 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
               className={cn(
                 "rounded-lg overflow-hidden bg-card border border-border/40 transition-all",
                 selected && "ring-2 ring-primary",
-                !selected && "hover:border-primary/40 opacity-70",
+                isToday && !selected && "ring-2 ring-primary/70 border-primary/40 bg-primary/5",
+                !selected && !isToday && "hover:border-primary/40 opacity-70",
               )}>
               <div className={cn("h-1 w-full", phaseStripe[ph])} />
               <div className="py-1">
                 <div className="text-[9px] uppercase text-muted-foreground">{format(d, "EE", { locale: de })}</div>
-                <div className={cn("text-sm", isToday && "font-bold text-primary")}>{format(d, "d")}</div>
+                {isToday ? (
+                  <div className="flex justify-center">
+                    <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground font-bold text-xs">
+                      {format(d, "d")}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-sm">{format(d, "d")}</div>
+                )}
               </div>
             </button>
           );
