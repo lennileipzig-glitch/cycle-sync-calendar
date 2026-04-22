@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { Plus, X } from "lucide-react";
 
 const DEFAULT_SYMPTOMS = ["Krämpfe", "Kopfschmerz", "Müdigkeit", "Reizbarkeit", "Heißhunger", "Brustspannen", "Akne", "Wassereinlagerung", "Schlafprobleme"];
-const MOODS = ["😊", "😌", "🙂", "😐", "😔", "😢", "😤", "🥰"];
+
 const CUSTOM_SYMPTOMS_KEY = "luna-custom-symptoms";
 
 // Energie-Skala 1–5
@@ -33,7 +33,7 @@ const loadCustomSymptoms = (): string[] => {
 const saveCustomSymptoms = (list: string[]) => localStorage.setItem(CUSTOM_SYMPTOMS_KEY, JSON.stringify(list.slice(-30)));
 
 export function TrackerDialog({ userId, open, onOpenChange }: { userId: string | null; open: boolean; onOpenChange: (o: boolean) => void }) {
-  const [mood, setMood] = useState<string>("");
+  
   const [energy, setEnergy] = useState<number>(3);
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [customSymptoms, setCustomSymptoms] = useState<string[]>([]);
@@ -48,13 +48,13 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string |
     (async () => {
       const todayLog = await dataApi.getLog(userId, today);
       if (todayLog) {
-        setMood(todayLog.mood ?? "");
+        
         setEnergy(energyToNum(todayLog.energy_level));
         setSymptoms(todayLog.symptoms ?? []);
         setNotes(todayLog.notes ?? "");
       } else {
         // Frischer Tag: keine Vorbelegung — Nutzerin entscheidet selbst
-        setMood("");
+        
         setEnergy(3);
         setSymptoms([]);
         setNotes("");
@@ -89,7 +89,7 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string |
     try {
       await dataApi.upsertLog(userId, {
         log_date: today,
-        mood: mood || null,
+        mood: null,
         energy_level: String(energy),
         symptoms,
         notes: notes || null,
@@ -112,18 +112,6 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string |
         </DialogHeader>
 
         <div className="space-y-6 py-2">
-          <div>
-            <Label className="mb-3 block">Stimmung</Label>
-            <div className="flex flex-wrap gap-2">
-              {MOODS.map(m => (
-                <button key={m} type="button" onClick={() => setMood(m)}
-                  className={cn("text-2xl w-12 h-12 rounded-full transition-all", mood === m ? "bg-primary/15 ring-2 ring-primary scale-110" : "bg-muted hover:bg-accent")}>
-                  {m}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div>
             <div className="flex items-baseline justify-between mb-3">
               <Label>Energielevel</Label>
