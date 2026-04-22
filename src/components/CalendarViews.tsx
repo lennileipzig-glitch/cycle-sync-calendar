@@ -879,7 +879,7 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
         <div className="rounded-xl bg-card border border-border/60 p-4 space-y-3">
           <div className="flex items-center gap-2">
             <Dumbbell className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Sport</div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Bewegung</div>
           </div>
           {sports.length > 0 && (
             <ul className="space-y-1">
