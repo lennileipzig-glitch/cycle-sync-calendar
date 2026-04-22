@@ -5,8 +5,11 @@ import { cn } from "@/lib/utils";
 import type { Profile } from "@/hooks/useProfile";
 import type { GuestEvent, EventCategory } from "@/lib/guestStore";
 import { fmtDate } from "@/lib/cycle";
-import { CheckCircle2, Circle, Plus, CalendarPlus, ListPlus, UtensilsCrossed, Dumbbell } from "lucide-react";
+import { CheckCircle2, Circle, Plus, CalendarPlus, ListPlus, UtensilsCrossed, Dumbbell, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InlineAddMeal } from "@/components/InlineAddMeal";
+import { InlineAddSport } from "@/components/InlineAddSport";
+import { dataApi } from "@/lib/dataApi";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -646,17 +649,43 @@ interface DayProps extends DataMaps {
   onAddEvent?: () => void;
   onAddTodo?: () => void;
   onEditEvent?: (e: GuestEvent) => void;
+  /** Optional: User-ID für Inline-Anlegen von Mahlzeit/Sport */
+  userId?: string | null;
+  /** Wird aufgerufen, wenn eine Mahlzeit/Sport-Einheit hinzugefügt oder gelöscht wurde */
+  onEventChanged?: () => void;
 }
 
 const energyToNum = (raw?: string | null) => energyToFloat(raw);
 
-export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker, onAddEvent, onAddTodo, onEditEvent }: DayProps) {
+const intensityWord = (v: number) => {
+  if (v <= 1.5) return "sehr leicht";
+  if (v <= 2.5) return "leicht";
+  if (v <= 3.5) return "mittel";
+  if (v <= 4.5) return "intensiv";
+  return "sehr intensiv";
+};
+
+export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker, onAddEvent, onAddTodo, onEditEvent, userId, onEventChanged }: DayProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const today = new Date();
   const energy = energyToNum(log?.energy_level);
   const phase = phaseForDate(selectedDate, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+
+  const meals = events.filter(e => e.category === "mahlzeit");
+  const sports = events.filter(e => e.category === "sport");
+  const termine = events.filter(e => e.category !== "mahlzeit" && e.category !== "sport");
+
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm("Wirklich löschen?")) return;
+    try {
+      await dataApi.deleteEvent(userId ?? null, id);
+      onEventChanged?.();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <div className="animate-fade-in space-y-4">
@@ -766,11 +795,11 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
               <button onClick={onAddEvent} className="text-xs text-primary hover:underline">+ Neu</button>
             )}
           </div>
-          {events.length === 0 ? (
+          {termine.length === 0 ? (
             <div className="text-sm text-muted-foreground">Keine Termine.</div>
           ) : (
             <ul className="space-y-1">
-              {events.map(e => {
+              {termine.map(e => {
                 const isShared = !!e._shared_owner_name;
                 const editable = !isShared && !!onEditEvent;
                 return (
@@ -809,6 +838,80 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
           )}
         </div>
 
+        {/* Mahlzeiten – inline anlegen */}
+        <div className="rounded-xl bg-card border border-border/60 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <UtensilsCrossed className="h-3.5 w-3.5 text-amber-700 dark:text-amber-300" />
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Ernährung</div>
+          </div>
+          {meals.length > 0 && (
+            <ul className="space-y-1">
+              {meals.map(m => (
+                <li key={m.id} className="group flex items-start gap-2 text-sm rounded-md px-2 py-1.5 -mx-2 hover:bg-muted/60">
+                  <button
+                    type="button"
+                    onClick={() => onEditEvent?.(m)}
+                    className="flex-1 text-left"
+                  >
+                    <div className="font-medium truncate">{m.title}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {m.all_day ? "Ganztägig" : format(new Date(m.starts_at), "HH:mm")}
+                      {m.details && ` · ${m.details.split("\n")[0].slice(0, 60)}`}
+                    </div>
+                  </button>
+                  {!m._shared_owner_name && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteEvent(m.id); }}
+                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                      aria-label="Mahlzeit löschen"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <InlineAddMeal userId={userId ?? null} date={selectedDate} onCreated={onEventChanged} />
+        </div>
+
+        {/* Sport – inline anlegen mit Intensitäts-Regler */}
+        <div className="rounded-xl bg-card border border-border/60 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Dumbbell className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Sport</div>
+          </div>
+          {sports.length > 0 && (
+            <ul className="space-y-1">
+              {sports.map(s => (
+                <li key={s.id} className="group flex items-start gap-2 text-sm rounded-md px-2 py-1.5 -mx-2 hover:bg-muted/60">
+                  <button
+                    type="button"
+                    onClick={() => onEditEvent?.(s)}
+                    className="flex-1 text-left"
+                  >
+                    <div className="font-medium truncate">{s.title}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {s.all_day ? "Ganztägig" : format(new Date(s.starts_at), "HH:mm")}
+                      {typeof s.energy_cost === "number" && ` · ${intensityWord(s.energy_cost)}`}
+                      {s.details && ` · ${s.details.split("\n")[0].slice(0, 50)}`}
+                    </div>
+                  </button>
+                  {!s._shared_owner_name && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteEvent(s.id); }}
+                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                      aria-label="Sport löschen"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <InlineAddSport userId={userId ?? null} date={selectedDate} onCreated={onEventChanged} />
+        </div>
         <div className="rounded-xl bg-card border border-border/60 p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">To-dos</div>
