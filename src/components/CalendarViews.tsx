@@ -5,7 +5,14 @@ import { cn } from "@/lib/utils";
 import type { Profile } from "@/hooks/useProfile";
 import type { GuestEvent } from "@/lib/guestStore";
 import { fmtDate } from "@/lib/cycle";
-import { CheckCircle2, Circle } from "lucide-react";
+import { CheckCircle2, Circle, Plus, CalendarPlus, ListPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const phaseStripe: Record<string, string> = {
   menstrual: "bg-phase-menstrual",
@@ -25,17 +32,56 @@ const phaseFill: Record<string, string> = {
 
 interface DataMaps {
   eventsByDay?: Record<string, GuestEvent[]>;
-  todosByDay?: Record<string, { id: string; completed: boolean }[]>;
+  todosByDay?: Record<string, { id: string; title: string; completed: boolean }[]>;
 }
 
-interface MonthProps extends DataMaps {
+interface QuickAdd {
+  onAddEventForDate?: (d: Date) => void;
+  onAddTodoForDate?: (d: Date) => void;
+}
+
+function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
+  if (!onAddEventForDate && !onAddTodoForDate) return null;
+  const px = size === "xs" ? "h-5 w-5" : "h-7 w-7";
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          onClick={(e) => e.stopPropagation()}
+          aria-label="Hinzufügen"
+          className={cn(
+            "inline-flex items-center justify-center rounded-full bg-background/70 hover:bg-primary hover:text-primary-foreground border border-border/60 transition-colors",
+            px,
+          )}
+        >
+          <Plus className={size === "xs" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+        {onAddEventForDate && (
+          <DropdownMenuItem onClick={() => onAddEventForDate(date)}>
+            <CalendarPlus className="h-4 w-4 mr-2" /> Termin
+          </DropdownMenuItem>
+        )}
+        {onAddTodoForDate && (
+          <DropdownMenuItem onClick={() => onAddTodoForDate(date)}>
+            <ListPlus className="h-4 w-4 mr-2" /> Aufgabe
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+interface MonthProps extends DataMaps, QuickAdd {
   monthDate: Date;
   selectedDate: Date;
   onSelectDate: (d: Date) => void;
   profile: Profile | null;
 }
 
-export function MonthView({ monthDate, selectedDate, onSelectDate, profile, eventsByDay = {}, todosByDay = {} }: MonthProps) {
+export function MonthView({ monthDate, selectedDate, onSelectDate, profile, eventsByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate }: MonthProps) {
   const start = startOfWeek(startOfMonth(monthDate), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(monthDate), { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start, end });
@@ -59,23 +105,28 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
           const openTodos = todos.filter(t => !t.completed).length;
           const phaseColorVar = `hsl(var(--phase-${phase}))`;
           return (
-            <button key={d.toISOString()} onClick={() => onSelectDate(d)}
+            <div
+              key={d.toISOString()}
               className={cn(
-                "min-h-[5.5rem] rounded-lg overflow-hidden flex flex-col text-sm transition-all relative bg-card border border-border/40",
+                "group min-h-[5.5rem] rounded-lg overflow-hidden flex flex-col text-sm transition-all relative bg-card border border-border/40 cursor-pointer",
                 !inMonth && "opacity-40",
                 selected && "ring-2 ring-primary shadow-soft",
                 !selected && "hover:border-primary/40",
-              )}>
-              {/* Phasen-Streifen oben */}
+              )}
+              onClick={() => onSelectDate(d)}
+              role="button"
+              tabIndex={0}
+            >
               <div className={cn("h-1.5 w-full shrink-0", phaseStripe[phase])} />
-              {/* Datum oben rechts */}
-              <div className="flex justify-end px-1.5 pt-1">
+              <div className="flex justify-between items-center px-1.5 pt-1">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} size="xs" />
+                </div>
                 <span className={cn(
                   "text-xs leading-none",
                   isToday && "font-bold text-primary",
                 )}>{format(d, "d")}</span>
               </div>
-              {/* Termine als Chips */}
               <div className="flex-1 flex flex-col gap-0.5 px-1 pb-1 mt-1 overflow-hidden">
                 {events.slice(0, 2).map((e) => (
                   <div
@@ -102,7 +153,7 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                   </div>
                 )}
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
@@ -110,7 +161,7 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
   );
 }
 
-interface WeekProps extends DataMaps {
+interface WeekProps extends DataMaps, QuickAdd {
   selectedDate: Date;
   onSelectDate: (d: Date) => void;
   profile: Profile | null;
@@ -125,16 +176,26 @@ const ENERGY_LABEL: Record<string, string> = {
   niedrig: "schlecht", mittel: "mittel", hoch: "gut",
 };
 
-export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {} }: WeekProps) {
+const energyToFloat = (raw?: string | null): number | null => {
+  if (!raw) return null;
+  const n = parseFloat(raw);
+  if (!isNaN(n) && n >= 1 && n <= 5) return n;
+  if (raw === "niedrig") return 2;
+  if (raw === "hoch") return 4;
+  if (raw === "mittel") return 3;
+  return null;
+};
+
+export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate }: WeekProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const today = new Date();
 
   return (
-    <div className="animate-fade-in">
-      {/* Kopfzeile: Wochentage mit Phasenstreifen + Stimmungsbild */}
-      <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 mb-2">
+    <div className="animate-fade-in space-y-2">
+      {/* Kopfzeile: Wochentage mit Phasenstreifen + Stimmungsbild + Quick-Add */}
+      <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1">
         <div />
         {days.map(d => {
           const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
@@ -143,23 +204,23 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
           const key = fmtDate(d);
           const m = moodByDay[key];
           return (
-            <button key={d.toISOString()} onClick={() => onSelectDate(d)}
+            <div
+              key={d.toISOString()}
+              onClick={() => onSelectDate(d)}
               className={cn(
-                "rounded-lg overflow-hidden bg-card border border-border/40 transition-all",
+                "group rounded-lg overflow-hidden bg-card border border-border/40 transition-all cursor-pointer",
                 selected && "ring-2 ring-primary shadow-soft",
                 !selected && "hover:border-primary/40",
-              )}>
+              )}
+              role="button"
+              tabIndex={0}
+            >
               <div className={cn("h-1.5 w-full", phaseStripe[phase])} />
-              <div className="px-2 py-1.5">
+              <div className="px-2 py-1.5 relative">
                 <div className="flex items-baseline justify-between">
                   <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{format(d, "EE", { locale: de })}</span>
                   <span className={cn("text-base", isToday && "font-bold text-primary")}>{format(d, "d")}</span>
                 </div>
-                {m?.energy && (
-                  <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                    {ENERGY_LABEL[m.energy] ?? m.energy}
-                  </div>
-                )}
                 {m?.symptoms && m.symptoms.length > 0 && (
                   <div className="flex gap-0.5 mt-1">
                     {m.symptoms.slice(0, 3).map((_, i) => (
@@ -167,8 +228,40 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                     ))}
                   </div>
                 )}
+                <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} size="xs" />
+                </div>
               </div>
-            </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Energielevel-Zeile für die ganze Woche */}
+      <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 items-stretch">
+        <div className="text-[10px] text-muted-foreground self-center text-right pr-1 leading-tight">
+          Energie
+        </div>
+        {days.map(d => {
+          const key = fmtDate(d);
+          const energy = energyToFloat(moodByDay[key]?.energy);
+          const pct = energy !== null ? ((energy - 1) / 4) * 100 : 0;
+          return (
+            <div key={d.toISOString()} className="rounded-md bg-muted/40 border border-border/30 h-10 relative overflow-hidden flex items-end justify-center">
+              {energy !== null ? (
+                <>
+                  <div
+                    className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/70 to-primary/30 transition-all"
+                    style={{ height: `${pct}%` }}
+                  />
+                  <span className="relative text-[10px] tabular-nums text-foreground/80 mb-0.5 px-1 rounded bg-background/60">
+                    {energy.toFixed(1)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-[9px] text-muted-foreground/60 self-center">—</span>
+              )}
+            </div>
           );
         })}
       </div>
@@ -224,6 +317,46 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
           );
         })}
       </div>
+
+      {/* Post-It Reihe für Todos pro Tag */}
+      <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 pt-1">
+        <div className="text-[10px] text-muted-foreground self-start text-right pr-1 pt-1 leading-tight">
+          To-dos
+        </div>
+        {days.map(d => {
+          const key = fmtDate(d);
+          const todos = todosByDay[key] ?? [];
+          return (
+            <div key={d.toISOString()} className="min-h-[3rem]">
+              {todos.length === 0 ? (
+                <button
+                  onClick={() => onAddTodoForDate?.(d)}
+                  className="w-full h-full min-h-[3rem] rounded-md border border-dashed border-border/50 text-[10px] text-muted-foreground/60 hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center"
+                  aria-label="Aufgabe hinzufügen"
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
+              ) : (
+                <div
+                  className="rounded-md p-1.5 shadow-sm border bg-accent/50 border-accent"
+                  style={{ transform: "rotate(-0.5deg)" }}
+                >
+                  <ul className="space-y-0.5">
+                    {todos.slice(0, 3).map(t => (
+                      <li key={t.id} className={cn("text-[10px] leading-tight truncate", t.completed && "line-through opacity-60")}>
+                        • {t.title}
+                      </li>
+                    ))}
+                    {todos.length > 3 && (
+                      <li className="text-[9px] text-muted-foreground">+{todos.length - 3} weitere</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -264,31 +397,52 @@ interface DayProps extends DataMaps {
   onToggleTodo: (id: string, completed: boolean) => void;
   onOpenTracker: () => void;
   onAddEvent?: () => void;
+  onAddTodo?: () => void;
 }
 
-const energyToNum = (raw?: string | null) => {
-  if (!raw) return null;
-  const n = parseInt(raw, 10);
-  if (!isNaN(n) && n >= 1 && n <= 5) return n;
-  if (raw === "niedrig") return 2;
-  if (raw === "hoch") return 4;
-  if (raw === "mittel") return 3;
-  return null;
-};
+const energyToNum = (raw?: string | null) => energyToFloat(raw);
 
-export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker, onAddEvent }: DayProps) {
+export function DayView({ selectedDate, onSelectDate, profile, events, todos, log, onToggleTodo, onOpenTracker, onAddEvent, onAddTodo }: DayProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const today = new Date();
   const energy = energyToNum(log?.energy_level);
+  const phase = phaseForDate(selectedDate, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
 
   return (
     <div className="animate-fade-in space-y-4">
-      {/* Mini-Strip oben */}
+      {/* Großer Tages-Header */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className={cn("h-12 w-1.5 rounded-full", phaseStripe[phase])} />
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {format(selectedDate, "EEEE", { locale: de })}
+            </div>
+            <div className="text-2xl leading-tight">
+              {format(selectedDate, "d. MMMM yyyy", { locale: de })}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {onAddEvent && (
+            <Button size="sm" variant="outline" onClick={onAddEvent}>
+              <CalendarPlus className="h-4 w-4 mr-1" /> Termin
+            </Button>
+          )}
+          {onAddTodo && (
+            <Button size="sm" variant="outline" onClick={onAddTodo}>
+              <ListPlus className="h-4 w-4 mr-1" /> Aufgabe
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Mini-Strip Wochennavigation */}
       <div className="grid grid-cols-7 gap-1">
         {days.map(d => {
-          const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+          const ph = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
           const selected = isSameDay(d, selectedDate);
           const isToday = isSameDay(d, today);
           return (
@@ -298,7 +452,7 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
                 selected && "ring-2 ring-primary",
                 !selected && "hover:border-primary/40 opacity-70",
               )}>
-              <div className={cn("h-1 w-full", phaseStripe[phase])} />
+              <div className={cn("h-1 w-full", phaseStripe[ph])} />
               <div className="py-1">
                 <div className="text-[9px] uppercase text-muted-foreground">{format(d, "EE", { locale: de })}</div>
                 <div className={cn("text-sm", isToday && "font-bold text-primary")}>{format(d, "d")}</div>
@@ -310,7 +464,6 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
 
       {/* Detail-Kacheln */}
       <div className="grid gap-3 md:grid-cols-2">
-        {/* Energielevel */}
         <button
           onClick={onOpenTracker}
           className="rounded-xl bg-card border border-border/60 p-4 text-left hover:border-primary/40 transition-all"
@@ -319,12 +472,13 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
           {energy !== null ? (
             <>
               <div className="text-2xl mb-2">
-                {["sehr schlecht", "schlecht", "mittel", "gut", "sehr gut"][energy - 1]}
+                <span className="capitalize">
+                  {["sehr schlecht", "schlecht", "mittel", "gut", "sehr gut"][Math.min(4, Math.max(0, Math.round(energy) - 1))]}
+                </span>
+                <span className="text-base text-muted-foreground ml-2 tabular-nums">{energy.toFixed(1)}</span>
               </div>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map(i => (
-                  <div key={i} className={cn("h-2 flex-1 rounded-full", i <= energy ? "bg-primary" : "bg-muted")} />
-                ))}
+              <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary" style={{ width: `${((energy - 1) / 4) * 100}%` }} />
               </div>
             </>
           ) : (
@@ -332,7 +486,6 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
           )}
         </button>
 
-        {/* Beschwerden */}
         <button
           onClick={onOpenTracker}
           className="rounded-xl bg-card border border-border/60 p-4 text-left hover:border-primary/40 transition-all"
@@ -349,7 +502,6 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
           )}
         </button>
 
-        {/* Termine */}
         <div className="rounded-xl bg-card border border-border/60 p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Termine</div>
@@ -374,9 +526,13 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
           )}
         </div>
 
-        {/* To-dos */}
         <div className="rounded-xl bg-card border border-border/60 p-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">To-dos</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">To-dos</div>
+            {onAddTodo && (
+              <button onClick={onAddTodo} className="text-xs text-primary hover:underline">+ Neu</button>
+            )}
+          </div>
           {todos.length === 0 ? (
             <div className="text-sm text-muted-foreground">Keine Aufgaben.</div>
           ) : (

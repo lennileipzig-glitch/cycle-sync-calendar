@@ -7,11 +7,12 @@ import { useProfile } from "@/hooks/useProfile";
 import { getPhase, fmtDate } from "@/lib/cycle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, ListTodo, User, Settings as SettingsIcon, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, User, Settings as SettingsIcon } from "lucide-react";
 import { MonthView, WeekView, YearView, DayView } from "@/components/CalendarViews";
-import { TodoList } from "@/components/TodoList";
 import { TrackerDialog } from "@/components/TrackerDialog";
 import { EventDialog } from "@/components/EventDialog";
+import { TodoDialog } from "@/components/TodoDialog";
+import { PhaseLegend } from "@/components/PhaseLegend";
 import { Recommendations } from "@/components/Recommendations";
 
 import { OnboardingDialog } from "@/components/OnboardingDialog";
@@ -33,6 +34,8 @@ const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [trackerOpen, setTrackerOpen] = useState(false);
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
+  const [todoDialogOpen, setTodoDialogOpen] = useState(false);
+  const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null>(null);
   const [allEvents, setAllEvents] = useState<GuestEvent[]>([]);
   const [weekTodos, setWeekTodos] = useState<{ id: string; title: string; completed: boolean; todo_date: string }[]>([]);
@@ -123,8 +126,8 @@ const Index = () => {
   }, [allEvents]);
 
   const todosByDay = useMemo(() => {
-    const m: Record<string, { id: string; completed: boolean }[]> = {};
-    weekTodos.forEach(t => { (m[t.todo_date] ??= []).push({ id: t.id, completed: t.completed }); });
+    const m: Record<string, { id: string; title: string; completed: boolean }[]> = {};
+    weekTodos.forEach(t => { (m[t.todo_date] ??= []).push({ id: t.id, title: t.title, completed: t.completed }); });
     return m;
   }, [weekTodos]);
 
@@ -275,6 +278,8 @@ const Index = () => {
                 profile={profile}
                 eventsByDay={eventsByDay}
                 todosByDay={todosByDay}
+                onAddEventForDate={(d) => { setQuickAddDate(d); setEventDialogOpen(true); }}
+                onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
               />
             </Card>
           )}
@@ -286,6 +291,9 @@ const Index = () => {
                 profile={profile}
                 eventsByDay={eventsByDay}
                 moodByDay={weekMood}
+                todosByDay={todosByDay}
+                onAddEventForDate={(d) => { setQuickAddDate(d); setEventDialogOpen(true); }}
+                onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
               />
             </Card>
           )}
@@ -300,38 +308,14 @@ const Index = () => {
                 log={dayLog}
                 onToggleTodo={toggleDayTodo}
                 onOpenTracker={() => setTrackerOpen(true)}
-                onAddEvent={() => setEventDialogOpen(true)}
+                onAddEvent={() => { setQuickAddDate(selectedDate); setEventDialogOpen(true); }}
+                onAddTodo={() => { setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
               />
             </Card>
           )}
         </div>
 
-        {/* Termine & To-dos getrennt — nur in Monat/Jahr/Woche relevant; Day-Ansicht hat sie schon eingebaut */}
-        {zoom !== "day" && (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card className="p-5 shadow-soft">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  Termine
-                </h3>
-                <Button variant="ghost" size="sm" onClick={() => setEventDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-1" /> Termin
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground italic">
-                Termine erscheinen direkt im jeweiligen Tag im Kalender oben.
-              </p>
-            </Card>
-            <Card className="p-5 shadow-soft">
-              <h3 className="text-lg mb-3 flex items-center gap-2">
-                <ListTodo className="h-4 w-4" />
-                To-dos · <span className="capitalize text-muted-foreground text-base">{format(selectedDate, "EEEE", { locale: de })}</span>
-              </h3>
-              <TodoList userId={userId} date={selectedDate} />
-            </Card>
-          </div>
-        )}
+        <PhaseLegend className="px-1" />
 
         <Recommendations phase={phase} energy={dayLog?.energy_level ?? todayLog?.energy_level} symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []} />
 
@@ -344,10 +328,32 @@ const Index = () => {
 
       <EventDialog
         userId={userId}
-        date={selectedDate}
+        date={quickAddDate}
         open={eventDialogOpen}
         onOpenChange={setEventDialogOpen}
         onCreated={async () => setAllEvents(await dataApi.getEvents(userId))}
+      />
+
+      <TodoDialog
+        userId={userId}
+        date={quickAddDate}
+        open={todoDialogOpen}
+        onOpenChange={setTodoDialogOpen}
+        onCreated={async () => {
+          // Wochen-Todos neu laden, damit Post-Its sofort erscheinen
+          const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
+          const end = endOfWeek(selectedDate, { weekStartsOn: 1 });
+          const todos: typeof weekTodos = [];
+          for (let d = new Date(start); d <= end; d = addDays(d, 1)) {
+            const k = fmtDate(d);
+            const dayTodos = await dataApi.getTodos(userId, k);
+            dayTodos.forEach(t => todos.push({ ...t, todo_date: k }));
+          }
+          setWeekTodos(todos);
+          if (fmtDate(quickAddDate) === fmtDate(selectedDate)) {
+            setDayTodosState(await dataApi.getTodos(userId, fmtDate(selectedDate)));
+          }
+        }}
       />
 
       <OnboardingDialog
