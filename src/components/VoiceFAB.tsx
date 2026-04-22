@@ -202,6 +202,46 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
 
   const sendToAssistant = useCallback(async (text: string) => {
     setProcessing(true);
+  // Verarbeitet die nächste Action aus der Queue (für Multi-Action-Anweisungen).
+  const processNextAction = useCallback(async (
+    remaining: VoiceAction[],
+    runner: (act: VoiceAction) => Promise<void>,
+  ) => {
+    if (remaining.length === 0) {
+      setQueue([]);
+      setQueueProgress(null);
+      setPendingAction(null);
+      setProcessing(false);
+      setOpen(false);
+      return;
+    }
+    const [next, ...rest] = remaining;
+    setQueue(rest);
+    setQueueProgress((prev) => prev ? { done: prev.done + 1, total: prev.total } : null);
+
+    // Clarify, clarify_category und low/medium-confidence Aktionen brauchen User-Input.
+    const needsConfirmation =
+      next.action === "clarify_category" ||
+      ((next.action !== "suggest_recipe" && next.action !== "clarify") && next.payload.confidence !== "high");
+
+    if (needsConfirmation || next.action === "suggest_recipe") {
+      setPendingAction(next);
+      setProcessing(false);
+      return;
+    }
+    // High-confidence: direkt ausführen, dann weiter
+    await runner(next);
+  }, []);
+
+  const advanceQueue = useCallback(async () => {
+    await processNextAction(queue, (act) => executeActionRef.current(act));
+  }, [queue, processNextAction]);
+
+  // Ref-Trick um Zirkular-Abhängigkeit zwischen execute & advance zu vermeiden
+  const executeActionRef = useRef<(act: VoiceAction) => Promise<void>>(async () => {});
+
+  const sendToAssistant = useCallback(async (text: string) => {
+    setProcessing(true);
     try {
       const context = await buildContext();
       const { data, error } = await supabase.functions.invoke("voice-assistant", {
@@ -209,33 +249,43 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
+      // Multi-Action: in Queue umwandeln und nacheinander abarbeiten
+      if (data?.action === "multi" || data?.action === "multi_action") {
+        const items: MultiItem[] = (data.payload?.items ?? []) as MultiItem[];
+        const actions = items.map(multiItemToAction).filter((a): a is VoiceAction => a !== null);
+        if (actions.length === 0) {
+          toast({ title: "Nichts erkannt", description: "Magst du es anders formulieren?" });
+          setProcessing(false);
+          return;
+        }
+        toast({ title: `${actions.length} Sachverhalte erkannt`, description: data.payload?.spoken_summary ?? "Ich arbeite sie nacheinander durch." });
+        setQueueProgress({ done: 0, total: actions.length });
+        await processNextAction(actions, (act) => executeActionRef.current(act));
+        return;
+      }
+
       const result = data as VoiceAction;
 
       if (result.action === "clarify") {
         toast({ title: "Fravia fragt nach", description: result.payload.question });
         setProcessing(false);
-        setTranscript(""); // erlauben, neu zu sprechen
+        setTranscript("");
         return;
       }
-
       if (result.action === "clarify_category") {
-        // Auswahl im Dialog anzeigen – Userin entscheidet manuell.
         setPendingAction(result);
         setProcessing(false);
         return;
       }
-
       if (result.action === "suggest_recipe") {
-        // Rezeptvorschläge nur anzeigen, nicht buchen
         setPendingAction(result);
         setProcessing(false);
         return;
       }
-
-      // Termin-/Mahlzeit-/Sport-Aktionen
       const conf = result.payload.confidence;
       if (conf === "high") {
-        await executeAction(result);
+        await executeActionRef.current(result);
       } else {
         setPendingAction(result);
         setProcessing(false);
@@ -245,42 +295,51 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
       toast({ title: "Fehler", description: e instanceof Error ? e.message : "Unbekannt", variant: "destructive" });
       setProcessing(false);
     }
-  }, [buildContext, toast]);
+  }, [buildContext, toast, processNextAction]);
 
-  // Handhabt die Auswahl in der Kategorie-Rückfrage
+  // Handhabt die Auswahl in der Kategorie-Rückfrage (für ein einzelnes Item)
   const handleCategoryChoice = useCallback(async (choice: CategoryOption) => {
     if (!pendingAction || pendingAction.action !== "clarify_category") return;
     const p = pendingAction.payload;
     const today = format(new Date(), "yyyy-MM-dd");
     const date = p.suggested_date ?? today;
     const title = p.suggested_title ?? (transcript.trim().slice(0, 80) || "Neuer Eintrag");
+    const time = p.suggested_time;
 
-    // To-do direkt anlegen (ohne Edge-Function-Roundtrip)
+    // Direkt eine konkrete Action bauen statt erneuten Roundtrip (besonders wichtig in Queue)
+    let nextAction: VoiceAction | null = null;
     if (choice === "todo") {
-      try {
-        await dataApi.addTodo(userId, date, title);
-        await onChanged();
-        toast({ title: "To-do angelegt", description: `${title} · ${format(new Date(date), "EEE d.M.", { locale: de })}` });
-        setPendingAction(null);
-        setOpen(false);
-      } catch (e) {
-        toast({ title: "Fehler", description: e instanceof Error ? e.message : "Unbekannt", variant: "destructive" });
-      }
-      return;
+      nextAction = { action: "add_todo", payload: { title, date, confidence: "high", spoken_summary: title } };
+    } else if (choice === "sport") {
+      nextAction = { action: "add_sport", payload: { title, date, time: time ?? "18:00", confidence: "high", spoken_summary: title } };
+    } else if (choice === "ernaehrung") {
+      nextAction = { action: "add_meal", payload: { title, date, time: time ?? "12:00", confidence: "high", spoken_summary: title } };
+    } else { // termin
+      nextAction = { action: "add_appointment", payload: { title, date, time: time ?? "09:00", confidence: "high", spoken_summary: title } };
     }
-
-    // Für Termin/Sport/Ernährung: Assistent erneut bitten – mit fixierter Kategorie
-    const categoryHint =
-      choice === "sport" ? "Es ist eine Sport-/Bewegungseinheit." :
-      choice === "ernaehrung" ? "Es ist eine Mahlzeit." :
-      "Es ist ein normaler Termin.";
-    const followUp = `${transcript.trim()} (Hinweis von der Nutzerin: ${categoryHint})`;
     setPendingAction(null);
-    await sendToAssistant(followUp);
-  }, [pendingAction, transcript, userId, onChanged, toast, sendToAssistant]);
+    await executeActionRef.current(nextAction);
+  }, [pendingAction, transcript]);
 
   const executeAction = useCallback(async (act: VoiceAction) => {
     if (act.action === "clarify" || act.action === "clarify_category" || act.action === "suggest_recipe") return;
+
+    // Sonderfall To-do: keine Uhrzeit, separate Tabelle
+    if (act.action === "add_todo") {
+      const p = act.payload;
+      try {
+        await dataApi.addTodo(userId, p.date, p.title, { energy_cost: p.energy_cost ?? null });
+        await onChanged();
+        toast({ title: "To-do angelegt", description: `${p.title} · ${format(new Date(p.date), "EEE d.M.", { locale: de })}` });
+      } catch (e) {
+        toast({ title: "Fehler", description: e instanceof Error ? e.message : "Unbekannt", variant: "destructive" });
+      }
+      setPendingAction(null);
+      // Queue weiter abarbeiten oder Dialog schließen
+      await processNextAction(queue, (a) => executeActionRef.current(a));
+      return;
+    }
+
     const p = act.payload;
     const category: "termin" | "mahlzeit" | "sport" =
       act.action === "add_meal" || act.action === "smart_plan_meal" ? "mahlzeit" :
@@ -301,25 +360,30 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
       details: ("details" in p && p.details) ? p.details : (("reasoning" in p && p.reasoning) ? p.reasoning : null),
     };
 
-    const inserted = await dataApi.addEvents(userId, [eventInput]);
-    await onChanged();
-
-    // Toast mit Undo
-    const undoEventId = (inserted as unknown as { id?: string }[] | undefined)?.[0]?.id;
-    toast({
-      title: "Eingetragen",
-      description: `${p.title} · ${format(startsAt, "EEE d.M., HH:mm", { locale: de })}`,
-      action: undoEventId ? (
-        <Button variant="ghost" size="sm" onClick={async () => {
-          await dataApi.deleteEvent(userId, undoEventId);
-          await onChanged();
-        }}>Rückgängig</Button>
-      ) : undefined,
-    });
+    try {
+      const inserted = await dataApi.addEvents(userId, [eventInput]);
+      await onChanged();
+      const undoEventId = (inserted as unknown as { id?: string }[] | undefined)?.[0]?.id;
+      toast({
+        title: "Eingetragen",
+        description: `${p.title} · ${format(startsAt, "EEE d.M., HH:mm", { locale: de })}`,
+        action: undoEventId ? (
+          <Button variant="ghost" size="sm" onClick={async () => {
+            await dataApi.deleteEvent(userId, undoEventId);
+            await onChanged();
+          }}>Rückgängig</Button>
+        ) : undefined,
+      });
+    } catch (e) {
+      toast({ title: "Fehler", description: e instanceof Error ? e.message : "Unbekannt", variant: "destructive" });
+    }
     setPendingAction(null);
-    setProcessing(false);
-    setOpen(false);
-  }, [userId, onChanged, toast]);
+    await processNextAction(queue, (a) => executeActionRef.current(a));
+  }, [userId, onChanged, toast, queue, processNextAction]);
+
+  // executeActionRef immer aktuell halten
+  useEffect(() => { executeActionRef.current = executeAction; }, [executeAction]);
+
 
   const handleSubmitTranscript = useCallback(() => {
     if (!transcript.trim()) return;
