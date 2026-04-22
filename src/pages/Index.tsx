@@ -12,7 +12,7 @@ import { MonthView, WeekView, YearView, DayView } from "@/components/CalendarVie
 import { TodoList } from "@/components/TodoList";
 import { TrackerDialog } from "@/components/TrackerDialog";
 import { Recommendations } from "@/components/Recommendations";
-import { User } from "lucide-react";
+
 import { OnboardingDialog } from "@/components/OnboardingDialog";
 import { dataApi } from "@/lib/dataApi";
 import { isGuest, type GuestEvent } from "@/lib/guestStore";
@@ -202,7 +202,9 @@ const Index = () => {
             <Button variant="outline" size="sm" onClick={() => setTrackerOpen(true)}>
               <Sparkles className="h-4 w-4 mr-1" /> Tracken
             </Button>
-            <ProfileSettings profile={profile} userId={userId} onSave={update} />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/profile")} aria-label="Profil">
+              <User className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </header>
