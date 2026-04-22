@@ -32,6 +32,7 @@ const Index = () => {
   const [zoom, setZoom] = useState<Zoom>("month");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [trackerOpen, setTrackerOpen] = useState(false);
+  const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null>(null);
   const [allEvents, setAllEvents] = useState<GuestEvent[]>([]);
   const [weekTodos, setWeekTodos] = useState<{ id: string; title: string; completed: boolean; todo_date: string }[]>([]);
