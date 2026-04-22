@@ -10,7 +10,14 @@ export interface DailyLog {
   symptoms: string[];
   notes: string | null;
 }
-export interface Todo { id: string; title: string; completed: boolean; todo_date: string; }
+export interface Todo {
+  id: string;
+  title: string;
+  completed: boolean;
+  todo_date: string;
+  energy_cost?: number | null;
+  is_flexible?: boolean;
+}
 
 export const dataApi = {
   // ---- Logs ----
@@ -65,11 +72,23 @@ export const dataApi = {
     return (data as Todo[]) ?? [];
   },
 
-  async addTodo(userId: string | null, date: string, title: string): Promise<Todo | null> {
-    if (isGuest()) return guestStore.addTodo(date, title);
+  async addTodo(
+    userId: string | null,
+    date: string,
+    title: string,
+    extra?: { energy_cost?: number | null; is_flexible?: boolean },
+  ): Promise<Todo | null> {
+    if (isGuest()) return guestStore.addTodo(date, title, extra);
     if (!userId) return null;
     const { data } = await supabase.from("todos")
-      .insert({ user_id: userId, todo_date: date, title }).select().single();
+      .insert({
+        user_id: userId,
+        todo_date: date,
+        title,
+        energy_cost: extra?.energy_cost ?? null,
+        is_flexible: extra?.is_flexible ?? false,
+      })
+      .select().single();
     return data as Todo | null;
   },
 
@@ -98,9 +117,41 @@ export const dataApi = {
   },
 
   async addEvents(userId: string | null, events: Omit<GuestEvent, "id">[]): Promise<void> {
-    if (isGuest()) { guestStore.addEvents(events); return; }
-    if (!userId || events.length === 0) return;
-    const rows = events.map(e => ({ user_id: userId, ...e }));
+    // Wiederkehrende Termine zu Einzel-Events expandieren
+    const expanded: Omit<GuestEvent, "id">[] = [];
+    for (const e of events) {
+      expanded.push(e);
+      if (!e.recurrence_freq || !e.recurrence_until) continue;
+      const start = new Date(e.starts_at);
+      const end = e.ends_at ? new Date(e.ends_at) : null;
+      const until = new Date(`${e.recurrence_until}T23:59:59`);
+      const step = e.recurrence_freq;
+      const advance = (d: Date): Date => {
+        const n = new Date(d);
+        if (step === "daily") n.setDate(n.getDate() + 1);
+        else if (step === "weekly") n.setDate(n.getDate() + 7);
+        else if (step === "monthly") n.setMonth(n.getMonth() + 1);
+        return n;
+      };
+      let cur = advance(start);
+      let curEnd = end ? advance(end) : null;
+      let safety = 0;
+      while (cur <= until && safety < 366) {
+        expanded.push({
+          ...e,
+          starts_at: cur.toISOString(),
+          ends_at: curEnd ? curEnd.toISOString() : null,
+          recurrence_freq: null,
+          recurrence_until: null,
+        });
+        cur = advance(cur);
+        if (curEnd) curEnd = advance(curEnd);
+        safety++;
+      }
+    }
+    if (isGuest()) { guestStore.addEvents(expanded); return; }
+    if (!userId || expanded.length === 0) return;
+    const rows = expanded.map(e => ({ user_id: userId, ...e }));
     await supabase.from("calendar_events").insert(rows);
   },
 };

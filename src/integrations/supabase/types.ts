@@ -19,9 +19,13 @@ export type Database = {
           all_day: boolean
           created_at: string
           ends_at: string | null
+          energy_cost: number | null
           external_uid: string | null
           id: string
+          is_flexible: boolean
           location: string | null
+          recurrence_freq: string | null
+          recurrence_until: string | null
           source: string
           starts_at: string
           title: string
@@ -31,9 +35,13 @@ export type Database = {
           all_day?: boolean
           created_at?: string
           ends_at?: string | null
+          energy_cost?: number | null
           external_uid?: string | null
           id?: string
+          is_flexible?: boolean
           location?: string | null
+          recurrence_freq?: string | null
+          recurrence_until?: string | null
           source?: string
           starts_at: string
           title: string
@@ -43,9 +51,13 @@ export type Database = {
           all_day?: boolean
           created_at?: string
           ends_at?: string | null
+          energy_cost?: number | null
           external_uid?: string | null
           id?: string
+          is_flexible?: boolean
           location?: string | null
+          recurrence_freq?: string | null
+          recurrence_until?: string | null
           source?: string
           starts_at?: string
           title?: string
@@ -159,7 +171,9 @@ export type Database = {
         Row: {
           completed: boolean
           created_at: string
+          energy_cost: number | null
           id: string
+          is_flexible: boolean
           title: string
           todo_date: string
           user_id: string
@@ -167,7 +181,9 @@ export type Database = {
         Insert: {
           completed?: boolean
           created_at?: string
+          energy_cost?: number | null
           id?: string
+          is_flexible?: boolean
           title: string
           todo_date: string
           user_id: string
@@ -175,7 +191,9 @@ export type Database = {
         Update: {
           completed?: boolean
           created_at?: string
+          energy_cost?: number | null
           id?: string
+          is_flexible?: boolean
           title?: string
           todo_date?: string
           user_id?: string

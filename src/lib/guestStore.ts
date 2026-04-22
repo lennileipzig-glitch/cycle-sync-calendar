@@ -29,6 +29,8 @@ export interface GuestTodo {
   todo_date: string;
   title: string;
   completed: boolean;
+  energy_cost?: number | null;
+  is_flexible?: boolean;
 }
 
 export interface GuestEvent {
@@ -39,6 +41,10 @@ export interface GuestEvent {
   all_day: boolean;
   location: string | null;
   source: string;
+  energy_cost?: number | null;
+  is_flexible?: boolean;
+  recurrence_freq?: "daily" | "weekly" | "monthly" | null;
+  recurrence_until?: string | null;
 }
 
 const read = <T>(key: string, fallback: T): T => {
@@ -85,9 +91,13 @@ export const guestStore = {
   },
   getLog(date: string) { return this.getLogs().find(l => l.log_date === date) ?? null; },
   getTodos(date: string): GuestTodo[] { return read<GuestTodo[]>(TODOS_KEY, []).filter(t => t.todo_date === date); },
-  addTodo(date: string, title: string) {
+  addTodo(date: string, title: string, extra?: { energy_cost?: number | null; is_flexible?: boolean }) {
     const todos = read<GuestTodo[]>(TODOS_KEY, []);
-    const t = { id: crypto.randomUUID(), todo_date: date, title, completed: false };
+    const t: GuestTodo = {
+      id: crypto.randomUUID(), todo_date: date, title, completed: false,
+      energy_cost: extra?.energy_cost ?? null,
+      is_flexible: extra?.is_flexible ?? false,
+    };
     todos.push(t); write(TODOS_KEY, todos); return t;
   },
   updateTodo(id: string, patch: Partial<GuestTodo>) {

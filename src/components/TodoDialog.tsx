@@ -3,8 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { fmtDate } from "@/lib/cycle";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { fmtDate, findNextDateForEnergyCost } from "@/lib/cycle";
 import { dataApi } from "@/lib/dataApi";
+import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
@@ -17,11 +21,34 @@ interface Props {
   onCreated?: () => void;
 }
 
+const COST_LABEL = (c: number) => {
+  if (c <= 1.5) return "sehr leicht";
+  if (c <= 2.5) return "leicht";
+  if (c <= 3.5) return "mittel";
+  if (c <= 4.5) return "anstrengend";
+  return "sehr anstrengend";
+};
+
 export function TodoDialog({ userId, date, open, onOpenChange, onCreated }: Props) {
+  const { guestMode } = useAuth();
+  const { profile } = useProfile(userId ?? undefined, guestMode);
   const [title, setTitle] = useState("");
+  const [cost, setCost] = useState(3);
+  const [flexible, setFlexible] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { if (open) setTitle(""); }, [open]);
+  useEffect(() => {
+    if (open) {
+      setTitle("");
+      setCost(3);
+      setFlexible(false);
+    }
+  }, [open]);
+
+  const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
+  const targetDate = flexible
+    ? findNextDateForEnergyCost(date, cost, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length)
+    : date;
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -30,8 +57,15 @@ export function TodoDialog({ userId, date, open, onOpenChange, onCreated }: Prop
     }
     setSaving(true);
     try {
-      await dataApi.addTodo(userId, fmtDate(date), title.trim());
-      toast.success("Aufgabe hinzugefügt");
+      await dataApi.addTodo(userId, fmtDate(targetDate), title.trim(), {
+        energy_cost: Math.round(cost * 10) / 10,
+        is_flexible: flexible,
+      });
+      toast.success(
+        flexible
+          ? `Aufgabe für ${format(targetDate, "EEEE, d. MMM", { locale: de })} eingeplant`
+          : "Aufgabe hinzugefügt",
+      );
       onOpenChange(false);
       onCreated?.();
     } catch (e) {
@@ -63,6 +97,37 @@ export function TodoDialog({ userId, date, open, onOpenChange, onCreated }: Prop
               autoFocus
             />
           </div>
+
+          <div className="space-y-2">
+            <div className="flex items-baseline justify-between">
+              <Label>Energieaufwand</Label>
+              <span className="text-xs text-muted-foreground">
+                {COST_LABEL(cost)} · {cost.toFixed(1)}
+              </span>
+            </div>
+            <Slider value={[cost]} min={1} max={5} step={0.1} onValueChange={v => setCost(v[0])} />
+          </div>
+
+          <div className="flex items-start justify-between gap-4 rounded-lg border border-border/60 p-3">
+            <div className="space-y-1">
+              <Label htmlFor="todo-flex" className="cursor-pointer">Flexibler Tag</Label>
+              <p className="text-xs text-muted-foreground">
+                Luna ordnet die Aufgabe automatisch einer passenden Zyklusphase zu.
+              </p>
+            </div>
+            <Switch id="todo-flex" checked={flexible} onCheckedChange={setFlexible} />
+          </div>
+
+          {flexible && lastPeriod && (
+            <p className="text-xs text-primary capitalize">
+              → eingeplant für {format(targetDate, "EEEE, d. MMMM", { locale: de })}
+            </p>
+          )}
+          {flexible && !lastPeriod && (
+            <p className="text-xs text-muted-foreground">
+              Trage erst deinen Zyklus ein, damit Luna passend planen kann. Wird sonst auf das gewählte Datum gelegt.
+            </p>
+          )}
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Abbrechen</Button>
