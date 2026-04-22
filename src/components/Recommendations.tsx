@@ -2,13 +2,17 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Salad, Dumbbell, Refrigerator, X, Plus } from "lucide-react";
+import { Sparkles, Loader2, Salad, Dumbbell, Refrigerator, X, Plus, CalendarPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import type { PhaseInfo } from "@/lib/cycle";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { isGuest } from "@/lib/guestStore";
+import { dataApi } from "@/lib/dataApi";
+import { fmtDate } from "@/lib/cycle";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
 
 interface RecipeItem { title: string; why: string; nutrients: string[]; uses_from_fridge?: string[]; }
 interface WorkoutItem { title: string; duration: string; intensity: string; why: string; }
@@ -26,7 +30,21 @@ const loadFridge = (): string[] => {
   try { const v = localStorage.getItem(FRIDGE_KEY); return v ? JSON.parse(v) : []; } catch { return []; }
 };
 
-export function Recommendations({ phase, energy, symptoms }: { phase: PhaseInfo; energy?: string | null; symptoms?: string[] }) {
+export function Recommendations({
+  phase,
+  energy,
+  symptoms,
+  selectedDate,
+  userId,
+  onEventAdded,
+}: {
+  phase: PhaseInfo;
+  energy?: string | null;
+  symptoms?: string[];
+  selectedDate: Date;
+  userId: string | null;
+  onEventAdded?: () => void;
+}) {
   const { user, guestMode } = useAuth();
   const { profile } = useProfile(user?.id, guestMode || isGuest());
   const [recipes, setRecipes] = useState<RecipeItem[]>([]);
@@ -74,6 +92,57 @@ export function Recommendations({ phase, energy, symptoms }: { phase: PhaseInfo;
   };
 
   useEffect(() => { setRecipes([]); setWorkouts([]); }, [phase.phase, energy, JSON.stringify(symptoms)]);
+
+  const dayLabel = format(selectedDate, "EEEE, d. MMM", { locale: de });
+
+  const addRecipeToDay = async (r: RecipeItem) => {
+    const start = new Date(selectedDate); start.setHours(12, 0, 0, 0);
+    const end = new Date(selectedDate); end.setHours(13, 0, 0, 0);
+    const detailsParts: string[] = [r.why];
+    if (r.nutrients?.length) detailsParts.push(`Nährstoffe: ${r.nutrients.join(", ")}`);
+    if (r.uses_from_fridge?.length) detailsParts.push(`Aus Kühlschrank: ${r.uses_from_fridge.join(", ")}`);
+    await dataApi.addEvents(userId, [{
+      title: r.title,
+      starts_at: start.toISOString(),
+      ends_at: end.toISOString(),
+      all_day: false,
+      location: null,
+      source: "ai-recipe",
+      energy_cost: 1.5,
+      is_flexible: false,
+      recurrence_freq: null,
+      recurrence_until: null,
+      category: "mahlzeit",
+      details: detailsParts.join("\n"),
+    }]);
+    toast.success(`„${r.title}" zu ${dayLabel} hinzugefügt`);
+    onEventAdded?.();
+  };
+
+  const addWorkoutToDay = async (w: WorkoutItem) => {
+    const start = new Date(selectedDate); start.setHours(18, 0, 0, 0);
+    const minMatch = /(\d+)/.exec(w.duration);
+    const minutes = minMatch ? Math.min(180, parseInt(minMatch[1], 10)) : 45;
+    const end = new Date(start.getTime() + minutes * 60_000);
+    const intensityCost = w.intensity === "intensiv" ? 4.5 : w.intensity === "moderat" ? 3.5 : 2.5;
+    await dataApi.addEvents(userId, [{
+      title: w.title,
+      starts_at: start.toISOString(),
+      ends_at: end.toISOString(),
+      all_day: false,
+      location: null,
+      source: "ai-workout",
+      energy_cost: intensityCost,
+      is_flexible: false,
+      recurrence_freq: null,
+      recurrence_until: null,
+      category: "sport",
+      details: `${w.why}\nDauer: ${w.duration} · Intensität: ${w.intensity}`,
+    }]);
+    toast.success(`„${w.title}" zu ${dayLabel} hinzugefügt`);
+    onEventAdded?.();
+  };
+
 
   const personalNote = () => {
     const parts: string[] = [];
@@ -147,7 +216,12 @@ export function Recommendations({ phase, energy, symptoms }: { phase: PhaseInfo;
             <ul className="space-y-3">
               {recipes.map((r, i) => (
                 <li key={i} className="border-l-2 border-primary/40 pl-3">
-                  <div className="font-medium text-sm">{r.title}</div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-medium text-sm">{r.title}</div>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] -mr-2 shrink-0" onClick={() => addRecipeToDay(r)}>
+                      <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
+                    </Button>
+                  </div>
                   <div className="text-xs text-muted-foreground mt-0.5">{r.why}</div>
                   <div className="text-xs text-primary/80 mt-1">{r.nutrients.join(" · ")}</div>
                   {r.uses_from_fridge && r.uses_from_fridge.length > 0 && (
@@ -183,7 +257,12 @@ export function Recommendations({ phase, energy, symptoms }: { phase: PhaseInfo;
             <ul className="space-y-3">
               {workouts.map((w, i) => (
                 <li key={i} className="border-l-2 border-primary/40 pl-3">
-                  <div className="font-medium text-sm">{w.title}</div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-medium text-sm">{w.title}</div>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px] -mr-2 shrink-0" onClick={() => addWorkoutToDay(w)}>
+                      <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
+                    </Button>
+                  </div>
                   <div className="text-xs text-muted-foreground mt-0.5">{w.why}</div>
                   <div className="text-xs text-primary/80 mt-1">{w.duration} · {w.intensity}</div>
                 </li>

@@ -40,6 +40,7 @@ const Index = () => {
   const [editEvent, setEditEvent] = useState<GuestEvent | null>(null);
   const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
   const [quickAddTime, setQuickAddTime] = useState<string | null>(null);
+  const [quickAddCategory, setQuickAddCategory] = useState<"termin" | "mahlzeit" | "sport">("termin");
   const [todayLog, setTodayLog] = useState<{ energy_level?: string | null; symptoms?: string[] | null; notes?: string | null } | null>(null);
   const [allEvents, setAllEvents] = useState<GuestEvent[]>([]);
   const [weekTodos, setWeekTodos] = useState<{ id: string; title: string; completed: boolean; todo_date: string }[]>([]);
@@ -280,8 +281,13 @@ const Index = () => {
                 profile={profile}
                 eventsByDay={eventsByDay}
                 todosByDay={todosByDay}
-                onAddEventForDate={(d) => { setQuickAddDate(d); setEventDialogOpen(true); }}
+                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("termin"); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
+                onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setEventDialogOpen(true); }}
+                onMoveEvent={async (ev, newDate) => {
+                  await dataApi.moveEventToDate(userId, ev, newDate);
+                  setAllEvents(await dataApi.getEvents(userId));
+                }}
               />
             </Card>
           )}
@@ -294,9 +300,14 @@ const Index = () => {
                 eventsByDay={eventsByDay}
                 moodByDay={weekMood}
                 todosByDay={todosByDay}
-                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddTime(null); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddTime(null); setQuickAddCategory("termin"); setEditEvent(null); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
-                onAddEventAtTime={(d, time) => { setQuickAddDate(d); setQuickAddTime(time); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddEventAtTime={(d, time) => { setQuickAddDate(d); setQuickAddTime(time); setQuickAddCategory("termin"); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setEditEvent(null); setEventDialogOpen(true); }}
+                onMoveEvent={async (ev, newDate) => {
+                  await dataApi.moveEventToDate(userId, ev, newDate);
+                  setAllEvents(await dataApi.getEvents(userId));
+                }}
               />
             </Card>
           )}
@@ -345,7 +356,14 @@ const Index = () => {
 
             <PhaseLegend className="px-1" />
 
-            <Recommendations phase={phase} energy={dayLog?.energy_level ?? todayLog?.energy_level} symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []} />
+            <Recommendations
+              phase={phase}
+              energy={dayLog?.energy_level ?? todayLog?.energy_level}
+              symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []}
+              selectedDate={selectedDate}
+              userId={userId}
+              onEventAdded={async () => setAllEvents(await dataApi.getEvents(userId))}
+            />
           </>
         )}
 
@@ -361,13 +379,15 @@ const Index = () => {
         userId={userId}
         date={quickAddDate}
         initialTime={quickAddTime}
+        initialCategory={quickAddCategory}
         open={eventDialogOpen}
-        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) { setEditEvent(null); setQuickAddTime(null); } }}
+        onOpenChange={(v) => { setEventDialogOpen(v); if (!v) { setEditEvent(null); setQuickAddTime(null); setQuickAddCategory("termin"); } }}
         event={editEvent}
         onCreated={async () => {
           setAllEvents(await dataApi.getEvents(userId));
           setEditEvent(null);
           setQuickAddTime(null);
+          setQuickAddCategory("termin");
         }}
       />
 

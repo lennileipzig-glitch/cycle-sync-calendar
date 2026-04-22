@@ -3,9 +3,9 @@ import { de } from "date-fns/locale";
 import { phaseForDate } from "@/lib/cycle";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/hooks/useProfile";
-import type { GuestEvent } from "@/lib/guestStore";
+import type { GuestEvent, EventCategory } from "@/lib/guestStore";
 import { fmtDate } from "@/lib/cycle";
-import { CheckCircle2, Circle, Plus, CalendarPlus, ListPlus } from "lucide-react";
+import { CheckCircle2, Circle, Plus, CalendarPlus, ListPlus, UtensilsCrossed, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,6 +30,17 @@ const phaseFill: Record<string, string> = {
   unknown: "bg-muted/30",
 };
 
+const categoryIcon = (cat?: EventCategory) => {
+  if (cat === "mahlzeit") return UtensilsCrossed;
+  if (cat === "sport") return Dumbbell;
+  return null;
+};
+const categoryAccent = (cat?: EventCategory): string => {
+  if (cat === "mahlzeit") return "border-l-amber-400 bg-amber-100/30 dark:bg-amber-400/10";
+  if (cat === "sport") return "border-l-emerald-500 bg-emerald-100/30 dark:bg-emerald-400/10";
+  return "";
+};
+
 interface DataMaps {
   eventsByDay?: Record<string, GuestEvent[]>;
   todosByDay?: Record<string, { id: string; title: string; completed: boolean }[]>;
@@ -40,10 +51,14 @@ interface QuickAdd {
   onAddTodoForDate?: (d: Date) => void;
   /** Optional: Termin an einem bestimmten Tag + Uhrzeit (HH:mm) anlegen */
   onAddEventAtTime?: (d: Date, time: string) => void;
+  /** Optional: Mahlzeit für einen Tag hinzufügen (öffnet Dialog mit Kategorie="mahlzeit") */
+  onAddMealForDate?: (d: Date) => void;
+  /** Optional: Drag & Drop – Event auf neues Datum verschieben */
+  onMoveEvent?: (event: GuestEvent, newDateStr: string) => void;
 }
 
-function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
-  if (!onAddEventForDate && !onAddTodoForDate) return null;
+function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, onAddMealForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
+  if (!onAddEventForDate && !onAddTodoForDate && !onAddMealForDate) return null;
   const px = size === "xs" ? "h-5 w-5" : "h-7 w-7";
   return (
     <DropdownMenu>
@@ -66,6 +81,11 @@ function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, size = "sm" }
             <CalendarPlus className="h-4 w-4 mr-2" /> Termin
           </DropdownMenuItem>
         )}
+        {onAddMealForDate && (
+          <DropdownMenuItem onClick={() => onAddMealForDate(date)}>
+            <UtensilsCrossed className="h-4 w-4 mr-2" /> Mahlzeit
+          </DropdownMenuItem>
+        )}
         {onAddTodoForDate && (
           <DropdownMenuItem onClick={() => onAddTodoForDate(date)}>
             <ListPlus className="h-4 w-4 mr-2" /> Aufgabe
@@ -83,12 +103,25 @@ interface MonthProps extends DataMaps, QuickAdd {
   profile: Profile | null;
 }
 
-export function MonthView({ monthDate, selectedDate, onSelectDate, profile, eventsByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate }: MonthProps) {
+export function MonthView({ monthDate, selectedDate, onSelectDate, profile, eventsByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddMealForDate, onMoveEvent }: MonthProps) {
   const start = startOfWeek(startOfMonth(monthDate), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(monthDate), { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start, end });
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const today = new Date();
+
+  const dragHandlers = (d: Date) => onMoveEvent ? {
+    onDragOver: (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; },
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      const data = e.dataTransfer.getData("application/x-luna-event");
+      if (!data) return;
+      try {
+        const ev = JSON.parse(data) as GuestEvent;
+        onMoveEvent(ev, fmtDate(d));
+      } catch { /* ignore */ }
+    },
+  } : {};
 
   return (
     <div className="animate-fade-in">
@@ -119,11 +152,12 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
               onClick={() => onSelectDate(d)}
               role="button"
               tabIndex={0}
+              {...dragHandlers(d)}
             >
               <div className={cn("h-1.5 w-full shrink-0", phaseStripe[phase])} />
               <div className="flex justify-between items-center px-1.5 pt-1">
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} size="xs" />
+                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
                 </div>
                 {isToday ? (
                   <span className="text-xs leading-none inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground font-bold">
@@ -134,25 +168,37 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                 )}
               </div>
               <div className="flex-1 flex flex-col gap-0.5 px-1 pb-1 mt-1 overflow-hidden">
-                {events.slice(0, 2).map((e) => (
-                  <div
-                    key={e.id}
-                    className={cn(
-                      "text-[9px] leading-tight px-1 py-0.5 rounded truncate text-left border-l-2",
-                      e._shared_owner_name && "border-dashed",
-                    )}
-                    style={{ background: `${phaseColorVar.replace(')', ' / 0.18)')}`, borderLeftColor: phaseColorVar }}
-                    title={e._shared_owner_name ? `${e.title} · von ${e._shared_owner_name}` : e.title}
-                  >
-                    {!e.all_day && (
-                      <span className="text-muted-foreground mr-0.5">
-                        {format(new Date(e.starts_at), "HH:mm")}
-                      </span>
-                    )}
-                    {e.title}
-                    {e._shared_owner_name && <span className="opacity-60"> · {e._shared_owner_name}</span>}
-                  </div>
-                ))}
+                {events.slice(0, 2).map((e) => {
+                  const Icon = categoryIcon(e.category);
+                  const draggable = !e._shared_owner_name && !!onMoveEvent;
+                  return (
+                    <div
+                      key={e.id}
+                      draggable={draggable}
+                      onDragStart={draggable ? (ev) => {
+                        ev.stopPropagation();
+                        ev.dataTransfer.effectAllowed = "move";
+                        ev.dataTransfer.setData("application/x-luna-event", JSON.stringify(e));
+                      } : undefined}
+                      className={cn(
+                        "text-[9px] leading-tight px-1 py-0.5 rounded truncate text-left border-l-2 flex items-center gap-1",
+                        e._shared_owner_name && "border-dashed",
+                        draggable && "cursor-grab active:cursor-grabbing",
+                      )}
+                      style={{ background: `${phaseColorVar.replace(')', ' / 0.18)')}`, borderLeftColor: phaseColorVar }}
+                      title={e._shared_owner_name ? `${e.title} · von ${e._shared_owner_name}` : e.title}
+                    >
+                      {Icon && <Icon className="h-2.5 w-2.5 shrink-0 opacity-70" />}
+                      {!e.all_day && (
+                        <span className="text-muted-foreground">
+                          {format(new Date(e.starts_at), "HH:mm")}
+                        </span>
+                      )}
+                      <span className="truncate">{e.title}</span>
+                      {e._shared_owner_name && <span className="opacity-60"> · {e._shared_owner_name}</span>}
+                    </div>
+                  );
+                })}
                 {events.length > 2 && (
                   <div className="text-[9px] text-muted-foreground px-1">+{events.length - 2} weitere</div>
                 )}
@@ -196,11 +242,21 @@ const energyToFloat = (raw?: string | null): number | null => {
   return null;
 };
 
-export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddEventAtTime }: WeekProps) {
+export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddEventAtTime, onAddMealForDate, onMoveEvent }: WeekProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const today = new Date();
+
+  const dropProps = (d: Date) => onMoveEvent ? {
+    onDragOver: (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; },
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      const data = e.dataTransfer.getData("application/x-luna-event");
+      if (!data) return;
+      try { onMoveEvent(JSON.parse(data) as GuestEvent, fmtDate(d)); } catch { /* ignore */ }
+    },
+  } : {};
 
   return (
     <div className="animate-fade-in space-y-2">
@@ -225,6 +281,7 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
               )}
               role="button"
               tabIndex={0}
+              {...dropProps(d)}
             >
               <div className={cn("h-1.5 w-full", phaseStripe[phase])} />
               <div className="px-2 py-1.5 relative">
@@ -246,7 +303,7 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                   </div>
                 )}
                 <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} size="xs" />
+                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
                 </div>
               </div>
             </div>

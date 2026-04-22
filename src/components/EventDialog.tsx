@@ -13,8 +13,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
-import type { GuestEvent } from "@/lib/guestStore";
+import { Trash2, CalendarCheck, UtensilsCrossed, Dumbbell } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import type { GuestEvent, EventCategory } from "@/lib/guestStore";
 
 interface Props {
   userId: string | null;
@@ -26,6 +27,12 @@ interface Props {
   event?: GuestEvent | null;
   /** Optional: Vorausgewählte Startzeit "HH:mm" (z. B. aus Wochenansicht) */
   initialTime?: string | null;
+  /** Optional: Standard-Kategorie beim Anlegen */
+  initialCategory?: EventCategory;
+  /** Optional: Vorbefüllter Titel (z. B. aus KI-Rezept oder -Workout) */
+  initialTitle?: string;
+  /** Optional: Vorbefüllte Details (z. B. Rezept-Beschreibung) */
+  initialDetails?: string;
 }
 
 type Recurrence = "none" | "daily" | "weekly" | "monthly";
@@ -38,12 +45,14 @@ const COST_LABEL = (c: number) => {
   return "sehr anstrengend";
 };
 
-export function EventDialog({ userId, date, open, onOpenChange, onCreated, event, initialTime }: Props) {
+export function EventDialog({ userId, date, open, onOpenChange, onCreated, event, initialTime, initialCategory, initialTitle, initialDetails }: Props) {
   const { guestMode } = useAuth();
   const { profile } = useProfile(userId ?? undefined, guestMode);
   const isEdit = !!event;
 
+  const [category, setCategory] = useState<EventCategory>("termin");
   const [title, setTitle] = useState("");
+  const [details, setDetails] = useState("");
   const [allDay, setAllDay] = useState(false);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
@@ -62,7 +71,9 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       const s = new Date(event.starts_at);
       const e = event.ends_at ? new Date(event.ends_at) : new Date(s.getTime() + 60 * 60 * 1000);
       const pad = (n: number) => n.toString().padStart(2, "0");
+      setCategory(event.category ?? "termin");
       setTitle(event.title ?? "");
+      setDetails(event.details ?? "");
       setAllDay(!!event.all_day);
       setStartTime(`${pad(s.getHours())}:${pad(s.getMinutes())}`);
       setEndTime(`${pad(e.getHours())}:${pad(e.getMinutes())}`);
@@ -72,24 +83,28 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       setRecurrence((event.recurrence_freq as Recurrence) ?? "none");
       setUntil(event.recurrence_until ?? "");
     } else {
-      setTitle("");
+      const cat: EventCategory = initialCategory ?? "termin";
+      setCategory(cat);
+      setTitle(initialTitle ?? "");
+      setDetails(initialDetails ?? "");
       setAllDay(false);
-      // Falls eine konkrete Uhrzeit übergeben wurde (z. B. Klick im Wochenraster)
-      const start = initialTime ?? "09:00";
-      setStartTime(start);
-      // Endzeit = +1h
-      const [h, m] = start.split(":").map(Number);
-      const endH = Math.min(23, h + 1);
+      // Sinnvolle Default-Zeiten je Kategorie
+      const defaultStart =
+        initialTime ?? (cat === "mahlzeit" ? "12:00" : cat === "sport" ? "18:00" : "09:00");
+      setStartTime(defaultStart);
+      const [h, m] = defaultStart.split(":").map(Number);
+      const durH = cat === "mahlzeit" ? 1 : cat === "sport" ? 1 : 1;
+      const endH = Math.min(23, h + durH);
       setEndTime(`${endH.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`);
       setLocation("");
-      setCost(3);
+      setCost(cat === "sport" ? 3.5 : cat === "mahlzeit" ? 1.5 : 3);
       setFlexible(false);
       setRecurrence("none");
       const u = new Date(date);
       u.setMonth(u.getMonth() + 3);
       setUntil(fmtDate(u));
     }
-  }, [open, date, event, initialTime]);
+  }, [open, date, event, initialTime, initialCategory, initialTitle, initialDetails]);
 
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const targetDate = flexible
@@ -132,19 +147,27 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
         is_flexible: flexible,
         recurrence_freq: recurrence === "none" ? null : recurrence,
         recurrence_until: recurrence === "none" ? null : until,
+        category,
+        details: details.trim() || null,
+      };
+
+      const labelByCat: Record<EventCategory, string> = {
+        termin: "Termin",
+        mahlzeit: "Mahlzeit",
+        sport: "Sport-Einheit",
       };
 
       if (isEdit && event) {
         await dataApi.updateEvent(userId, event.id, payload);
-        toast.success("Termin aktualisiert");
+        toast.success(`${labelByCat[category]} aktualisiert`);
       } else {
         await dataApi.addEvents(userId, [payload]);
         toast.success(
           flexible
-            ? `Termin für ${format(targetDate, "EEEE, d. MMM", { locale: de })} eingeplant`
+            ? `${labelByCat[category]} für ${format(targetDate, "EEEE, d. MMM", { locale: de })} eingeplant`
             : recurrence !== "none"
-              ? "Wiederkehrenden Termin angelegt"
-              : "Termin hinzugefügt",
+              ? `Wiederkehrende ${labelByCat[category]} angelegt`
+              : `${labelByCat[category]} hinzugefügt`,
         );
       }
       onOpenChange(false);
@@ -163,7 +186,7 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
     setDeleting(true);
     try {
       await dataApi.deleteEvent(userId, event.id);
-      toast.success("Termin gelöscht");
+      toast.success("Gelöscht");
       onOpenChange(false);
       onCreated?.();
     } catch (e) {
@@ -174,18 +197,66 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
     }
   };
 
+  const titleByCat: Record<EventCategory, string> = {
+    termin: isEdit ? "Termin bearbeiten" : "Neuer Termin",
+    mahlzeit: isEdit ? "Mahlzeit bearbeiten" : "Mahlzeit hinzufügen",
+    sport: isEdit ? "Sport-Einheit bearbeiten" : "Sport-Einheit hinzufügen",
+  };
+  const placeholderByCat: Record<EventCategory, string> = {
+    termin: "z. B. Yoga, Arzttermin",
+    mahlzeit: "z. B. Quark mit Beeren",
+    sport: "z. B. Boxkurs, Spaziergang",
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Termin bearbeiten" : "Neuer Termin"}</DialogTitle>
+          <DialogTitle>{titleByCat[category]}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="ev-title">Titel</Label>
-            <Input id="ev-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="z. B. Yoga, Arzttermin" autoFocus />
+          {/* Kategorie-Auswahl */}
+          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg bg-muted">
+            {([
+              { v: "termin", icon: CalendarCheck, label: "Termin" },
+              { v: "mahlzeit", icon: UtensilsCrossed, label: "Mahlzeit" },
+              { v: "sport", icon: Dumbbell, label: "Sport" },
+            ] as const).map(({ v, icon: Icon, label }) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setCategory(v)}
+                className={`flex items-center justify-center gap-1.5 text-xs py-1.5 rounded-md transition-colors ${
+                  category === v
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="ev-title">Titel</Label>
+            <Input id="ev-title" value={title} onChange={e => setTitle(e.target.value)} placeholder={placeholderByCat[category]} autoFocus />
+          </div>
+
+          {category !== "termin" && (
+            <div className="space-y-2">
+              <Label htmlFor="ev-details">
+                {category === "mahlzeit" ? "Notizen / Rezept" : "Beschreibung / Übungen"} <span className="text-muted-foreground text-xs">(optional)</span>
+              </Label>
+              <Textarea
+                id="ev-details"
+                value={details}
+                onChange={e => setDetails(e.target.value)}
+                placeholder={category === "mahlzeit" ? "Zutaten, Zubereitung, …" : "z. B. 3×10 Liegestütze, Cardio-Block …"}
+                rows={3}
+              />
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <Label htmlFor="ev-allday">Ganztägig</Label>
             <Switch id="ev-allday" checked={allDay} onCheckedChange={setAllDay} />

@@ -17,7 +17,9 @@ export type Database = {
       calendar_events: {
         Row: {
           all_day: boolean
+          category: string
           created_at: string
+          details: string | null
           ends_at: string | null
           energy_cost: number | null
           external_uid: string | null
@@ -34,7 +36,9 @@ export type Database = {
         }
         Insert: {
           all_day?: boolean
+          category?: string
           created_at?: string
+          details?: string | null
           ends_at?: string | null
           energy_cost?: number | null
           external_uid?: string | null
@@ -51,7 +55,9 @@ export type Database = {
         }
         Update: {
           all_day?: boolean
+          category?: string
           created_at?: string
+          details?: string | null
           ends_at?: string | null
           energy_cost?: number | null
           external_uid?: string | null
