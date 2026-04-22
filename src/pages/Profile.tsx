@@ -187,13 +187,11 @@ export default function Profile() {
 
       <main className="container max-w-4xl py-6">
         <Tabs defaultValue="energy" className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full">
+          <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="energy"><TrendingUp className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.energy")}</span></TabsTrigger>
             <TabsTrigger value="basics"><UserIcon className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.cycle")}</span></TabsTrigger>
             <TabsTrigger value="diet"><Apple className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.diet")}</span></TabsTrigger>
             <TabsTrigger value="sport"><Dumbbell className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.sport")}</span></TabsTrigger>
-            <TabsTrigger value="notifs"><Bell className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.notifs")}</span></TabsTrigger>
-            <TabsTrigger value="settings"><SettingsIcon className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.settings")}</span></TabsTrigger>
           </TabsList>
 
           {/* ENERGIEKURVE */}
