@@ -368,6 +368,8 @@ const Index = () => {
               symptoms={dayLog?.symptoms ?? todayLog?.symptoms ?? []}
               selectedDate={selectedDate}
               userId={userId}
+              dayEvents={dayEvents}
+              onEditEvent={(ev) => { setEditEvent(ev); setQuickAddDate(new Date(ev.starts_at)); setEventDialogOpen(true); }}
               onEventAdded={async () => setAllEvents(await dataApi.getEvents(userId))}
             />
           </>
