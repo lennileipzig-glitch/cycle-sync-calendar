@@ -309,10 +309,15 @@ const Index = () => {
         {zoom !== "day" && (
           <div className="grid gap-4 lg:grid-cols-2">
             <Card className="p-5 shadow-soft">
-              <h3 className="text-lg mb-3 flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                Termine · <span className="capitalize text-muted-foreground text-base">{format(selectedDate, "EEEE", { locale: de })}</span>
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Termine · <span className="capitalize text-muted-foreground text-base">{format(selectedDate, "EEEE", { locale: de })}</span>
+                </h3>
+                <Button variant="ghost" size="sm" onClick={() => setEventDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Termin
+                </Button>
+              </div>
               {dayEvents.length === 0 ? (
                 <p className="text-sm text-muted-foreground italic">Keine Termine an diesem Tag.</p>
               ) : (
