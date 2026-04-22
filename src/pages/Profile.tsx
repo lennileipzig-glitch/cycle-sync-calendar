@@ -32,24 +32,16 @@ const SPORT_LEVELS: { value: SportLevel; label: string }[] = [
   { value: "regular", label: "Regelmäßig" },
   { value: "athletic", label: "Sportlich" },
 ];
-const NOTIFICATION_TOPIC_OPTIONS = [
-  { id: "energy_forecast", label: "Energie-Forecast", desc: "z. B. „Deine Energie steigt heute wahrscheinlich – guter Tag für schwierige Gespräche.“" },
-  { id: "checkin", label: "Sanftes Check-in", desc: "z. B. „Wie geht's dir heute?“" },
-  { id: "phase_change", label: "Phasenwechsel", desc: "Hinweise, wenn du in eine neue Zyklusphase wechselst." },
-  { id: "appointment_prep", label: "Termin-Kontext", desc: "Energie-Hinweis vor anstehenden Terminen." },
-];
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user, loading: authLoading, guestMode } = useAuth();
   const guest = guestMode || isGuest();
   const userId = user?.id ?? null;
   const { profile, update, loading } = useProfile(user?.id, guest);
 
   const [importKind, setImportKind] = useState<"csv" | "ics" | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [rated, setRated] = useState(false);
 
   // Lokale Form-States
   const [name, setName] = useState("");
@@ -63,9 +55,6 @@ export default function Profile() {
   const [sports, setSports] = useState<string[]>([]);
   const [sportLevel, setSportLevel] = useState<SportLevel>("regular");
   const [sportFreq, setSportFreq] = useState(3);
-  const [notifEnabled, setNotifEnabled] = useState(false);
-  const [notifTime, setNotifTime] = useState("09:00");
-  const [notifTopics, setNotifTopics] = useState<string[]>([]);
 
   useEffect(() => {
     if (!profile) return;
