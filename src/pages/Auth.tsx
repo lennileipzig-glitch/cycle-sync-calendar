@@ -47,10 +47,10 @@ export default function Auth() {
   };
 
   const continueAsGuest = () => {
-    localStorage.setItem("fravia-guest-mode", "1");
-    if (!localStorage.getItem("fravia-guest-profile")) {
+    localStorage.setItem("luna-guest-mode", "1");
+    if (!localStorage.getItem("luna-guest-profile")) {
       localStorage.setItem(
-        "fravia-guest-profile",
+        "luna-guest-profile",
         JSON.stringify({
           display_name: name || "Gast",
           avg_cycle_length: 28,
@@ -61,6 +61,8 @@ export default function Auth() {
         }),
       );
     }
+    // Trigger storage listener in same tab
+    window.dispatchEvent(new Event("storage"));
     navigate("/", { replace: true });
   };
 
