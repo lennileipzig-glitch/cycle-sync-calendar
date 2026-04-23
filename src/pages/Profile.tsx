@@ -287,9 +287,6 @@ export default function Profile() {
               <EnergyChart userId={userId} />
             </Card>
           </TabsContent>
-            </Card>
-          </TabsContent>
-
           {/* ERNÄHRUNG */}
           <TabsContent value="diet">
             <Card className="p-5 space-y-5">
