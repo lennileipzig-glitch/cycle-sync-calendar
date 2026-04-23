@@ -353,12 +353,16 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
       </div>
 
       {/* Stundenraster (scrollbar, ganzer Tag 0–24h) */}
-      <div className="rounded-lg border border-border/40 overflow-hidden">
-        <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1 relative max-h-[60vh] overflow-y-auto items-start">
+      <div className="rounded-lg border border-border/60 overflow-hidden bg-card">
+        <div className="grid grid-cols-[3rem_repeat(7,minmax(0,1fr))] gap-0 relative max-h-[60vh] overflow-y-auto items-start">
           {/* Zeit-Spalte (inkl. 24:00 als Endmarker) */}
-          <div className="flex flex-col sticky left-0 bg-background z-10" style={{ height: HOURS.length * ROW_HEIGHT }}>
+          <div className="flex flex-col sticky left-0 self-start bg-background z-10" style={{ height: HOURS.length * ROW_HEIGHT }}>
             {HOUR_LABELS.map(h => (
-              <div key={h} style={{ height: h === 24 ? 0 : ROW_HEIGHT }} className="text-[10px] text-muted-foreground text-right pr-1 -mt-1.5">
+              <div
+                key={h}
+                style={{ height: h === 24 ? 0 : ROW_HEIGHT }}
+                className="text-[10px] text-muted-foreground text-right pr-1 -mt-1.5"
+              >
                 {h.toString().padStart(2, "0")}:00
               </div>
             ))}
@@ -401,11 +405,11 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                 key={d.toISOString()}
                 style={{ height: HOURS.length * ROW_HEIGHT }}
                 className={cn(
-                  "relative bg-card/50 border-l border-border/30",
-                  isToday && "bg-primary/5 border-primary/40",
+                  "relative self-start overflow-hidden bg-card/50 border-l-2 border-border/60",
+                  isToday && "bg-primary/5 border-primary/50",
                 )}
               >
-                {HOURS.map(h => (
+                {HOURS.map((h, index) => (
                   <button
                     key={h}
                     type="button"
@@ -420,7 +424,11 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                       else onAddEventForDate?.(d);
                     }}
                     style={{ height: ROW_HEIGHT }}
-                    className="block w-full border-t border-border/30 first:border-t-0 hover:bg-primary/10 transition-colors group/slot relative text-left"
+                    className={cn(
+                      "block w-full border-t border-border/40 hover:bg-primary/10 transition-colors group/slot relative text-left",
+                      index === HOURS.length - 1 && "border-b-2 border-b-border/60",
+                      index === 0 && "border-t-0",
+                    )}
                     aria-label={`Termin am ${format(d, "EEEE", { locale: de })} um ${h}:00 hinzufügen`}
                     {...slotDropFor(h)}
                   >
