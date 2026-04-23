@@ -285,7 +285,7 @@ const Index = () => {
                 todosByDay={todosByDay}
                 onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("termin"); setLockEventCategory(false); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
-                onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setLockEventCategory(false); setEventDialogOpen(true); }}
+                onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setLockEventCategory(true); setEventDialogOpen(true); }}
                 onMoveEvent={async (ev, newDate) => {
                   await dataApi.moveEventToDate(userId, ev, newDate);
                   setAllEvents(await dataApi.getEvents(userId));
@@ -304,7 +304,7 @@ const Index = () => {
                 todosByDay={todosByDay}
                 onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddTime(null); setQuickAddCategory("termin"); setLockEventCategory(true); setEditEvent(null); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
-                onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setLockEventCategory(false); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setLockEventCategory(true); setEditEvent(null); setEventDialogOpen(true); }}
                 onAddEventAtTime={(d, time) => { setQuickAddDate(d); setQuickAddTime(time); setQuickAddCategory("termin"); setLockEventCategory(true); setEditEvent(null); setEventDialogOpen(true); }}
                 onMoveEvent={async (ev, newDate) => {
                   await dataApi.moveEventToDate(userId, ev, newDate);
