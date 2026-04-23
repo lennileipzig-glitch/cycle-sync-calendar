@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, User as UserIcon, Save, Share2 } from "lucide-react";
+import { ArrowLeft, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, User as UserIcon, Save, Share2, Mail, Lock, Crown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, type DietStyle, type SportLevel } from "@/hooks/useProfile";
 import { isGuest } from "@/lib/guestStore";
@@ -47,6 +48,7 @@ export default function Profile() {
 
   // Lokale Form-States
   const [name, setName] = useState("");
+  const [age, setAge] = useState<string>("");
   const [meno, setMeno] = useState(false);
   const [cycleLen, setCycleLen] = useState(28);
   const [periodLen, setPeriodLen] = useState(5);
@@ -57,6 +59,13 @@ export default function Profile() {
   const [sports, setSports] = useState<string[]>([]);
   const [sportLevel, setSportLevel] = useState<SportLevel>("regular");
   const [sportFreq, setSportFreq] = useState(3);
+
+  // Account
+  const [newPassword, setNewPassword] = useState("");
+  const [newPassword2, setNewPassword2] = useState("");
+  const [savingPwd, setSavingPwd] = useState(false);
+  const userEmail = user?.email ?? (guest ? "Gastmodus (keine E-Mail)" : "");
+  const subscriptionPlan = "Free"; // Platzhalter bis Abo-System implementiert ist
 
   useEffect(() => {
     if (!profile) return;
@@ -71,6 +80,9 @@ export default function Profile() {
     setSports(profile.sports);
     setSportLevel(profile.sport_level);
     setSportFreq(profile.sport_frequency_per_week);
+    // Alter aus localStorage (noch nicht im DB-Schema)
+    const storedAge = localStorage.getItem(`fravia-age-${profile.id}`);
+    if (storedAge) setAge(storedAge);
   }, [profile]);
 
   useEffect(() => {
@@ -89,6 +101,10 @@ export default function Profile() {
       avg_period_length: periodLen,
       last_period_start: meno ? null : (lastPeriod || null),
     });
+    if (profile) {
+      if (age) localStorage.setItem(`fravia-age-${profile.id}`, age);
+      else localStorage.removeItem(`fravia-age-${profile.id}`);
+    }
     toast.success("Profil gespeichert");
   };
   const saveDiet = async () => {
@@ -98,6 +114,17 @@ export default function Profile() {
   const saveSports = async () => {
     await update({ sports, sport_level: sportLevel, sport_frequency_per_week: sportFreq });
     toast.success("Sport gespeichert");
+  };
+  const changePassword = async () => {
+    if (guest) { toast.error("Im Gastmodus nicht verfügbar"); return; }
+    if (newPassword.length < 6) { toast.error("Passwort muss mindestens 6 Zeichen haben"); return; }
+    if (newPassword !== newPassword2) { toast.error("Passwörter stimmen nicht überein"); return; }
+    setSavingPwd(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setSavingPwd(false);
+    if (error) { toast.error(error.message); return; }
+    setNewPassword(""); setNewPassword2("");
+    toast.success("Passwort geändert");
   };
 
   return (
@@ -120,38 +147,32 @@ export default function Profile() {
       </header>
 
       <main className="container max-w-4xl py-6">
-        <Tabs defaultValue="energy" className="space-y-6">
+        <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="profile"><UserIcon className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Profil</span></TabsTrigger>
             <TabsTrigger value="energy"><TrendingUp className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.energy")}</span></TabsTrigger>
-            <TabsTrigger value="basics"><UserIcon className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.cycle")}</span></TabsTrigger>
             <TabsTrigger value="diet"><Apple className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.diet")}</span></TabsTrigger>
             <TabsTrigger value="sport"><Dumbbell className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t("tabs.sport")}</span></TabsTrigger>
           </TabsList>
 
-          {/* ENERGIEKURVE */}
-          <TabsContent value="energy">
-            <Card className="p-5 space-y-4">
-              <div>
-                <h2 className="text-lg">Deine Energiekurve</h2>
-                <p className="text-sm text-muted-foreground">
-                  Sieh, wie deine Energie sich über die Zeit entwickelt. Wechsle zwischen Tag, Woche, Monat und Jahr – und klicke einen Punkt für die Tagesdetails.
-                </p>
-              </div>
-              <EnergyChart userId={userId} />
-            </Card>
-          </TabsContent>
-
-          {/* ZYKLUS / STAMMDATEN */}
-          <TabsContent value="basics">
+          {/* PROFIL (vereint Stammdaten, Zyklus, Account, Abo, Import, Teilen) */}
+          <TabsContent value="profile" className="space-y-6">
+            {/* Persönliche Daten */}
             <Card className="p-5 space-y-5">
               <div>
-                <h2 className="text-lg">Stammdaten & Zyklus</h2>
-                <p className="text-sm text-muted-foreground">Diese Werte helfen Fravia, deine Phasen zu berechnen.</p>
+                <h2 className="text-lg">Persönliche Daten</h2>
+                <p className="text-sm text-muted-foreground">So sprechen wir dich an und so berechnen wir deine Phasen.</p>
               </div>
 
-              <div className="space-y-2">
-                <Label>Name</Label>
-                <Input value={name} onChange={e => setName(e.target.value)} placeholder="Wie sollen wir dich nennen?" />
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input value={name} onChange={e => setName(e.target.value)} placeholder="Wie sollen wir dich nennen?" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Alter</Label>
+                  <Input type="number" min={10} max={120} value={age} onChange={e => setAge(e.target.value)} placeholder="z. B. 32" />
+                </div>
               </div>
 
               <div className="flex items-center justify-between rounded-lg border border-border p-3">
@@ -181,34 +202,91 @@ export default function Profile() {
                 </>
               )}
 
-              <div className="pt-2 border-t border-border space-y-2">
-                <Label>Daten importieren</Label>
-                <div className="grid sm:grid-cols-2 gap-2">
-                  <Button variant="outline" className="justify-start" onClick={() => setImportKind("csv")}>
-                    <Upload className="h-4 w-4 mr-2" /> Zyklus-CSV
-                  </Button>
-                  <Button variant="outline" className="justify-start" onClick={() => setImportKind("ics")}>
-                    <CalendarIcon className="h-4 w-4 mr-2" /> Kalender (.ics)
-                  </Button>
-                </div>
-              </div>
-
               <Button onClick={saveProfileBasics} className="w-full"><Save className="h-4 w-4 mr-2" /> Speichern</Button>
+            </Card>
 
-              {!guest && (
-                <div className="pt-3 border-t border-border space-y-2">
-                  <div>
-                    <Label>Kalender teilen</Label>
-                    <p className="text-xs text-muted-foreground">Lade Personen ein, deinen Kalender zu sehen. Du entscheidest pro Person, ob deine Zyklusphasen sichtbar sind (Standard: aus).</p>
-                  </div>
-                  <Button variant="outline" className="w-full justify-start" onClick={() => setShareOpen(true)}>
-                    <Share2 className="h-4 w-4 mr-2" /> Freigaben verwalten
+            {/* Account */}
+            {!guest && (
+              <Card className="p-5 space-y-5">
+                <div>
+                  <h2 className="text-lg">Account</h2>
+                  <p className="text-sm text-muted-foreground">Deine Anmeldedaten.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2"><Mail className="h-4 w-4" /> E-Mail-Adresse</Label>
+                  <Input value={userEmail} disabled />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2"><Lock className="h-4 w-4" /> Passwort</Label>
+                  <Input value="••••••••••" disabled />
+                </div>
+
+                <div className="pt-3 border-t border-border space-y-3">
+                  <Label>Passwort ändern</Label>
+                  <Input type="password" placeholder="Neues Passwort" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+                  <Input type="password" placeholder="Neues Passwort wiederholen" value={newPassword2} onChange={e => setNewPassword2(e.target.value)} />
+                  <Button onClick={changePassword} disabled={savingPwd} className="w-full">
+                    <Lock className="h-4 w-4 mr-2" /> {savingPwd ? "Wird geändert…" : "Passwort ändern"}
                   </Button>
                 </div>
-              )}
+              </Card>
+            )}
+
+            {/* Abo-Modell */}
+            <Card className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg flex items-center gap-2"><Crown className="h-5 w-5" /> Abo-Modell</h2>
+                  <p className="text-sm text-muted-foreground">Dein aktueller Plan.</p>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-secondary text-sm font-medium">{subscriptionPlan}</span>
+              </div>
             </Card>
+
+            {/* Daten importieren */}
+            <Card className="p-5 space-y-3">
+              <div>
+                <h2 className="text-lg">Daten importieren</h2>
+                <p className="text-sm text-muted-foreground">Übernimm Daten aus deinem bisherigen Kalender oder deiner Zyklus-App.</p>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-2">
+                <Button variant="outline" className="justify-start" onClick={() => setImportKind("csv")}>
+                  <Upload className="h-4 w-4 mr-2" /> Zyklus-CSV (Clue, Flo, Apple Health)
+                </Button>
+                <Button variant="outline" className="justify-start" onClick={() => setImportKind("ics")}>
+                  <CalendarIcon className="h-4 w-4 mr-2" /> Kalender (.ics aus Google/Apple)
+                </Button>
+              </div>
+            </Card>
+
+            {/* Kalender teilen */}
+            {!guest && (
+              <Card className="p-5 space-y-3">
+                <div>
+                  <h2 className="text-lg">Kalender teilen</h2>
+                  <p className="text-sm text-muted-foreground">Lade Personen ein, deinen Kalender zu sehen. Du entscheidest pro Person, ob deine Zyklusphasen sichtbar sind (Standard: aus).</p>
+                </div>
+                <Button variant="outline" className="w-full justify-start" onClick={() => setShareOpen(true)}>
+                  <Share2 className="h-4 w-4 mr-2" /> Freigaben verwalten
+                </Button>
+              </Card>
+            )}
           </TabsContent>
 
+          {/* ENERGIEKURVE */}
+          <TabsContent value="energy">
+            <Card className="p-5 space-y-4">
+              <div>
+                <h2 className="text-lg">Deine Energiekurve</h2>
+                <p className="text-sm text-muted-foreground">
+                  Sieh, wie deine Energie sich über die Zeit entwickelt. Wechsle zwischen Tag, Woche, Monat und Jahr – und klicke einen Punkt für die Tagesdetails.
+                </p>
+              </div>
+              <EnergyChart userId={userId} />
+            </Card>
+          </TabsContent>
           {/* ERNÄHRUNG */}
           <TabsContent value="diet">
             <Card className="p-5 space-y-5">
