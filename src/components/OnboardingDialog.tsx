@@ -56,7 +56,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
       <Dialog open={open} onOpenChange={() => { /* nicht schließbar */ }}>
         <DialogContent className="max-w-lg" onPointerDownOutside={e => e.preventDefault()} onEscapeKeyDown={e => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle className="text-2xl">Lass uns dich kennenlernen</DialogTitle>
+            <DialogTitle className="text-2xl">Lass mich dich kennenlernen</DialogTitle>
             <DialogDescription>Schritt {step + 1} von {totalSteps} – du kannst alles später anpassen.</DialogDescription>
           </DialogHeader>
           <Progress value={((step + 1) / totalSteps) * 100} className="h-1" />
