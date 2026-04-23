@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, User as UserIcon, Save, Share2 } from "lucide-react";
+import { ArrowLeft, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, User as UserIcon, Save, Share2, Mail, Lock, Crown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, type DietStyle, type SportLevel } from "@/hooks/useProfile";
 import { isGuest } from "@/lib/guestStore";
