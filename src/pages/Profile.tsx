@@ -101,6 +101,10 @@ export default function Profile() {
       avg_period_length: periodLen,
       last_period_start: meno ? null : (lastPeriod || null),
     });
+    if (profile) {
+      if (age) localStorage.setItem(`fravia-age-${profile.id}`, age);
+      else localStorage.removeItem(`fravia-age-${profile.id}`);
+    }
     toast.success("Profil gespeichert");
   };
   const saveDiet = async () => {
@@ -110,6 +114,17 @@ export default function Profile() {
   const saveSports = async () => {
     await update({ sports, sport_level: sportLevel, sport_frequency_per_week: sportFreq });
     toast.success("Sport gespeichert");
+  };
+  const changePassword = async () => {
+    if (guest) { toast.error("Im Gastmodus nicht verfügbar"); return; }
+    if (newPassword.length < 6) { toast.error("Passwort muss mindestens 6 Zeichen haben"); return; }
+    if (newPassword !== newPassword2) { toast.error("Passwörter stimmen nicht überein"); return; }
+    setSavingPwd(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setSavingPwd(false);
+    if (error) { toast.error(error.message); return; }
+    setNewPassword(""); setNewPassword2("");
+    toast.success("Passwort geändert");
   };
 
   return (
