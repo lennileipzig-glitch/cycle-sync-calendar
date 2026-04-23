@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
+import { lovable } from "@/integrations/lovable";
 
 export default function Auth() {
   const [mode, setMode] = useState<"signin" | "signup">("signup");
