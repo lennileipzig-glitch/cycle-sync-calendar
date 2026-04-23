@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -225,8 +226,8 @@ export default function Profile() {
 
                 <div className="pt-3 border-t border-border space-y-3">
                   <Label>Passwort ändern</Label>
-                  <Input type="password" placeholder="Neues Passwort" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
-                  <Input type="password" placeholder="Neues Passwort wiederholen" value={newPassword2} onChange={e => setNewPassword2(e.target.value)} />
+                  <PasswordInput placeholder="Neues Passwort" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+                  <PasswordInput placeholder="Neues Passwort wiederholen" value={newPassword2} onChange={e => setNewPassword2(e.target.value)} />
                   <Button onClick={changePassword} disabled={savingPwd} className="w-full">
                     <Lock className="h-4 w-4 mr-2" /> {savingPwd ? "Wird geändert…" : "Passwort ändern"}
                   </Button>
