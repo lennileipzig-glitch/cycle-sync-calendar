@@ -399,6 +399,7 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
             return (
               <div
                 key={d.toISOString()}
+                style={{ height: HOURS.length * ROW_HEIGHT }}
                 className={cn(
                   "relative bg-card/50 border-l border-border/30",
                   isToday && "bg-primary/5 border-primary/40",
