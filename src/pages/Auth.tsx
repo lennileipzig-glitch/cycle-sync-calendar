@@ -115,7 +115,7 @@ export default function Auth() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="pw">Passwort</Label>
-            <Input id="pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+            <PasswordInput id="pw" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           <Button type="submit" className="w-full" disabled={busy}>
             {busy ? "Moment..." : mode === "signup" ? "Konto erstellen" : "Anmelden"}
