@@ -48,6 +48,7 @@ export default function Profile() {
 
   // Lokale Form-States
   const [name, setName] = useState("");
+  const [age, setAge] = useState<string>("");
   const [meno, setMeno] = useState(false);
   const [cycleLen, setCycleLen] = useState(28);
   const [periodLen, setPeriodLen] = useState(5);
@@ -58,6 +59,13 @@ export default function Profile() {
   const [sports, setSports] = useState<string[]>([]);
   const [sportLevel, setSportLevel] = useState<SportLevel>("regular");
   const [sportFreq, setSportFreq] = useState(3);
+
+  // Account
+  const [newPassword, setNewPassword] = useState("");
+  const [newPassword2, setNewPassword2] = useState("");
+  const [savingPwd, setSavingPwd] = useState(false);
+  const userEmail = user?.email ?? (guest ? "Gastmodus (keine E-Mail)" : "");
+  const subscriptionPlan = "Free"; // Platzhalter bis Abo-System implementiert ist
 
   useEffect(() => {
     if (!profile) return;
@@ -72,6 +80,9 @@ export default function Profile() {
     setSports(profile.sports);
     setSportLevel(profile.sport_level);
     setSportFreq(profile.sport_frequency_per_week);
+    // Alter aus localStorage (noch nicht im DB-Schema)
+    const storedAge = localStorage.getItem(`fravia-age-${profile.id}`);
+    if (storedAge) setAge(storedAge);
   }, [profile]);
 
   useEffect(() => {
