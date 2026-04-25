@@ -99,7 +99,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
                   <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2">
                     <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                     <span>
-                      <strong className="text-foreground">Endometriose</strong> ist eine chronische Erkrankung, bei der gebärmutterschleimhautähnliches Gewebe außerhalb der Gebärmutter wächst. Häufige Anzeichen: starke Regelschmerzen, Schmerzen im Becken, Erschöpfung. Fravia kann Empfehlungen darauf abstimmen.
+                      <strong className="text-foreground">Endometriose</strong> ist eine chronische Erkrankung, bei der gebärmutterschleimhautähnliches Gewebe außerhalb der Gebärmutter wächst. Häufige Anzeichen: starke Regelschmerzen, Schmerzen im Becken, Erschöpfung. Fravia berücksichtigt das in ihren Empfehlungen.
                     </span>
                   </div>
 
