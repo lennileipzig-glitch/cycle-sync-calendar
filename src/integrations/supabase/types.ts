@@ -166,6 +166,7 @@ export type Database = {
           diet_intolerances: string[]
           diet_style: string
           display_name: string | null
+          endometriosis_status: string
           favorite_foods: string[]
           id: string
           in_menopause: boolean
@@ -187,6 +188,7 @@ export type Database = {
           diet_intolerances?: string[]
           diet_style?: string
           display_name?: string | null
+          endometriosis_status?: string
           favorite_foods?: string[]
           id: string
           in_menopause?: boolean
@@ -208,6 +210,7 @@ export type Database = {
           diet_intolerances?: string[]
           diet_style?: string
           display_name?: string | null
+          endometriosis_status?: string
           favorite_foods?: string[]
           id?: string
           in_menopause?: boolean
