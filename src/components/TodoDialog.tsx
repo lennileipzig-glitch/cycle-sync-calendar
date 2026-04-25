@@ -158,9 +158,16 @@ export function TodoDialog({ userId, date, open, onOpenChange, onCreated, todo }
             </p>
           )}
         </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Abbrechen</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? "Speichere…" : "Hinzufügen"}</Button>
+        <DialogFooter className={isEdit ? "sm:justify-between" : ""}>
+          {isEdit && (
+            <Button variant="ghost" onClick={handleDelete} disabled={saving} className="text-destructive hover:text-destructive">
+              Löschen
+            </Button>
+          )}
+          <div className="flex gap-2 sm:justify-end">
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>Abbrechen</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? "Speichere…" : isEdit ? "Speichern" : "Hinzufügen"}</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
