@@ -869,11 +869,22 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
           ) : (
             <ul className="space-y-1.5">
               {todos.map(t => (
-                <li key={t.id}>
-                  <button onClick={() => onToggleTodo(t.id, !t.completed)} className="flex items-center gap-2 text-sm w-full text-left">
+                <li key={t.id} className="flex items-center gap-2 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => onToggleTodo(t.id, !t.completed)}
+                    className="shrink-0 rounded-full p-0.5 hover:bg-accent transition-colors"
+                    aria-label={t.completed ? "Als offen markieren" : "Als erledigt markieren"}
+                  >
                     {t.completed
-                      ? <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      : <Circle className="h-4 w-4 text-muted-foreground shrink-0" />}
+                      ? <CheckCircle2 className="h-4 w-4 text-primary" />
+                      : <Circle className="h-4 w-4 text-muted-foreground" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onEditTodo?.(t)}
+                    className="flex-1 text-left hover:underline truncate"
+                  >
                     <span className={cn(t.completed && "line-through text-muted-foreground")}>{t.title}</span>
                   </button>
                 </li>
