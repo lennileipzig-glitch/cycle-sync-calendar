@@ -19,6 +19,8 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onCreated?: () => void;
+  /** Wenn gesetzt: Bearbeitungsmodus für vorhandene Aufgabe */
+  todo?: { id: string; title: string; energy_cost?: number | null; is_flexible?: boolean } | null;
 }
 
 const COST_LABEL = (c: number) => {
@@ -29,21 +31,22 @@ const COST_LABEL = (c: number) => {
   return "sehr anstrengend";
 };
 
-export function TodoDialog({ userId, date, open, onOpenChange, onCreated }: Props) {
+export function TodoDialog({ userId, date, open, onOpenChange, onCreated, todo }: Props) {
   const { guestMode } = useAuth();
   const { profile } = useProfile(userId ?? undefined, guestMode);
   const [title, setTitle] = useState("");
   const [cost, setCost] = useState(3);
   const [flexible, setFlexible] = useState(false);
   const [saving, setSaving] = useState(false);
+  const isEdit = !!todo;
 
   useEffect(() => {
     if (open) {
-      setTitle("");
-      setCost(3);
-      setFlexible(false);
+      setTitle(todo?.title ?? "");
+      setCost(todo?.energy_cost ?? 3);
+      setFlexible(todo?.is_flexible ?? false);
     }
-  }, [open]);
+  }, [open, todo]);
 
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const targetDate = flexible
@@ -57,15 +60,24 @@ export function TodoDialog({ userId, date, open, onOpenChange, onCreated }: Prop
     }
     setSaving(true);
     try {
-      await dataApi.addTodo(userId, fmtDate(targetDate), title.trim(), {
-        energy_cost: Math.round(cost * 10) / 10,
-        is_flexible: flexible,
-      });
-      toast.success(
-        flexible
-          ? `Aufgabe für ${format(targetDate, "EEEE, d. MMM", { locale: de })} eingeplant`
-          : "Aufgabe hinzugefügt",
-      );
+      if (isEdit && todo) {
+        await dataApi.updateTodo(userId, todo.id, {
+          title: title.trim(),
+          energy_cost: Math.round(cost * 10) / 10,
+          is_flexible: flexible,
+        });
+        toast.success("Aufgabe aktualisiert");
+      } else {
+        await dataApi.addTodo(userId, fmtDate(targetDate), title.trim(), {
+          energy_cost: Math.round(cost * 10) / 10,
+          is_flexible: flexible,
+        });
+        toast.success(
+          flexible
+            ? `Aufgabe für ${format(targetDate, "EEEE, d. MMM", { locale: de })} eingeplant`
+            : "Aufgabe hinzugefügt",
+        );
+      }
       onOpenChange(false);
       onCreated?.();
     } catch (e) {
@@ -76,11 +88,28 @@ export function TodoDialog({ userId, date, open, onOpenChange, onCreated }: Prop
     }
   };
 
+  const handleDelete = async () => {
+    if (!todo) return;
+    if (!confirm("Aufgabe wirklich löschen?")) return;
+    setSaving(true);
+    try {
+      await dataApi.deleteTodo(userId, todo.id);
+      toast.success("Aufgabe gelöscht");
+      onOpenChange(false);
+      onCreated?.();
+    } catch (e) {
+      console.error(e);
+      toast.error("Fehler beim Löschen");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Neue Aufgabe</DialogTitle>
+          <DialogTitle>{isEdit ? "Aufgabe bearbeiten" : "Neue Aufgabe"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground capitalize">
@@ -129,9 +158,16 @@ export function TodoDialog({ userId, date, open, onOpenChange, onCreated }: Prop
             </p>
           )}
         </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Abbrechen</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? "Speichere…" : "Hinzufügen"}</Button>
+        <DialogFooter className={isEdit ? "sm:justify-between" : ""}>
+          {isEdit && (
+            <Button variant="ghost" onClick={handleDelete} disabled={saving} className="text-destructive hover:text-destructive">
+              Löschen
+            </Button>
+          )}
+          <div className="flex gap-2 sm:justify-end">
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>Abbrechen</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? "Speichere…" : isEdit ? "Speichern" : "Hinzufügen"}</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

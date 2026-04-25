@@ -97,6 +97,15 @@ export const dataApi = {
     await supabase.from("todos").update({ completed }).eq("id", id);
   },
 
+  async updateTodo(
+    userId: string | null,
+    id: string,
+    patch: { title?: string; energy_cost?: number | null; is_flexible?: boolean; todo_date?: string },
+  ): Promise<void> {
+    if (isGuest()) { guestStore.updateTodo(id, patch); return; }
+    await supabase.from("todos").update(patch).eq("id", id);
+  },
+
   async deleteTodo(userId: string | null, id: string): Promise<void> {
     if (isGuest()) { guestStore.deleteTodo(id); return; }
     await supabase.from("todos").delete().eq("id", id);

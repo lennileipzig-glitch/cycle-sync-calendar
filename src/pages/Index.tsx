@@ -39,6 +39,7 @@ const Index = () => {
   const [todoDialogOpen, setTodoDialogOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<GuestEvent | null>(null);
+  const [editTodo, setEditTodo] = useState<{ id: string; title: string; completed: boolean; energy_cost?: number | null; is_flexible?: boolean } | null>(null);
   const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
   const [quickAddTime, setQuickAddTime] = useState<string | null>(null);
   const [quickAddCategory, setQuickAddCategory] = useState<"termin" | "mahlzeit" | "sport">("termin");
@@ -326,8 +327,9 @@ const Index = () => {
                 onToggleTodo={toggleDayTodo}
                 onOpenTracker={() => setTrackerOpen(true)}
                 onAddEvent={() => { setQuickAddDate(selectedDate); setQuickAddCategory("termin"); setLockEventCategory(false); setEditEvent(null); setEventDialogOpen(true); }}
-                onAddTodo={() => { setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
+                onAddTodo={() => { setEditTodo(null); setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
                 onEditEvent={(ev) => { setEditEvent(ev); setQuickAddDate(new Date(ev.starts_at)); setEventDialogOpen(true); }}
+                onEditTodo={(t) => { setEditTodo(t); setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
                 userId={userId}
                 onEventChanged={async () => setAllEvents(await dataApi.getEvents(userId))}
               />
@@ -408,7 +410,8 @@ const Index = () => {
         userId={userId}
         date={quickAddDate}
         open={todoDialogOpen}
-        onOpenChange={setTodoDialogOpen}
+        todo={editTodo}
+        onOpenChange={(v) => { setTodoDialogOpen(v); if (!v) setEditTodo(null); }}
         onCreated={async () => {
           // Wochen-Todos neu laden, damit Post-Its sofort erscheinen
           const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
