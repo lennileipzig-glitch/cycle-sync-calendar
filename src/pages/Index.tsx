@@ -410,7 +410,8 @@ const Index = () => {
         userId={userId}
         date={quickAddDate}
         open={todoDialogOpen}
-        onOpenChange={setTodoDialogOpen}
+        todo={editTodo}
+        onOpenChange={(v) => { setTodoDialogOpen(v); if (!v) setEditTodo(null); }}
         onCreated={async () => {
           // Wochen-Todos neu laden, damit Post-Its sofort erscheinen
           const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
