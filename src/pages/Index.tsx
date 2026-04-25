@@ -435,6 +435,7 @@ const Index = () => {
             last_period_start: data.last_period_start,
             avg_cycle_length: data.avg_cycle_length,
             avg_period_length: data.avg_period_length,
+            endometriosis_status: data.endometriosis_status,
             onboarding_completed: true,
           });
         }}

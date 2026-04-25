@@ -4,6 +4,7 @@ import { isGuest, guestStore } from "@/lib/guestStore";
 
 export type DietStyle = "omnivore" | "vegetarian" | "vegan" | "pescetarian";
 export type SportLevel = "beginner" | "regular" | "athletic";
+export type EndometriosisStatus = "none" | "suspected" | "diagnosed";
 
 export interface Profile {
   id: string;
@@ -13,6 +14,7 @@ export interface Profile {
   last_period_start: string | null;
   onboarding_completed: boolean;
   in_menopause: boolean;
+  endometriosis_status: EndometriosisStatus;
   // Ernährung
   diet_style: DietStyle;
   diet_intolerances: string[];
