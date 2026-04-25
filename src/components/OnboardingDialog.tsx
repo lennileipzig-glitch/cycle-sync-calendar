@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { ImportDialog } from "./ImportDialog";
-import { Sparkles, Upload, Calendar as CalendarIcon } from "lucide-react";
+import { Sparkles, Upload, Calendar as CalendarIcon, Info } from "lucide-react";
 import { toast } from "sonner";
+import type { EndometriosisStatus } from "@/hooks/useProfile";
 
 export interface OnboardingData {
   display_name: string;
@@ -15,6 +17,7 @@ export interface OnboardingData {
   last_period_start: string | null;
   avg_cycle_length: number;
   avg_period_length: number;
+  endometriosis_status: EndometriosisStatus;
 }
 
 interface Props {
@@ -34,6 +37,8 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
   const [cycleLen, setCycleLen] = useState(28);
   const [knowsPeriod, setKnowsPeriod] = useState<"yes" | "no" | "">("");
   const [periodLen, setPeriodLen] = useState(5);
+  const [endoStatus, setEndoStatus] = useState<EndometriosisStatus>("none");
+  const [endoMeno, setEndoMeno] = useState(false);
   const [importOpen, setImportOpen] = useState<"csv" | "ics" | null>(null);
 
   const totalSteps = 5;
@@ -43,10 +48,11 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
   const finish = async () => {
     await onComplete({
       display_name: name || "Du",
-      in_menopause: phase === "menopause",
-      last_period_start: phase === "menopause" ? null : (lastPeriod || null),
+      in_menopause: phase === "menopause" || endoMeno,
+      last_period_start: (phase === "menopause" || endoMeno) ? null : (lastPeriod || null),
       avg_cycle_length: cycleLen,
       avg_period_length: periodLen,
+      endometriosis_status: endoStatus,
     });
     toast.success("Willkommen bei Fravia 🌸");
   };
