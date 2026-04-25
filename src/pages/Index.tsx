@@ -327,8 +327,9 @@ const Index = () => {
                 onToggleTodo={toggleDayTodo}
                 onOpenTracker={() => setTrackerOpen(true)}
                 onAddEvent={() => { setQuickAddDate(selectedDate); setQuickAddCategory("termin"); setLockEventCategory(false); setEditEvent(null); setEventDialogOpen(true); }}
-                onAddTodo={() => { setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
+                onAddTodo={() => { setEditTodo(null); setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
                 onEditEvent={(ev) => { setEditEvent(ev); setQuickAddDate(new Date(ev.starts_at)); setEventDialogOpen(true); }}
+                onEditTodo={(t) => { setEditTodo(t); setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
                 userId={userId}
                 onEventChanged={async () => setAllEvents(await dataApi.getEvents(userId))}
               />
