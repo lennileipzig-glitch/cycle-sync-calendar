@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, User as UserIcon, Save, Share2, Mail, Lock, Crown } from "lucide-react";
+import { ArrowLeft, Upload, Calendar as CalendarIcon, TrendingUp, Settings as SettingsIcon, Apple, Dumbbell, User as UserIcon, Save, Share2, Mail, Lock, Crown, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile, type DietStyle, type SportLevel } from "@/hooks/useProfile";
+import { useProfile, type DietStyle, type SportLevel, type EndometriosisStatus } from "@/hooks/useProfile";
 import { isGuest } from "@/lib/guestStore";
 import { dataApi } from "@/lib/dataApi";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,7 @@ export default function Profile() {
   const [name, setName] = useState("");
   const [age, setAge] = useState<string>("");
   const [meno, setMeno] = useState(false);
+  const [endoStatus, setEndoStatus] = useState<EndometriosisStatus>("none");
   const [cycleLen, setCycleLen] = useState(28);
   const [periodLen, setPeriodLen] = useState(5);
   const [lastPeriod, setLastPeriod] = useState("");
@@ -72,6 +73,7 @@ export default function Profile() {
     if (!profile) return;
     setName(profile.display_name ?? "");
     setMeno(profile.in_menopause);
+    setEndoStatus(profile.endometriosis_status ?? "none");
     setCycleLen(profile.avg_cycle_length);
     setPeriodLen(profile.avg_period_length);
     setLastPeriod(profile.last_period_start ?? "");
@@ -98,6 +100,7 @@ export default function Profile() {
     await update({
       display_name: name || null,
       in_menopause: meno,
+      endometriosis_status: endoStatus,
       avg_cycle_length: cycleLen,
       avg_period_length: periodLen,
       last_period_start: meno ? null : (lastPeriod || null),
