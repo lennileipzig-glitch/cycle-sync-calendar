@@ -310,6 +310,7 @@ const Index = () => {
                   await dataApi.moveEventToDate(userId, ev, newDate);
                   setAllEvents(await dataApi.getEvents(userId));
                 }}
+                onSelectEvent={(ev) => { setEditEvent(ev); setQuickAddDate(new Date(ev.starts_at)); setQuickAddCategory(ev.category ?? "termin"); setLockEventCategory(false); setEventDialogOpen(true); }}
               />
             </Card>
           )}
