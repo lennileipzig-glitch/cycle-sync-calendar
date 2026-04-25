@@ -38,7 +38,6 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
   const [knowsPeriod, setKnowsPeriod] = useState<"yes" | "no" | "">("");
   const [periodLen, setPeriodLen] = useState(5);
   const [endoStatus, setEndoStatus] = useState<EndometriosisStatus>("none");
-  const [endoMeno, setEndoMeno] = useState(false);
   const [importOpen, setImportOpen] = useState<"csv" | "ics" | null>(null);
 
   const totalSteps = 5;
@@ -48,8 +47,8 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
   const finish = async () => {
     await onComplete({
       display_name: name || "Du",
-      in_menopause: phase === "menopause" || endoMeno,
-      last_period_start: (phase === "menopause" || endoMeno) ? null : (lastPeriod || null),
+      in_menopause: phase === "menopause",
+      last_period_start: phase === "menopause" ? null : (lastPeriod || null),
       avg_cycle_length: cycleLen,
       avg_period_length: periodLen,
       endometriosis_status: endoStatus,
@@ -77,7 +76,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
             )}
 
             {step === 1 && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <Label>In welcher Lebensphase bist du gerade?</Label>
                 <RadioGroup value={phase} onValueChange={(v) => setPhase(v as "cycling" | "menopause")}>
                   <label className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:border-primary/40">
@@ -95,6 +94,37 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
                     </div>
                   </label>
                 </RadioGroup>
+
+                <div className="space-y-3 pt-2 border-t border-border">
+                  <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2">
+                    <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>
+                      <strong className="text-foreground">Endometriose</strong> ist eine chronische Erkrankung, bei der gebärmutterschleimhautähnliches Gewebe außerhalb der Gebärmutter wächst. Häufige Anzeichen: starke Regelschmerzen, Schmerzen im Becken, Erschöpfung. Fravia kann Empfehlungen darauf abstimmen.
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                    <div className="pr-3">
+                      <div className="text-sm font-medium">Ich habe diagnostizierte Endometriose</div>
+                      <div className="text-xs text-muted-foreground">Ärztlich bestätigt (z. B. per Laparoskopie).</div>
+                    </div>
+                    <Switch
+                      checked={endoStatus === "diagnosed"}
+                      onCheckedChange={(v) => setEndoStatus(v ? "diagnosed" : "none")}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                    <div className="pr-3">
+                      <div className="text-sm font-medium">Bei mir ist Verdacht auf Endometriose</div>
+                      <div className="text-xs text-muted-foreground">Symptome passen, aber noch keine gesicherte Diagnose.</div>
+                    </div>
+                    <Switch
+                      checked={endoStatus === "suspected"}
+                      onCheckedChange={(v) => setEndoStatus(v ? "suspected" : "none")}
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
@@ -150,45 +180,6 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
                       <span className="text-sm text-muted-foreground">Tage</span>
                     </div>
                   )}
-                </div>
-
-                <div className="space-y-3 pt-3 border-t border-border">
-                  <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2">
-                    <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                    <span>
-                      <strong className="text-foreground">Endometriose</strong> ist eine chronische Erkrankung, bei der gebärmutterschleimhautähnliches Gewebe außerhalb der Gebärmutter wächst. Häufige Anzeichen: starke Regelschmerzen, Schmerzen im Becken, Erschöpfung. Fravia kann Empfehlungen darauf abstimmen.
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-lg border border-border p-3">
-                    <div className="pr-3">
-                      <div className="text-sm font-medium">Ich habe diagnostizierte Endometriose</div>
-                      <div className="text-xs text-muted-foreground">Ärztlich bestätigt (z. B. per Laparoskopie).</div>
-                    </div>
-                    <Switch
-                      checked={endoStatus === "diagnosed"}
-                      onCheckedChange={(v) => setEndoStatus(v ? "diagnosed" : "none")}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-lg border border-border p-3">
-                    <div className="pr-3">
-                      <div className="text-sm font-medium">Bei mir ist Verdacht auf Endometriose</div>
-                      <div className="text-xs text-muted-foreground">Symptome passen, aber noch keine gesicherte Diagnose.</div>
-                    </div>
-                    <Switch
-                      checked={endoStatus === "suspected"}
-                      onCheckedChange={(v) => setEndoStatus(v ? "suspected" : "none")}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-lg border border-border p-3">
-                    <div className="pr-3">
-                      <div className="text-sm font-medium">Ich bin in der Menopause</div>
-                      <div className="text-xs text-muted-foreground">Fravia fokussiert auf Energie & Wohlbefinden statt Zyklusphase.</div>
-                    </div>
-                    <Switch checked={endoMeno} onCheckedChange={setEndoMeno} />
-                  </div>
                 </div>
 
                 <p className="text-xs text-muted-foreground italic">Standard ist 28/5 – Fravia passt sich an, je mehr du trackst.</p>
