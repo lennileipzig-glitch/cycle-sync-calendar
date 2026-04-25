@@ -47,10 +47,11 @@ export const dataApi = {
   async upsertLog(userId: string | null, log: Omit<DailyLog, "id">): Promise<void> {
     if (isGuest()) { guestStore.upsertLog(log); return; }
     if (!userId) return;
-    await supabase.from("daily_logs").upsert(
+    const { error } = await supabase.from("daily_logs").upsert(
       { user_id: userId, ...log },
       { onConflict: "user_id,log_date" },
     );
+    if (error) { console.error("upsertLog failed:", error); throw error; }
   },
 
   async bulkInsertLogs(userId: string | null, logs: Omit<DailyLog, "id">[]): Promise<void> {
@@ -60,7 +61,8 @@ export const dataApi = {
     }
     if (!userId || logs.length === 0) return;
     const rows = logs.map(l => ({ user_id: userId, ...l }));
-    await supabase.from("daily_logs").upsert(rows, { onConflict: "user_id,log_date" });
+    const { error } = await supabase.from("daily_logs").upsert(rows, { onConflict: "user_id,log_date" });
+    if (error) { console.error("bulkInsertLogs failed:", error); throw error; }
   },
 
   // ---- Todos ----
@@ -80,7 +82,7 @@ export const dataApi = {
   ): Promise<Todo | null> {
     if (isGuest()) return guestStore.addTodo(date, title, extra);
     if (!userId) return null;
-    const { data } = await supabase.from("todos")
+    const { data, error } = await supabase.from("todos")
       .insert({
         user_id: userId,
         todo_date: date,
@@ -89,12 +91,14 @@ export const dataApi = {
         is_flexible: extra?.is_flexible ?? false,
       })
       .select().single();
+    if (error) { console.error("addTodo failed:", error); throw error; }
     return data as Todo | null;
   },
 
   async toggleTodo(userId: string | null, id: string, completed: boolean): Promise<void> {
     if (isGuest()) { guestStore.updateTodo(id, { completed }); return; }
-    await supabase.from("todos").update({ completed }).eq("id", id);
+    const { error } = await supabase.from("todos").update({ completed }).eq("id", id);
+    if (error) { console.error("toggleTodo failed:", error); throw error; }
   },
 
   async updateTodo(
@@ -103,12 +107,14 @@ export const dataApi = {
     patch: { title?: string; energy_cost?: number | null; is_flexible?: boolean; todo_date?: string },
   ): Promise<void> {
     if (isGuest()) { guestStore.updateTodo(id, patch); return; }
-    await supabase.from("todos").update(patch).eq("id", id);
+    const { error } = await supabase.from("todos").update(patch).eq("id", id);
+    if (error) { console.error("updateTodo failed:", error); throw error; }
   },
 
   async deleteTodo(userId: string | null, id: string): Promise<void> {
     if (isGuest()) { guestStore.deleteTodo(id); return; }
-    await supabase.from("todos").delete().eq("id", id);
+    const { error } = await supabase.from("todos").delete().eq("id", id);
+    if (error) { console.error("deleteTodo failed:", error); throw error; }
   },
 
   // ---- Events ----
@@ -193,7 +199,8 @@ export const dataApi = {
       user_id: targetOwner,
       shared_via: opts?.sharedVia ?? null,
     }));
-    const { data } = await supabase.from("calendar_events").insert(rows).select();
+    const { data, error } = await supabase.from("calendar_events").insert(rows).select();
+    if (error) { console.error("addEvents failed:", error, "rows:", rows); throw error; }
     return (data ?? []) as GuestEvent[];
   },
 
@@ -202,13 +209,15 @@ export const dataApi = {
     if (!userId) return;
     // UI-only Felder rausstrippen
     const { _shared_owner_name, _shared_show_phases, user_id, id: _i, ...rest } = patch as GuestEvent;
-    await supabase.from("calendar_events").update(rest).eq("id", id);
+    const { error } = await supabase.from("calendar_events").update(rest).eq("id", id);
+    if (error) { console.error("updateEvent failed:", error); throw error; }
   },
 
   async deleteEvent(userId: string | null, id: string): Promise<void> {
     if (isGuest()) { guestStore.deleteEvent(id); return; }
     if (!userId) return;
-    await supabase.from("calendar_events").delete().eq("id", id);
+    const { error } = await supabase.from("calendar_events").delete().eq("id", id);
+    if (error) { console.error("deleteEvent failed:", error); throw error; }
   },
 
   /** Verschiebt ein Event auf ein anderes Datum (Drag & Drop). Uhrzeit bleibt erhalten. */
