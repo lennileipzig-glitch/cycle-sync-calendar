@@ -109,7 +109,7 @@ export function TodoDialog({ userId, date, open, onOpenChange, onCreated, todo }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Neue Aufgabe</DialogTitle>
+          <DialogTitle>{isEdit ? "Aufgabe bearbeiten" : "Neue Aufgabe"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground capitalize">
