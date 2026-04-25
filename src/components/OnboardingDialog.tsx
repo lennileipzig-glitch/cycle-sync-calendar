@@ -77,7 +77,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
             )}
 
             {step === 1 && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <Label>In welcher Lebensphase bist du gerade?</Label>
                 <RadioGroup value={phase} onValueChange={(v) => setPhase(v as "cycling" | "menopause")}>
                   <label className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:border-primary/40">
@@ -95,6 +95,37 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
                     </div>
                   </label>
                 </RadioGroup>
+
+                <div className="space-y-3 pt-2 border-t border-border">
+                  <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2">
+                    <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>
+                      <strong className="text-foreground">Endometriose</strong> ist eine chronische Erkrankung, bei der gebärmutterschleimhautähnliches Gewebe außerhalb der Gebärmutter wächst. Häufige Anzeichen: starke Regelschmerzen, Schmerzen im Becken, Erschöpfung. Fravia kann Empfehlungen darauf abstimmen.
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                    <div className="pr-3">
+                      <div className="text-sm font-medium">Ich habe diagnostizierte Endometriose</div>
+                      <div className="text-xs text-muted-foreground">Ärztlich bestätigt (z. B. per Laparoskopie).</div>
+                    </div>
+                    <Switch
+                      checked={endoStatus === "diagnosed"}
+                      onCheckedChange={(v) => setEndoStatus(v ? "diagnosed" : "none")}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                    <div className="pr-3">
+                      <div className="text-sm font-medium">Bei mir ist Verdacht auf Endometriose</div>
+                      <div className="text-xs text-muted-foreground">Symptome passen, aber noch keine gesicherte Diagnose.</div>
+                    </div>
+                    <Switch
+                      checked={endoStatus === "suspected"}
+                      onCheckedChange={(v) => setEndoStatus(v ? "suspected" : "none")}
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
