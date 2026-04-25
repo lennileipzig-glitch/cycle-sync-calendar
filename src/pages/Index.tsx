@@ -39,6 +39,7 @@ const Index = () => {
   const [todoDialogOpen, setTodoDialogOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<GuestEvent | null>(null);
+  const [editTodo, setEditTodo] = useState<{ id: string; title: string; completed: boolean; energy_cost?: number | null; is_flexible?: boolean } | null>(null);
   const [quickAddDate, setQuickAddDate] = useState<Date>(new Date());
   const [quickAddTime, setQuickAddTime] = useState<string | null>(null);
   const [quickAddCategory, setQuickAddCategory] = useState<"termin" | "mahlzeit" | "sport">("termin");
