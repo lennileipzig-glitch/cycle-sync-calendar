@@ -38,7 +38,6 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
   const [knowsPeriod, setKnowsPeriod] = useState<"yes" | "no" | "">("");
   const [periodLen, setPeriodLen] = useState(5);
   const [endoStatus, setEndoStatus] = useState<EndometriosisStatus>("none");
-  const [endoMeno, setEndoMeno] = useState(false);
   const [importOpen, setImportOpen] = useState<"csv" | "ics" | null>(null);
 
   const totalSteps = 5;
@@ -48,8 +47,8 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
   const finish = async () => {
     await onComplete({
       display_name: name || "Du",
-      in_menopause: phase === "menopause" || endoMeno,
-      last_period_start: (phase === "menopause" || endoMeno) ? null : (lastPeriod || null),
+      in_menopause: phase === "menopause",
+      last_period_start: phase === "menopause" ? null : (lastPeriod || null),
       avg_cycle_length: cycleLen,
       avg_period_length: periodLen,
       endometriosis_status: endoStatus,
