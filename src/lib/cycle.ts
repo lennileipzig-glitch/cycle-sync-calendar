@@ -119,8 +119,9 @@ export function findNextDateForEnergyCost(
   cycleLength = 28,
   periodLength = 5,
   lookaheadDays = 35,
+  irregular = false,
 ): Date {
-  if (!lastPeriodStart) return from;
+  if (!lastPeriodStart || irregular) return from;
   const preferred = new Set(preferredPhasesForEnergyCost(cost));
   for (let i = 0; i <= lookaheadDays; i++) {
     const d = addDays(from, i);
