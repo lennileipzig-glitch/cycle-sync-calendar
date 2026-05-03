@@ -761,11 +761,17 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
       {/* Detail-Kacheln */}
       <div className="grid gap-3 md:grid-cols-2">
         <button
-          onClick={onOpenTracker}
-          className="rounded-xl bg-card border border-border/60 p-4 text-left hover:border-primary/40 transition-all"
+          onClick={isFuture ? undefined : onOpenTracker}
+          disabled={isFuture}
+          className={cn(
+            "rounded-xl bg-card border border-border/60 p-4 text-left transition-all",
+            isFuture ? "opacity-60 cursor-not-allowed" : "hover:border-primary/40",
+          )}
         >
           <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Energielevel</div>
-          {energy !== null ? (
+          {isFuture ? (
+            <div className="text-sm text-muted-foreground">Tracking erst ab heute möglich</div>
+          ) : energy !== null ? (
             <>
               <div className="text-2xl mb-2">
                 <span className="capitalize">
@@ -783,11 +789,17 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
         </button>
 
         <button
-          onClick={onOpenTracker}
-          className="rounded-xl bg-card border border-border/60 p-4 text-left hover:border-primary/40 transition-all"
+          onClick={isFuture ? undefined : onOpenTracker}
+          disabled={isFuture}
+          className={cn(
+            "rounded-xl bg-card border border-border/60 p-4 text-left transition-all",
+            isFuture ? "opacity-60 cursor-not-allowed" : "hover:border-primary/40",
+          )}
         >
           <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Beschwerden</div>
-          {log?.symptoms && log.symptoms.length > 0 ? (
+          {isFuture ? (
+            <div className="text-sm text-muted-foreground">Tracking erst ab heute möglich</div>
+          ) : log?.symptoms && log.symptoms.length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {log.symptoms.map(s => (
                 <span key={s} className="text-xs px-2 py-0.5 bg-muted rounded-full">{s}</span>
