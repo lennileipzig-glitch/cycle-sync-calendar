@@ -720,19 +720,8 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {onAddEvent && (
-            <Button size="sm" variant="outline" onClick={onAddEvent}>
-              <CalendarPlus className="h-4 w-4 mr-1" /> Termin
-            </Button>
-          )}
-          {onAddTodo && (
-            <Button size="sm" variant="outline" onClick={onAddTodo}>
-              <ListPlus className="h-4 w-4 mr-1" /> Aufgabe
-            </Button>
-          )}
-        </div>
       </div>
+
 
       {/* Mini-Strip Wochennavigation */}
       <div className="grid grid-cols-7 gap-1">
