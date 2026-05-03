@@ -58,7 +58,11 @@ export function InlineAddMeal({ userId, date, onCreated }: Props) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full text-xs text-amber-700 dark:text-amber-300 hover:underline flex items-center gap-1 justify-center py-2 rounded-md border border-dashed border-amber-300/60 dark:border-amber-400/30 hover:border-amber-500 transition-colors"
+        className="w-full text-xs hover:underline flex items-center gap-1 justify-center py-2 rounded-md border border-dashed transition-colors"
+        style={{
+          color: "hsl(var(--tile-nutrition))",
+          borderColor: "hsl(var(--tile-nutrition) / 0.5)",
+        }}
       >
         <UtensilsCrossed className="h-3.5 w-3.5" /> <Plus className="h-3.5 w-3.5" /> Mahlzeit hinzufügen
       </button>
@@ -66,9 +70,15 @@ export function InlineAddMeal({ userId, date, onCreated }: Props) {
   }
 
   return (
-    <div className="space-y-2 rounded-md border border-amber-300/60 dark:border-amber-400/30 bg-amber-50/50 dark:bg-amber-400/5 p-2.5">
+    <div
+      className="space-y-2 rounded-md border p-2.5"
+      style={{
+        background: "hsl(var(--tile-nutrition) / 0.10)",
+        borderColor: "hsl(var(--tile-nutrition) / 0.45)",
+      }}
+    >
       <div className="flex items-center gap-2">
-        <UtensilsCrossed className="h-4 w-4 text-amber-700 dark:text-amber-300 shrink-0" />
+        <UtensilsCrossed className="h-4 w-4 shrink-0" style={{ color: "hsl(var(--tile-nutrition))" }} />
         <Input
           autoFocus
           value={title}
@@ -95,7 +105,15 @@ export function InlineAddMeal({ userId, date, onCreated }: Props) {
         className="text-xs"
       />
       <div className="flex justify-end">
-        <Button size="sm" onClick={handleAdd} disabled={saving}>
+        <Button
+          size="sm"
+          onClick={handleAdd}
+          disabled={saving}
+          style={{
+            background: "hsl(var(--tile-nutrition))",
+            color: "hsl(var(--primary-foreground))",
+          }}
+        >
           {saving ? "Speichere…" : "Hinzufügen"}
         </Button>
       </div>
