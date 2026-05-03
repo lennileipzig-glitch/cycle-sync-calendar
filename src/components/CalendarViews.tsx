@@ -113,7 +113,7 @@ interface MonthProps extends DataMaps, QuickAdd {
   profile: Profile | null;
 }
 
-export function MonthView({ monthDate, selectedDate, onSelectDate, profile, eventsByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddMealForDate, onMoveEvent }: MonthProps) {
+export function MonthView({ monthDate, selectedDate, onSelectDate, profile, eventsByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddMealForDate, onAddSportForDate, onMoveEvent }: MonthProps) {
   const start = startOfWeek(startOfMonth(monthDate), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(monthDate), { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start, end });
