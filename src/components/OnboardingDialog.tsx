@@ -132,10 +132,31 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
             )}
 
             {step === 2 && phase !== "menopause" && (
-              <div className="space-y-3">
-                <Label htmlFor="lp">Wann hat deine letzte Periode begonnen?</Label>
-                <Input id="lp" type="date" value={lastPeriod} onChange={e => setLastPeriod(e.target.value)} max={new Date().toISOString().slice(0, 10)} />
-                <p className="text-sm text-muted-foreground">Wenn du es nicht weißt, lass das Feld leer – Fravia lernt mit jedem Tag, den du trackst.</p>
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <Label>Wie ist dein Zyklus?</Label>
+                  <RadioGroup value={regularity} onValueChange={(v) => setRegularity(v as "regular" | "irregular")}>
+                    <label className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:border-primary/40">
+                      <RadioGroupItem value="regular" id="reg-y" className="mt-0.5" />
+                      <div>
+                        <div className="font-medium text-sm">Regelmäßige Periode</div>
+                        <div className="text-xs text-muted-foreground">Meine Periode kommt in vorhersehbaren Abständen.</div>
+                      </div>
+                    </label>
+                    <label className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:border-primary/40">
+                      <RadioGroupItem value="irregular" id="reg-n" className="mt-0.5" />
+                      <div>
+                        <div className="font-medium text-sm">Unregelmäßige Periode</div>
+                        <div className="text-xs text-muted-foreground">Mein Zyklus ist unregelmäßig. Fravia wartet dann auf deine Markierung „Heute hat meine Blutung begonnen", bevor sie auf Menstruation umstellt.</div>
+                      </div>
+                    </label>
+                  </RadioGroup>
+                </div>
+                <div className="space-y-2 pt-2 border-t border-border">
+                  <Label htmlFor="lp">Wann hat deine letzte Periode begonnen?</Label>
+                  <Input id="lp" type="date" value={lastPeriod} onChange={e => setLastPeriod(e.target.value)} max={new Date().toISOString().slice(0, 10)} />
+                  <p className="text-sm text-muted-foreground">Wenn du es nicht weißt, lass das Feld leer – Fravia lernt mit jedem Tag, den du trackst.</p>
+                </div>
               </div>
             )}
             {step === 2 && phase === "menopause" && (
