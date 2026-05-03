@@ -72,6 +72,7 @@ export const guestStore = {
       onboarding_completed: false,
       in_menopause: false,
       endometriosis_status: "none",
+      cycle_irregular: false,
       diet_style: "omnivore",
       diet_intolerances: [],
       favorite_foods: [],
