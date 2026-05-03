@@ -289,6 +289,7 @@ const Index = () => {
                 onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("termin"); setLockEventCategory(true); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
                 onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setLockEventCategory(true); setEventDialogOpen(true); }}
+                onAddSportForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("sport"); setLockEventCategory(true); setEditEvent(null); setEventDialogOpen(true); }}
                 onMoveEvent={async (ev, newDate) => {
                   await dataApi.moveEventToDate(userId, ev, newDate);
                   setAllEvents(await dataApi.getEvents(userId));
