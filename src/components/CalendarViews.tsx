@@ -322,7 +322,7 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                   </div>
                 )}
                 <div className="hidden sm:block absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
+                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} onAddSportForDate={onAddSportForDate} size="xs" />
                 </div>
               </div>
             </div>
