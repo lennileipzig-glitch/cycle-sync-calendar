@@ -56,12 +56,14 @@ interface QuickAdd {
   onAddEventAtTime?: (d: Date, time: string) => void;
   /** Optional: Mahlzeit für einen Tag hinzufügen (öffnet Dialog mit Kategorie="mahlzeit") */
   onAddMealForDate?: (d: Date) => void;
+  /** Optional: Workout für einen Tag hinzufügen (öffnet Dialog mit Kategorie="sport") */
+  onAddSportForDate?: (d: Date) => void;
   /** Optional: Drag & Drop – Event auf neues Datum verschieben */
   onMoveEvent?: (event: GuestEvent, newDateStr: string) => void;
 }
 
-function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, onAddMealForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
-  if (!onAddEventForDate && !onAddTodoForDate && !onAddMealForDate) return null;
+function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, onAddMealForDate, onAddSportForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
+  if (!onAddEventForDate && !onAddTodoForDate && !onAddMealForDate && !onAddSportForDate) return null;
   const px = size === "xs" ? "h-5 w-5" : "h-7 w-7";
   return (
     <DropdownMenu>
