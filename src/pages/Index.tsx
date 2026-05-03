@@ -437,6 +437,7 @@ const Index = () => {
           await update({
             display_name: data.display_name,
             in_menopause: data.in_menopause,
+            cycle_irregular: data.cycle_irregular,
             last_period_start: data.last_period_start,
             avg_cycle_length: data.avg_cycle_length,
             avg_period_length: data.avg_period_length,
