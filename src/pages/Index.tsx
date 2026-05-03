@@ -122,6 +122,7 @@ const Index = () => {
     selectedDate,
     profile?.last_period_start ? new Date(profile.last_period_start) : null,
     profile?.avg_cycle_length, profile?.avg_period_length,
+    profile?.cycle_irregular ?? false,
   ), [selectedDate, profile]);
 
   // Tag innerhalb der aktuellen Phase + Phasenlänge
