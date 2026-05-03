@@ -14,6 +14,7 @@ import type { EndometriosisStatus } from "@/hooks/useProfile";
 export interface OnboardingData {
   display_name: string;
   in_menopause: boolean;
+  cycle_irregular: boolean;
   last_period_start: string | null;
   avg_cycle_length: number;
   avg_period_length: number;
@@ -32,6 +33,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
   const [step, setStep] = useState(0);
   const [name, setName] = useState(initialName ?? "");
   const [phase, setPhase] = useState<"cycling" | "menopause" | "">("");
+  const [regularity, setRegularity] = useState<"regular" | "irregular" | "">("");
   const [lastPeriod, setLastPeriod] = useState("");
   const [knowsCycle, setKnowsCycle] = useState<"yes" | "no" | "">("");
   const [cycleLen, setCycleLen] = useState(28);
@@ -48,6 +50,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
     await onComplete({
       display_name: name || "Du",
       in_menopause: phase === "menopause",
+      cycle_irregular: phase === "cycling" && regularity === "irregular",
       last_period_start: phase === "menopause" ? null : (lastPeriod || null),
       avg_cycle_length: cycleLen,
       avg_period_length: periodLen,
