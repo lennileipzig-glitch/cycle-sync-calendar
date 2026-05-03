@@ -269,11 +269,15 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
           {!allDay && (
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="ev-start">Beginn</Label>
+                <Label htmlFor="ev-start">
+                  Beginn {category === "mahlzeit" && <span className="text-muted-foreground text-xs">(optional)</span>}
+                </Label>
                 <Input id="ev-start" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ev-end">Ende</Label>
+                <Label htmlFor="ev-end">
+                  Ende {category === "mahlzeit" && <span className="text-muted-foreground text-xs">(optional)</span>}
+                </Label>
                 <Input id="ev-end" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
               </div>
             </div>
