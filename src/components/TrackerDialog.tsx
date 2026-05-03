@@ -120,6 +120,33 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string |
         </DialogHeader>
 
         <div className="space-y-6 py-2">
+          {profile && !profile.in_menopause && (
+            <div>
+              <Button
+                type="button"
+                variant={periodStartedToday ? "default" : "outline"}
+                className="w-full justify-start gap-2"
+                onClick={async () => {
+                  if (periodStartedToday) {
+                    await update({ last_period_start: null });
+                    toast.success("Markierung entfernt");
+                  } else {
+                    await update({ last_period_start: today });
+                    toast.success("Heute als Periodenstart markiert 🌸");
+                  }
+                }}
+              >
+                <Droplet className="h-4 w-4" />
+                {periodStartedToday ? "Heute als Periodenstart markiert · entfernen" : "Heute hat meine Blutung begonnen"}
+              </Button>
+              {profile.cycle_irregular && !periodStartedToday && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Bei unregelmäßigem Zyklus richtet Fravia Empfehlungen erst dann auf Menstruation aus, wenn du den Beginn hier markierst.
+                </p>
+              )}
+            </div>
+          )}
+
           <div>
             <div className="flex items-baseline justify-between mb-3">
               <Label>Energielevel</Label>
