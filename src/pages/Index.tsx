@@ -16,6 +16,7 @@ import { TodoDialog } from "@/components/TodoDialog";
 import { PhaseLegend } from "@/components/PhaseLegend";
 import { Recommendations } from "@/components/Recommendations";
 import { VoiceFAB } from "@/components/VoiceFAB";
+import { QuickAddFAB } from "@/components/QuickAddFAB";
 
 import { OnboardingDialog } from "@/components/OnboardingDialog";
 import { dataApi } from "@/lib/dataApi";
@@ -456,6 +457,13 @@ const Index = () => {
       />
 
       <ShareCalendarDialog ownerId={userId} open={shareOpen} onOpenChange={setShareOpen} />
+
+      <QuickAddFAB
+        onAddEvent={() => { setEditEvent(null); setQuickAddDate(selectedDate); setQuickAddTime(null); setQuickAddCategory("termin"); setLockEventCategory(false); setEventDialogOpen(true); }}
+        onAddTodo={() => { setEditTodo(null); setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
+        onAddMeal={() => { setEditEvent(null); setQuickAddDate(selectedDate); setQuickAddTime(null); setQuickAddCategory("mahlzeit"); setLockEventCategory(true); setEventDialogOpen(true); }}
+        onAddSport={() => { setEditEvent(null); setQuickAddDate(selectedDate); setQuickAddTime(null); setQuickAddCategory("sport"); setLockEventCategory(true); setEventDialogOpen(true); }}
+      />
 
       <VoiceFAB
         userId={userId}
