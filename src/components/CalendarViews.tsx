@@ -688,7 +688,9 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const today = new Date();
-  const isFuture = selectedDate.setHours(0,0,0,0) > new Date().setHours(0,0,0,0);
+  const _todayMid = new Date(); _todayMid.setHours(0,0,0,0);
+  const _selMid = new Date(selectedDate); _selMid.setHours(0,0,0,0);
+  const isFuture = _selMid.getTime() > _todayMid.getTime();
   const energy = energyToNum(log?.energy_level);
   const phase = phaseForDate(selectedDate, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length, profile?.cycle_irregular);
 
