@@ -120,7 +120,7 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string |
         </DialogHeader>
 
         <div className="space-y-6 py-2">
-          {profile && !profile.in_menopause && (
+          {profile && !profile.in_menopause && profile.cycle_irregular && (
             <div>
               <Button
                 type="button"
