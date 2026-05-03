@@ -137,7 +137,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
       energy_cost: e.energy_cost ?? null,
     }));
     const log = await dataApi.getLog(userId, todayStr);
-    const phase = getPhase(today, profile.last_period_start ? new Date(profile.last_period_start) : null, profile.avg_cycle_length, profile.avg_period_length);
+    const phase = getPhase(today, profile.last_period_start ? new Date(profile.last_period_start) : null, profile.avg_cycle_length, profile.avg_period_length, profile.cycle_irregular);
     let fridge: string[] = [];
     try { fridge = JSON.parse(localStorage.getItem(FRIDGE_KEY) || "[]"); } catch { fridge = []; }
     return {
