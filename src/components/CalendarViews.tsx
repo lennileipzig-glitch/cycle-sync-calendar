@@ -171,10 +171,10 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                 )}
                 <div className="flex items-center gap-0.5 ml-auto">
                   {hasMeal && (
-                    <UtensilsCrossed className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-600 dark:text-amber-400" aria-label="Mahlzeit geplant" />
+                    <UtensilsCrossed className="h-2.5 w-2.5 sm:h-3 sm:w-3" style={{ color: "hsl(var(--tile-nutrition))" }} aria-label="Mahlzeit geplant" />
                   )}
                   {hasSport && (
-                    <Dumbbell className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-emerald-600 dark:text-emerald-400" aria-label="Sport geplant" />
+                    <Dumbbell className="h-2.5 w-2.5 sm:h-3 sm:w-3" style={{ color: "hsl(var(--tile-movement))" }} aria-label="Sport geplant" />
                   )}
                   {openTodos > 0 && (
                     <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary" aria-label={`${openTodos} offene Aufgaben`} />
