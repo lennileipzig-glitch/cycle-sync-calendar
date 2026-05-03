@@ -228,7 +228,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
           <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
             <Button variant="ghost" onClick={back} disabled={step === 0}>Zurück</Button>
             {step < totalSteps - 1 ? (
-              <Button onClick={next} disabled={(step === 0 && !name) || (step === 1 && !phase)}>
+              <Button onClick={next} disabled={(step === 0 && !name) || (step === 1 && !phase) || (step === 2 && phase === "cycling" && !regularity)}>
                 Weiter
               </Button>
             ) : (
