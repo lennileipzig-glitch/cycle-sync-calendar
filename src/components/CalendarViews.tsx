@@ -91,6 +91,11 @@ function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, onAddMealForD
             <UtensilsCrossed className="h-4 w-4 mr-2" /> Mahlzeit
           </DropdownMenuItem>
         )}
+        {onAddSportForDate && (
+          <DropdownMenuItem onClick={() => onAddSportForDate(date)}>
+            <Dumbbell className="h-4 w-4 mr-2" /> Workout
+          </DropdownMenuItem>
+        )}
         {onAddTodoForDate && (
           <DropdownMenuItem onClick={() => onAddTodoForDate(date)}>
             <ListPlus className="h-4 w-4 mr-2" /> Aufgabe
