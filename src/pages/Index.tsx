@@ -285,7 +285,7 @@ const Index = () => {
                 profile={profile}
                 eventsByDay={eventsByDay}
                 todosByDay={todosByDay}
-                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("termin"); setLockEventCategory(false); setEventDialogOpen(true); }}
+                onAddEventForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("termin"); setLockEventCategory(true); setEventDialogOpen(true); }}
                 onAddTodoForDate={(d) => { setQuickAddDate(d); setTodoDialogOpen(true); }}
                 onAddMealForDate={(d) => { setQuickAddDate(d); setQuickAddCategory("mahlzeit"); setLockEventCategory(true); setEventDialogOpen(true); }}
                 onMoveEvent={async (ev, newDate) => {
@@ -327,7 +327,7 @@ const Index = () => {
                 log={dayLog}
                 onToggleTodo={toggleDayTodo}
                 onOpenTracker={() => setTrackerOpen(true)}
-                onAddEvent={() => { setQuickAddDate(selectedDate); setQuickAddCategory("termin"); setLockEventCategory(false); setEditEvent(null); setEventDialogOpen(true); }}
+                onAddEvent={() => { setQuickAddDate(selectedDate); setQuickAddCategory("termin"); setLockEventCategory(true); setEditEvent(null); setEventDialogOpen(true); }}
                 onAddTodo={() => { setEditTodo(null); setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
                 onEditEvent={(ev) => { setEditEvent(ev); setQuickAddDate(new Date(ev.starts_at)); setEventDialogOpen(true); }}
                 onEditTodo={(t) => { setEditTodo(t); setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
@@ -459,7 +459,7 @@ const Index = () => {
       <ShareCalendarDialog ownerId={userId} open={shareOpen} onOpenChange={setShareOpen} />
 
       <QuickAddFAB
-        onAddEvent={() => { setEditEvent(null); setQuickAddDate(selectedDate); setQuickAddTime(null); setQuickAddCategory("termin"); setLockEventCategory(false); setEventDialogOpen(true); }}
+        onAddEvent={() => { setEditEvent(null); setQuickAddDate(selectedDate); setQuickAddTime(null); setQuickAddCategory("termin"); setLockEventCategory(true); setEventDialogOpen(true); }}
         onAddTodo={() => { setEditTodo(null); setQuickAddDate(selectedDate); setTodoDialogOpen(true); }}
         onAddMeal={() => { setEditEvent(null); setQuickAddDate(selectedDate); setQuickAddTime(null); setQuickAddCategory("mahlzeit"); setLockEventCategory(true); setEventDialogOpen(true); }}
         onAddSport={() => { setEditEvent(null); setQuickAddDate(selectedDate); setQuickAddTime(null); setQuickAddCategory("sport"); setLockEventCategory(true); setEventDialogOpen(true); }}
