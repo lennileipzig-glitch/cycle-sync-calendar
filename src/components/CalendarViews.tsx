@@ -187,7 +187,7 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                     <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary" aria-label={`${openTodos} offene Aufgaben`} />
                   )}
                   <div className="hidden sm:block opacity-0 group-hover:opacity-100 transition-opacity">
-                    <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
+                    <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} onAddSportForDate={onAddSportForDate} size="xs" />
                   </div>
                 </div>
               </div>
