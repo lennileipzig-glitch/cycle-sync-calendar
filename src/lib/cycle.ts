@@ -44,7 +44,7 @@ const PHASE_DATA: Record<Exclude<Phase, "unknown">, Omit<PhaseInfo, "phase" | "d
   },
 };
 
-export function getPhase(today: Date, lastPeriodStart: Date | null, cycleLength = 28, periodLength = 5): PhaseInfo {
+export function getPhase(today: Date, lastPeriodStart: Date | null, cycleLength = 28, periodLength = 5, irregular = false): PhaseInfo {
   if (!lastPeriodStart) {
     return {
       phase: "unknown",
@@ -65,11 +65,32 @@ export function getPhase(today: Date, lastPeriodStart: Date | null, cycleLength 
   else if (dayInCycle < ovulationDay - 1) phase = "follicular";
   else if (dayInCycle <= ovulationDay + 1) phase = "ovulation";
   else phase = "luteal";
+
+  // Bei unregelmäßigem Zyklus nur Menstruation anzeigen, wenn die Blutung
+  // explizit kürzlich (innerhalb periodLength Tagen) markiert wurde.
+  // Andere Phasen sind nicht zuverlässig vorhersagbar → "unbekannt".
+  if (irregular) {
+    const sinceStart = days; // Tage seit Markierung
+    if (sinceStart >= 0 && sinceStart < periodLength) {
+      return { phase: "menstrual", dayInCycle: sinceStart + 1, cycleLength, ...PHASE_DATA.menstrual };
+    }
+    return {
+      phase: "unknown",
+      label: "Phase unbekannt",
+      dayInCycle: 0,
+      cycleLength,
+      description: "Bei unregelmäßigem Zyklus markiere bitte den Beginn deiner Blutung im Tages-Tracker.",
+      color: "hsl(var(--muted-foreground))",
+      nutrition: [],
+      exercise: [],
+    };
+  }
+
   return { phase, dayInCycle, cycleLength, ...PHASE_DATA[phase] };
 }
 
-export function phaseForDate(date: Date, lastPeriodStart: Date | null, cycleLength = 28, periodLength = 5): Phase {
-  return getPhase(date, lastPeriodStart, cycleLength, periodLength).phase;
+export function phaseForDate(date: Date, lastPeriodStart: Date | null, cycleLength = 28, periodLength = 5, irregular = false): Phase {
+  return getPhase(date, lastPeriodStart, cycleLength, periodLength, irregular).phase;
 }
 
 export const fmtDate = (d: Date) => format(d, "yyyy-MM-dd");
