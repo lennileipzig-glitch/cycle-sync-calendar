@@ -56,12 +56,14 @@ interface QuickAdd {
   onAddEventAtTime?: (d: Date, time: string) => void;
   /** Optional: Mahlzeit für einen Tag hinzufügen (öffnet Dialog mit Kategorie="mahlzeit") */
   onAddMealForDate?: (d: Date) => void;
+  /** Optional: Workout für einen Tag hinzufügen (öffnet Dialog mit Kategorie="sport") */
+  onAddSportForDate?: (d: Date) => void;
   /** Optional: Drag & Drop – Event auf neues Datum verschieben */
   onMoveEvent?: (event: GuestEvent, newDateStr: string) => void;
 }
 
-function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, onAddMealForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
-  if (!onAddEventForDate && !onAddTodoForDate && !onAddMealForDate) return null;
+function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, onAddMealForDate, onAddSportForDate, size = "sm" }: QuickAdd & { date: Date; size?: "sm" | "xs" }) {
+  if (!onAddEventForDate && !onAddTodoForDate && !onAddMealForDate && !onAddSportForDate) return null;
   const px = size === "xs" ? "h-5 w-5" : "h-7 w-7";
   return (
     <DropdownMenu>
@@ -89,6 +91,11 @@ function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, onAddMealForD
             <UtensilsCrossed className="h-4 w-4 mr-2" /> Mahlzeit
           </DropdownMenuItem>
         )}
+        {onAddSportForDate && (
+          <DropdownMenuItem onClick={() => onAddSportForDate(date)}>
+            <Dumbbell className="h-4 w-4 mr-2" /> Workout
+          </DropdownMenuItem>
+        )}
         {onAddTodoForDate && (
           <DropdownMenuItem onClick={() => onAddTodoForDate(date)}>
             <ListPlus className="h-4 w-4 mr-2" /> Aufgabe
@@ -106,7 +113,7 @@ interface MonthProps extends DataMaps, QuickAdd {
   profile: Profile | null;
 }
 
-export function MonthView({ monthDate, selectedDate, onSelectDate, profile, eventsByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddMealForDate, onMoveEvent }: MonthProps) {
+export function MonthView({ monthDate, selectedDate, onSelectDate, profile, eventsByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddMealForDate, onAddSportForDate, onMoveEvent }: MonthProps) {
   const start = startOfWeek(startOfMonth(monthDate), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(monthDate), { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start, end });
@@ -180,7 +187,7 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                     <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary" aria-label={`${openTodos} offene Aufgaben`} />
                   )}
                   <div className="hidden sm:block opacity-0 group-hover:opacity-100 transition-opacity">
-                    <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
+                    <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} onAddSportForDate={onAddSportForDate} size="xs" />
                   </div>
                 </div>
               </div>
@@ -254,7 +261,7 @@ const energyToFloat = (raw?: string | null): number | null => {
   return null;
 };
 
-export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddEventAtTime, onAddMealForDate, onMoveEvent, onSelectEvent }: WeekProps) {
+export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddEventAtTime, onAddMealForDate, onAddSportForDate, onMoveEvent, onSelectEvent }: WeekProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
@@ -315,7 +322,7 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                   </div>
                 )}
                 <div className="hidden sm:block absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
+                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} onAddSportForDate={onAddSportForDate} size="xs" />
                 </div>
               </div>
             </div>
