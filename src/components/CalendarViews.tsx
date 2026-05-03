@@ -296,25 +296,25 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
               {...dropProps(d)}
             >
               <div className={cn("h-1.5 w-full", phaseStripe[phase])} />
-              <div className="px-2 py-1.5 relative">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{format(d, "EE", { locale: de })}</span>
+              <div className="px-1 sm:px-2 py-1 sm:py-1.5 relative">
+                <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between items-center gap-0.5">
+                  <span className="text-[9px] sm:text-[10px] uppercase tracking-wide text-muted-foreground">{format(d, "EE", { locale: de })}</span>
                   {isToday ? (
-                    <span className="inline-flex items-center justify-center h-6 min-w-6 px-1 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                    <span className="inline-flex items-center justify-center h-5 min-w-5 sm:h-6 sm:min-w-6 px-1 rounded-full bg-primary text-primary-foreground font-bold text-xs sm:text-sm">
                       {format(d, "d")}
                     </span>
                   ) : (
-                    <span className="text-base">{format(d, "d")}</span>
+                    <span className="text-sm sm:text-base">{format(d, "d")}</span>
                   )}
                 </div>
                 {m?.symptoms && m.symptoms.length > 0 && (
-                  <div className="flex gap-0.5 mt-1">
+                  <div className="flex gap-0.5 mt-1 justify-center sm:justify-start">
                     {m.symptoms.slice(0, 3).map((_, i) => (
                       <span key={i} className="h-1 w-1 rounded-full bg-foreground/40" />
                     ))}
                   </div>
                 )}
-                <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="hidden sm:block absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
                 </div>
               </div>
