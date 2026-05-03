@@ -86,6 +86,11 @@ function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, onAddMealForD
             <CalendarPlus className="h-4 w-4 mr-2" /> Termin
           </DropdownMenuItem>
         )}
+        {onAddTodoForDate && (
+          <DropdownMenuItem onClick={() => onAddTodoForDate(date)}>
+            <ListPlus className="h-4 w-4 mr-2" /> Aufgabe
+          </DropdownMenuItem>
+        )}
         {onAddMealForDate && (
           <DropdownMenuItem onClick={() => onAddMealForDate(date)}>
             <UtensilsCrossed className="h-4 w-4 mr-2" /> Mahlzeit
@@ -94,11 +99,6 @@ function QuickAddMenu({ date, onAddEventForDate, onAddTodoForDate, onAddMealForD
         {onAddSportForDate && (
           <DropdownMenuItem onClick={() => onAddSportForDate(date)}>
             <Dumbbell className="h-4 w-4 mr-2" /> Workout
-          </DropdownMenuItem>
-        )}
-        {onAddTodoForDate && (
-          <DropdownMenuItem onClick={() => onAddTodoForDate(date)}>
-            <ListPlus className="h-4 w-4 mr-2" /> Aufgabe
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
