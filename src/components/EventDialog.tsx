@@ -110,7 +110,7 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
 
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const targetDate = flexible
-    ? findNextDateForEnergyCost(date, cost, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length)
+    ? findNextDateForEnergyCost(date, cost, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length, 35, profile?.cycle_irregular ?? false)
     : date;
 
   const handleSave = async () => {

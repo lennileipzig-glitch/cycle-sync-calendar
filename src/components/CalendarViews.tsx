@@ -133,7 +133,7 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
       </div>
       <div className="grid grid-cols-7 gap-1">
         {days.map(d => {
-          const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+          const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length, profile?.cycle_irregular);
           const inMonth = isSameMonth(d, monthDate);
           const selected = isSameDay(d, selectedDate);
           const isToday = isSameDay(d, today);
@@ -276,7 +276,7 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
       <div className="grid grid-cols-[3rem_repeat(7,1fr)] gap-1">
         <div />
         {days.map(d => {
-          const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+          const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length, profile?.cycle_irregular);
           const selected = isSameDay(d, selectedDate);
           const isToday = isSameDay(d, today);
           const key = fmtDate(d);
@@ -370,7 +370,7 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
           {days.map(d => {
             const key = fmtDate(d);
             const events = eventsByDay[key] ?? [];
-            const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+            const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length, profile?.cycle_irregular);
             const isToday = isSameDay(d, today);
 
             const slotDropFor = (h: number) => onMoveEvent ? {
@@ -632,7 +632,7 @@ export function YearView({ selectedDate, onSelectDate, profile }: { selectedDate
             </div>
             <div className="grid grid-cols-7 gap-0.5">
               {days.map(d => {
-                const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+                const phase = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length, profile?.cycle_irregular);
                 const isToday = isSameDay(d, today);
                 return (
                   <div
@@ -689,7 +689,7 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const today = new Date();
   const energy = energyToNum(log?.energy_level);
-  const phase = phaseForDate(selectedDate, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+  const phase = phaseForDate(selectedDate, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length, profile?.cycle_irregular);
 
   const meals = events.filter(e => e.category === "mahlzeit");
   const sports = events.filter(e => e.category === "sport");
@@ -726,7 +726,7 @@ export function DayView({ selectedDate, onSelectDate, profile, events, todos, lo
       {/* Mini-Strip Wochennavigation */}
       <div className="grid grid-cols-7 gap-1">
         {days.map(d => {
-          const ph = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length);
+          const ph = phaseForDate(d, lastPeriod, profile?.avg_cycle_length, profile?.avg_period_length, profile?.cycle_irregular);
           const selected = isSameDay(d, selectedDate);
           const isToday = isSameDay(d, today);
           return (

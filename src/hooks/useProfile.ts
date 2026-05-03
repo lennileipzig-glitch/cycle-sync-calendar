@@ -15,6 +15,7 @@ export interface Profile {
   onboarding_completed: boolean;
   in_menopause: boolean;
   endometriosis_status: EndometriosisStatus;
+  cycle_irregular: boolean;
   // Ernährung
   diet_style: DietStyle;
   diet_intolerances: string[];

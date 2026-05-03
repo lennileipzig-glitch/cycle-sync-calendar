@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS cycle_irregular boolean NOT NULL DEFAULT false;

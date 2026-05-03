@@ -163,6 +163,7 @@ export type Database = {
           avg_period_length: number
           created_at: string
           custom_symptoms: string[]
+          cycle_irregular: boolean
           diet_intolerances: string[]
           diet_style: string
           display_name: string | null
@@ -185,6 +186,7 @@ export type Database = {
           avg_period_length?: number
           created_at?: string
           custom_symptoms?: string[]
+          cycle_irregular?: boolean
           diet_intolerances?: string[]
           diet_style?: string
           display_name?: string | null
@@ -207,6 +209,7 @@ export type Database = {
           avg_period_length?: number
           created_at?: string
           custom_symptoms?: string[]
+          cycle_irregular?: boolean
           diet_intolerances?: string[]
           diet_style?: string
           display_name?: string | null
