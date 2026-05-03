@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { fmtDate } from "@/lib/cycle";
 import { dataApi } from "@/lib/dataApi";
+import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Droplet } from "lucide-react";
 
 const DEFAULT_SYMPTOMS = ["Krämpfe", "Kopfschmerz", "Müdigkeit", "Reizbarkeit", "Heißhunger", "Brustspannen", "Akne", "Wassereinlagerung", "Schlafprobleme"];
 
@@ -37,7 +39,8 @@ const loadCustomSymptoms = (): string[] => {
 const saveCustomSymptoms = (list: string[]) => localStorage.setItem(CUSTOM_SYMPTOMS_KEY, JSON.stringify(list.slice(-30)));
 
 export function TrackerDialog({ userId, open, onOpenChange }: { userId: string | null; open: boolean; onOpenChange: (o: boolean) => void }) {
-  
+  const { guestMode } = useAuth();
+  const { profile, update } = useProfile(userId ?? undefined, guestMode);
   const [energy, setEnergy] = useState<number>(3);
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [customSymptoms, setCustomSymptoms] = useState<string[]>([]);
@@ -45,6 +48,7 @@ export function TrackerDialog({ userId, open, onOpenChange }: { userId: string |
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const today = fmtDate(new Date());
+  const periodStartedToday = profile?.last_period_start === today;
 
   useEffect(() => {
     if (!open) return;
