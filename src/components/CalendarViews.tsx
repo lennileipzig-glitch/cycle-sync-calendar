@@ -161,27 +161,27 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
               {...dragHandlers(d)}
             >
               <div className={cn("h-1.5 w-full shrink-0", phaseStripe[phase])} />
-              <div className="flex justify-between items-center px-1.5 pt-1 gap-1">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
-                </div>
+              <div className="flex justify-between items-center px-1 sm:px-1.5 pt-1 gap-0.5">
+                {isToday ? (
+                  <span className="text-[10px] sm:text-xs leading-none inline-flex items-center justify-center h-4 min-w-4 sm:h-5 sm:min-w-5 px-1 rounded-full bg-primary text-primary-foreground font-bold">
+                    {format(d, "d")}
+                  </span>
+                ) : (
+                  <span className="text-[10px] sm:text-xs leading-none">{format(d, "d")}</span>
+                )}
                 <div className="flex items-center gap-0.5 ml-auto">
                   {hasMeal && (
-                    <UtensilsCrossed className="h-3 w-3 text-amber-600 dark:text-amber-400" aria-label="Mahlzeit geplant" />
+                    <UtensilsCrossed className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-600 dark:text-amber-400" aria-label="Mahlzeit geplant" />
                   )}
                   {hasSport && (
-                    <Dumbbell className="h-3 w-3 text-emerald-600 dark:text-emerald-400" aria-label="Sport geplant" />
+                    <Dumbbell className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-emerald-600 dark:text-emerald-400" aria-label="Sport geplant" />
                   )}
                   {openTodos > 0 && (
-                    <CheckCircle2 className="h-3 w-3 text-primary" aria-label={`${openTodos} offene Aufgaben`} />
+                    <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary" aria-label={`${openTodos} offene Aufgaben`} />
                   )}
-                  {isToday ? (
-                    <span className="text-xs leading-none inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground font-bold ml-0.5">
-                      {format(d, "d")}
-                    </span>
-                  ) : (
-                    <span className="text-xs leading-none ml-0.5">{format(d, "d")}</span>
-                  )}
+                  <div className="hidden sm:block opacity-0 group-hover:opacity-100 transition-opacity">
+                    <QuickAddMenu date={d} onAddEventForDate={onAddEventForDate} onAddTodoForDate={onAddTodoForDate} onAddMealForDate={onAddMealForDate} size="xs" />
+                  </div>
                 </div>
               </div>
               <div className="flex-1 flex flex-col gap-0.5 px-1 pb-1 mt-1 overflow-hidden">
