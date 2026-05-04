@@ -1,0 +1,1 @@
+ALTER TABLE public.daily_logs DROP CONSTRAINT IF EXISTS daily_logs_energy_level_check;
