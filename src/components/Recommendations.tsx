@@ -179,6 +179,14 @@ export function Recommendations({
     return parts.join(" · ");
   };
 
+  const baseServings = openRecipe?.servings && openRecipe.servings > 0 ? openRecipe.servings : 2;
+  const servingFactor = openRecipe ? recipeServings / baseServings : 1;
+  const fmtAmount = (n: number) => {
+    if (!isFinite(n)) return "";
+    const rounded = Math.round(n * 100) / 100;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/\.?0+$/, "");
+  };
+
   return (
     <div className="space-y-2">
       {personalNote() && (
