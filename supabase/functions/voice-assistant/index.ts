@@ -126,6 +126,7 @@ KATEGORIE-ZUORDNUNG (wichtig!):
               title: { type: "string" },
               date: { type: "string" },
               time: { type: "string" },
+              duration_min: { type: "number", description: "Dauer in Minuten. Wenn die Nutzerin sie nennt ('zwei Stunden', 'bis 16 Uhr'), übernimm sie. Sonst Default 60." },
               location: { type: "string" },
               details: { type: "string" },
               confidence: { type: "string", enum: ["high", "medium", "low"] },
