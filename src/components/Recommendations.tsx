@@ -324,14 +324,22 @@ export function Recommendations({
             {recipes.length > 0 && (
               <ul className="space-y-3 mt-3">
                 {recipes.map((r, i) => (
-                  <li key={i} className="border-l-2 pl-3" style={{ borderColor: "hsl(var(--tile-nutrition) / 0.6)" }}>
+                  <li
+                    key={i}
+                    className="border-l-2 pl-3 cursor-pointer rounded-r-md hover:bg-accent/40 transition-colors py-1"
+                    style={{ borderColor: "hsl(var(--tile-nutrition) / 0.6)" }}
+                    onClick={() => { setOpenRecipe(r); setRecipeServings(r.servings && r.servings > 0 ? r.servings : 2); }}
+                  >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="font-medium text-sm">{r.title}</div>
+                      <div className="font-medium text-sm flex items-center gap-1">
+                        {r.title}
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
                       <Button
                         size="sm"
                         variant="ghost"
                         className="h-6 px-2 text-[11px] -mr-2 shrink-0"
-                        onClick={() => addRecipeToDay(r)}
+                        onClick={(e) => { e.stopPropagation(); addRecipeToDay(r); }}
                       >
                         <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
                       </Button>
