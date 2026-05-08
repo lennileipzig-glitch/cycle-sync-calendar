@@ -52,7 +52,14 @@ REGELN:
 - "Plane mir Sport diese Woche / find einen guten Tag für Yoga": tool=smart_plan_sport. Wähle einen Tag in den nächsten 7 Tagen mit wenig Belastung, der zur Phase passt (Krafttraining/HIIT in Follikel/Ovulation, Yoga/Spaziergänge in Menstruation/Luteal).
 - "Plane mir eine Mahlzeit": tool=smart_plan_meal.
 - Datumsangaben relativ ("morgen", "übermorgen", "nächsten Montag") in YYYY-MM-DD umrechnen.
-- Uhrzeiten als HH:mm (24h). Wenn keine Zeit genannt: für Mahlzeiten 12:00 (Mittag), 19:00 (Abend), 08:00 (Frühstück); für Sport 18:00; für Termine 09:00.
+- Uhrzeiten IMMER als HH:mm (24h) extrahieren, wenn die Nutzerin sie nennt. Beispiele:
+  * "um 18 Uhr" → "18:00"
+  * "18 Uhr 30" / "halb sieben abends" → "18:30"
+  * "um 8" (morgens-Kontext: Frühstück/Termin) → "08:00", abends-Kontext (Abendessen, Sport) → "20:00"
+  * "Viertel nach 7" → "07:15", "Viertel vor 8" → "07:45"
+  * "mittags" → "12:00", "abends" → "19:00", "morgens" → "08:00", "nachmittags" → "15:00"
+  Übernimm die genannte Uhrzeit EXAKT — rate nicht und ändere sie nicht.
+- NUR wenn die Nutzerin GAR KEINE Uhrzeit nennt, nutze Defaults: Mahlzeiten 12:00/19:00/08:00, Sport 18:00, Termine 09:00.
 - confidence: "high" wenn Datum, Zeit und Aktion eindeutig sind. "medium" wenn etwas geraten/abgeleitet wurde. "low" wenn vieles unklar.
 
 KATEGORIE-ZUORDNUNG (wichtig!):
