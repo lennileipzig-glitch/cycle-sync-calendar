@@ -151,6 +151,25 @@ KATEGORIE-ZUORDNUNG (wichtig!):
                     why: { type: "string" },
                     uses_from_fridge: { type: "array", items: { type: "string" } },
                     short_steps: { type: "string" },
+                    servings: { type: "number", description: "Standard-Portionenzahl, z.B. 2" },
+                    ingredients: {
+                      type: "array",
+                      description: "Zutatenliste für die angegebene Portionenzahl.",
+                      items: {
+                        type: "object",
+                        properties: {
+                          name: { type: "string" },
+                          amount: { type: "number", description: "Menge als Zahl, z.B. 200" },
+                          unit: { type: "string", description: "Einheit, z.B. 'g', 'ml', 'Stk', 'EL', 'TL', 'Prise'" },
+                        },
+                        required: ["name"],
+                      },
+                    },
+                    steps: {
+                      type: "array",
+                      description: "Kurze Zubereitungsschritte (3-7 Schritte).",
+                      items: { type: "string" },
+                    },
                   },
                   required: ["title", "why"],
                 },
