@@ -48,25 +48,7 @@ export default function Auth() {
     }
   };
 
-  const continueAsGuest = () => {
-    localStorage.setItem("luna-guest-mode", "1");
-    if (!localStorage.getItem("luna-guest-profile")) {
-      localStorage.setItem(
-        "luna-guest-profile",
-        JSON.stringify({
-          display_name: name || "Gast",
-          avg_cycle_length: 28,
-          avg_period_length: 5,
-          last_period_start: null,
-          onboarding_completed: false,
-          in_menopause: false,
-        }),
-      );
-    }
-    // Trigger storage listener in same tab
-    window.dispatchEvent(new Event("storage"));
-    navigate("/", { replace: true });
-  };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-warm">
