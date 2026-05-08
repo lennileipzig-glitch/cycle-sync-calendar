@@ -341,18 +341,27 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
             </div>
           )}
 
-          {pendingAction && pendingAction.action === "suggest_recipe" && (
+          {pendingAction && pendingAction.action === "suggest_recipe" && openRecipeIdx === null && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">{pendingAction.payload.spoken_summary}</p>
               <div className="space-y-2 max-h-[50vh] overflow-y-auto">
                 {pendingAction.payload.recipes.map((r, i) => (
-                  <Card key={i} className="p-3">
-                    <h4 className="font-medium text-sm">{r.title}</h4>
+                  <Card
+                    key={i}
+                    className="p-3 cursor-pointer hover:bg-accent/40 transition-colors"
+                    onClick={() => {
+                      setOpenRecipeIdx(i);
+                      setRecipeServings(r.servings && r.servings > 0 ? r.servings : 2);
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="font-medium text-sm">{r.title}</h4>
+                      <span className="text-[11px] text-muted-foreground shrink-0">Details ›</span>
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">{r.why}</p>
                     {r.uses_from_fridge && r.uses_from_fridge.length > 0 && (
                       <p className="text-xs mt-1.5"><span className="text-muted-foreground">Aus deinem Kühlschrank: </span>{r.uses_from_fridge.join(", ")}</p>
                     )}
-                    {r.short_steps && <p className="text-xs mt-1.5">{r.short_steps}</p>}
                   </Card>
                 ))}
               </div>
@@ -364,6 +373,92 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
               </DialogFooter>
             </div>
           )}
+
+          {pendingAction && pendingAction.action === "suggest_recipe" && openRecipeIdx !== null && (() => {
+            const r = pendingAction.payload.recipes[openRecipeIdx];
+            if (!r) return null;
+            const baseServings = r.servings && r.servings > 0 ? r.servings : 2;
+            const factor = recipeServings / baseServings;
+            const fmtAmount = (n: number) => {
+              if (!isFinite(n)) return "";
+              const rounded = Math.round(n * 100) / 100;
+              return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/\.?0+$/, "");
+            };
+            return (
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="font-medium text-base">{r.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{r.why}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setOpenRecipeIdx(null)} aria-label="Schließen">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <Card className="p-3 flex items-center justify-between">
+                  <Label className="text-xs">Portionen</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setRecipeServings(s => Math.max(1, s - 1))}
+                    >
+                      –
+                    </Button>
+                    <span className="w-8 text-center text-sm font-medium">{recipeServings}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setRecipeServings(s => Math.min(20, s + 1))}
+                    >
+                      +
+                    </Button>
+                  </div>
+                </Card>
+
+                <div className="max-h-[45vh] overflow-y-auto space-y-3">
+                  {r.ingredients && r.ingredients.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Zutaten</h4>
+                      <ul className="text-sm space-y-1">
+                        {r.ingredients.map((ing, j) => (
+                          <li key={j} className="flex justify-between gap-3 border-b border-border/40 py-1">
+                            <span>{ing.name}</span>
+                            <span className="text-muted-foreground tabular-nums shrink-0">
+                              {ing.amount != null ? `${fmtAmount(ing.amount * factor)}${ing.unit ? " " + ing.unit : ""}` : (ing.unit ?? "")}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {r.steps && r.steps.length > 0 ? (
+                    <div>
+                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Zubereitung</h4>
+                      <ol className="text-sm space-y-1.5 list-decimal pl-5">
+                        {r.steps.map((s, j) => <li key={j}>{s}</li>)}
+                      </ol>
+                    </div>
+                  ) : r.short_steps ? (
+                    <div>
+                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Zubereitung</h4>
+                      <p className="text-sm">{r.short_steps}</p>
+                    </div>
+                  ) : null}
+                </div>
+
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setOpenRecipeIdx(null)}>Zurück</Button>
+                </DialogFooter>
+              </div>
+            );
+          })()}
 
           {pendingAction && pendingAction.action === "clarify_category" && (
             <div className="space-y-3">
