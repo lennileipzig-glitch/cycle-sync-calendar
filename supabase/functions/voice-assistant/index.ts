@@ -48,7 +48,7 @@ REGELN:
 - "Ich habe X gegessen/Mahlzeit Y": tool=add_meal mit confidence=high wenn Zeit klar, sonst medium.
 - "Ich habe Sport gebucht/Kurs morgen 18 Uhr": tool=add_sport mit Zeit/Datum.
 - "Termin morgen 14 Uhr Zahnarzt": tool=add_appointment.
-- "Schlag mir ein Rezept vor / was kann ich kochen": tool=suggest_recipe (nutzt Kühlschrank-Inhalt).
+- "Schlag mir ein Rezept vor / was kann ich kochen": tool=suggest_recipe (nutzt Kühlschrank-Inhalt). Liefere 2-4 Rezepte. Für JEDES Rezept IMMER: servings (Standard 2), ingredients (Liste mit name, amount, unit – passend zur Portionenzahl), und steps (3-7 kurze Zubereitungsschritte).
 - "Plane mir Sport diese Woche / find einen guten Tag für Yoga": tool=smart_plan_sport. Wähle einen Tag in den nächsten 7 Tagen mit wenig Belastung, der zur Phase passt (Krafttraining/HIIT in Follikel/Ovulation, Yoga/Spaziergänge in Menstruation/Luteal).
 - "Plane mir eine Mahlzeit": tool=smart_plan_meal.
 - Datumsangaben relativ ("morgen", "übermorgen", "nächsten Montag") in YYYY-MM-DD umrechnen.
@@ -151,6 +151,25 @@ KATEGORIE-ZUORDNUNG (wichtig!):
                     why: { type: "string" },
                     uses_from_fridge: { type: "array", items: { type: "string" } },
                     short_steps: { type: "string" },
+                    servings: { type: "number", description: "Standard-Portionenzahl, z.B. 2" },
+                    ingredients: {
+                      type: "array",
+                      description: "Zutatenliste für die angegebene Portionenzahl.",
+                      items: {
+                        type: "object",
+                        properties: {
+                          name: { type: "string" },
+                          amount: { type: "number", description: "Menge als Zahl, z.B. 200" },
+                          unit: { type: "string", description: "Einheit, z.B. 'g', 'ml', 'Stk', 'EL', 'TL', 'Prise'" },
+                        },
+                        required: ["name"],
+                      },
+                    },
+                    steps: {
+                      type: "array",
+                      description: "Kurze Zubereitungsschritte (3-7 Schritte).",
+                      items: { type: "string" },
+                    },
                   },
                   required: ["title", "why"],
                 },
