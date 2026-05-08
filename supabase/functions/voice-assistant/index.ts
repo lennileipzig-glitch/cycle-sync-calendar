@@ -60,6 +60,7 @@ REGELN:
   * "mittags" → "12:00", "abends" → "19:00", "morgens" → "08:00", "nachmittags" → "15:00"
   Übernimm die genannte Uhrzeit EXAKT — rate nicht und ändere sie nicht.
 - NUR wenn die Nutzerin GAR KEINE Uhrzeit nennt, nutze Defaults: Mahlzeiten 12:00/19:00/08:00, Sport 18:00, Termine 09:00.
+- DAUER (duration_min) IMMER setzen. Wenn die Nutzerin eine Dauer nennt ("zwei Stunden", "eine halbe Stunde", "90 Minuten", "von 15 bis 17 Uhr"), übernimm sie EXAKT. Sonst Defaults: Mahlzeit 30, Sport 60, Termin 60. Bei Sportarten mit typisch längerer Dauer (Handball, Fußball, Wandern, lange Läufe) ruhig 90–120 vorschlagen.
 - confidence: "high" wenn Datum, Zeit und Aktion eindeutig sind. "medium" wenn etwas geraten/abgeleitet wurde. "low" wenn vieles unklar.
 
 KATEGORIE-ZUORDNUNG (wichtig!):
