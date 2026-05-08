@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     const recipeContext = kind === "recipes"
       ? `\nErnährungsstil: ${dietStyle ?? "omnivor"}.${(intolerances ?? []).length ? ` Unverträglichkeiten/Verzicht: ${(intolerances ?? []).join(", ")}.` : ""}${(favoriteFoods ?? []).length ? ` Lieblingszutaten: ${(favoriteFoods ?? []).join(", ")}.` : ""}${fridgeList.length ? ` Verfügbare Zutaten im Kühlschrank, die bevorzugt verwendet werden sollen: ${fridgeList.join(", ")}. Nutze möglichst viele dieser Zutaten und ergänze nur das Nötigste.` : ""}`
       : "";
-    const userMsg = `Aktuelle Zyklusphase: ${phase}. Energielevel: ${energy ?? "unbekannt"}. Beschwerden: ${(symptoms ?? []).join(", ") || "keine"}.${recipeContext} Erstelle ${kind === "recipes" ? "3 passende Rezeptideen mit kurzer Begründung warum sie jetzt guttun" : "3 passende Sport-/Bewegungsempfehlungen mit Dauer und Begründung"}.`;
+    const userMsg = `Aktuelle Zyklusphase: ${phase}. Energielevel: ${energy ?? "unbekannt"}. Beschwerden: ${(symptoms ?? []).join(", ") || "keine"}.${recipeContext} Erstelle ${kind === "recipes" ? "3 passende Rezeptideen mit kurzer Begründung, Zutatenliste mit Mengen für 2 Portionen, und 3-6 kurzen Zubereitungsschritten" : "3 passende Sport-/Bewegungsempfehlungen mit Dauer und Begründung"}.`;
 
     const tool = kind === "recipes" ? {
       type: "function",
@@ -36,8 +36,27 @@ Deno.serve(async (req) => {
                   why: { type: "string", description: "Warum jetzt passend (1 Satz)" },
                   nutrients: { type: "array", items: { type: "string" } },
                   uses_from_fridge: { type: "array", items: { type: "string" }, description: "Welche der vorhandenen Kühlschrank-Zutaten verwendet werden" },
+                  servings: { type: "number", description: "Standard-Portionenzahl, üblich 2." },
+                  ingredients: {
+                    type: "array",
+                    description: "Zutatenliste passend zur Portionenzahl.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string" },
+                        amount: { type: "number", description: "Menge als Zahl, z.B. 200" },
+                        unit: { type: "string", description: "Einheit, z.B. g, ml, Stk, EL, TL, Prise" },
+                      },
+                      required: ["name"],
+                    },
+                  },
+                  steps: {
+                    type: "array",
+                    description: "3-6 kurze Zubereitungsschritte.",
+                    items: { type: "string" },
+                  },
                 },
-                required: ["title", "why", "nutrients"],
+                required: ["title", "why", "nutrients", "servings", "ingredients", "steps"],
               },
             },
           },
