@@ -480,6 +480,79 @@ export function Recommendations({
           </div>
         </Card>
       </div>
+
+      <Dialog open={!!openRecipe} onOpenChange={(o) => { if (!o) setOpenRecipe(null); }}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          {openRecipe && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{openRecipe.title}</DialogTitle>
+                <DialogDescription>{openRecipe.why}</DialogDescription>
+              </DialogHeader>
+
+              <Card className="p-3 flex items-center justify-between">
+                <Label className="text-xs">Portionen</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setRecipeServings(s => Math.max(1, s - 1))}
+                  >
+                    –
+                  </Button>
+                  <span className="w-8 text-center text-sm font-medium">{recipeServings}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setRecipeServings(s => Math.min(20, s + 1))}
+                  >
+                    +
+                  </Button>
+                </div>
+              </Card>
+
+              {openRecipe.ingredients && openRecipe.ingredients.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Zutaten</h4>
+                  <ul className="text-sm space-y-1">
+                    {openRecipe.ingredients.map((ing, j) => (
+                      <li key={j} className="flex justify-between gap-3 border-b border-border/40 py-1">
+                        <span>{ing.name}</span>
+                        <span className="text-muted-foreground tabular-nums shrink-0">
+                          {ing.amount != null ? `${fmtAmount(ing.amount * servingFactor)}${ing.unit ? " " + ing.unit : ""}` : (ing.unit ?? "")}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {openRecipe.steps && openRecipe.steps.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Zubereitung</h4>
+                  <ol className="text-sm space-y-1.5 list-decimal pl-5">
+                    {openRecipe.steps.map((s, j) => <li key={j}>{s}</li>)}
+                  </ol>
+                </div>
+              )}
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpenRecipe(null)}>Schließen</Button>
+                <Button
+                  onClick={() => { addRecipeToDay(openRecipe); setOpenRecipe(null); }}
+                  style={{ background: "hsl(var(--tile-nutrition))", color: "hsl(var(--tile-nutrition-foreground, var(--background)))" }}
+                >
+                  <CalendarPlus className="h-4 w-4 mr-2" /> Zum Tag hinzufügen
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
