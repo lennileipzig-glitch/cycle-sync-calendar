@@ -85,6 +85,7 @@ KATEGORIE-ZUORDNUNG (wichtig!):
               title: { type: "string" },
               date: { type: "string", description: "YYYY-MM-DD" },
               time: { type: "string", description: "HH:mm" },
+              duration_min: { type: "number", description: "Dauer in Minuten. Wenn die Nutzerin sie nennt ('zwei Stunden', 'eine halbe Stunde'), übernimm sie. Sonst: 30 für Mahlzeiten." },
               details: { type: "string" },
               confidence: { type: "string", enum: ["high", "medium", "low"] },
               spoken_summary: { type: "string", description: "Kurze deutsche Bestätigung an die Nutzerin, max 1 Satz" },
