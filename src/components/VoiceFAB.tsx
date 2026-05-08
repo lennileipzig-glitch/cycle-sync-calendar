@@ -119,7 +119,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
     }
     if (!open) {
       stopListening();
-      setTranscript(""); setInterim(""); setPendingAction(null); setProcessing(false); setEditMode(false);
+      setTranscript(""); setInterim(""); setPendingAction(null); setProcessing(false); setEditMode(false); setOpenRecipeIdx(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
