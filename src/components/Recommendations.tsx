@@ -70,7 +70,8 @@ export function Recommendations({
   const [loadingW, setLoadingW] = useState(false);
   const [fridge, setFridge] = useState<string[]>(loadFridge());
   const [fridgeInput, setFridgeInput] = useState("");
-
+  const [openRecipe, setOpenRecipe] = useState<RecipeItem | null>(null);
+  const [recipeServings, setRecipeServings] = useState<number>(2);
   const meals = dayEvents.filter(e => e.category === "mahlzeit");
   const sports = dayEvents.filter(e => e.category === "sport");
 
