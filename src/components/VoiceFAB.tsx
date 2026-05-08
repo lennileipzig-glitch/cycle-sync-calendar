@@ -187,14 +187,9 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
         return;
       }
 
-      // Termin-/Mahlzeit-/Sport-Aktionen
-      const conf = result.payload.confidence;
-      if (conf === "high") {
-        await executeAction(result);
-      } else {
-        setPendingAction(result);
-        setProcessing(false);
-      }
+      // Termin-/Mahlzeit-/Sport-Aktionen: IMMER Bestätigung anzeigen
+      setPendingAction(result);
+      setProcessing(false);
     } catch (e) {
       console.error(e);
       toast({ title: "Fehler", description: e instanceof Error ? e.message : "Unbekannt", variant: "destructive" });
