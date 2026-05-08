@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Salad, Dumbbell, Refrigerator, X, Plus, CalendarPlus, Trash2 } from "lucide-react";
+import { Sparkles, Loader2, Salad, Dumbbell, Refrigerator, X, Plus, CalendarPlus, Trash2, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import type { PhaseInfo } from "@/lib/cycle";
 import { useProfile } from "@/hooks/useProfile";
@@ -16,7 +18,8 @@ import { InlineAddMeal } from "@/components/InlineAddMeal";
 import { InlineAddSport } from "@/components/InlineAddSport";
 import { cn } from "@/lib/utils";
 
-interface RecipeItem { title: string; why: string; nutrients: string[]; uses_from_fridge?: string[]; }
+interface RecipeIngredient { name: string; amount?: number; unit?: string }
+interface RecipeItem { title: string; why: string; nutrients: string[]; uses_from_fridge?: string[]; servings?: number; ingredients?: RecipeIngredient[]; steps?: string[] }
 interface WorkoutItem { title: string; duration: string; intensity: string; why: string; }
 
 const intensityWord = (v: number) => {
@@ -67,7 +70,8 @@ export function Recommendations({
   const [loadingW, setLoadingW] = useState(false);
   const [fridge, setFridge] = useState<string[]>(loadFridge());
   const [fridgeInput, setFridgeInput] = useState("");
-
+  const [openRecipe, setOpenRecipe] = useState<RecipeItem | null>(null);
+  const [recipeServings, setRecipeServings] = useState<number>(2);
   const meals = dayEvents.filter(e => e.category === "mahlzeit");
   const sports = dayEvents.filter(e => e.category === "sport");
 
@@ -173,6 +177,14 @@ export function Recommendations({
     if (energy) parts.push(`Energie: ${energyLabel(energy)}`);
     if (symptoms && symptoms.length > 0) parts.push(`Beschwerden: ${symptoms.slice(0, 3).join(", ")}`);
     return parts.join(" · ");
+  };
+
+  const baseServings = openRecipe?.servings && openRecipe.servings > 0 ? openRecipe.servings : 2;
+  const servingFactor = openRecipe ? recipeServings / baseServings : 1;
+  const fmtAmount = (n: number) => {
+    if (!isFinite(n)) return "";
+    const rounded = Math.round(n * 100) / 100;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/\.?0+$/, "");
   };
 
   return (
@@ -320,14 +332,22 @@ export function Recommendations({
             {recipes.length > 0 && (
               <ul className="space-y-3 mt-3">
                 {recipes.map((r, i) => (
-                  <li key={i} className="border-l-2 pl-3" style={{ borderColor: "hsl(var(--tile-nutrition) / 0.6)" }}>
+                  <li
+                    key={i}
+                    className="border-l-2 pl-3 cursor-pointer rounded-r-md hover:bg-accent/40 transition-colors py-1"
+                    style={{ borderColor: "hsl(var(--tile-nutrition) / 0.6)" }}
+                    onClick={() => { setOpenRecipe(r); setRecipeServings(r.servings && r.servings > 0 ? r.servings : 2); }}
+                  >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="font-medium text-sm">{r.title}</div>
+                      <div className="font-medium text-sm flex items-center gap-1">
+                        {r.title}
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
                       <Button
                         size="sm"
                         variant="ghost"
                         className="h-6 px-2 text-[11px] -mr-2 shrink-0"
-                        onClick={() => addRecipeToDay(r)}
+                        onClick={(e) => { e.stopPropagation(); addRecipeToDay(r); }}
                       >
                         <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
                       </Button>
@@ -460,6 +480,79 @@ export function Recommendations({
           </div>
         </Card>
       </div>
+
+      <Dialog open={!!openRecipe} onOpenChange={(o) => { if (!o) setOpenRecipe(null); }}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          {openRecipe && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{openRecipe.title}</DialogTitle>
+                <DialogDescription>{openRecipe.why}</DialogDescription>
+              </DialogHeader>
+
+              <Card className="p-3 flex items-center justify-between">
+                <Label className="text-xs">Portionen</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setRecipeServings(s => Math.max(1, s - 1))}
+                  >
+                    –
+                  </Button>
+                  <span className="w-8 text-center text-sm font-medium">{recipeServings}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setRecipeServings(s => Math.min(20, s + 1))}
+                  >
+                    +
+                  </Button>
+                </div>
+              </Card>
+
+              {openRecipe.ingredients && openRecipe.ingredients.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Zutaten</h4>
+                  <ul className="text-sm space-y-1">
+                    {openRecipe.ingredients.map((ing, j) => (
+                      <li key={j} className="flex justify-between gap-3 border-b border-border/40 py-1">
+                        <span>{ing.name}</span>
+                        <span className="text-muted-foreground tabular-nums shrink-0">
+                          {ing.amount != null ? `${fmtAmount(ing.amount * servingFactor)}${ing.unit ? " " + ing.unit : ""}` : (ing.unit ?? "")}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {openRecipe.steps && openRecipe.steps.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Zubereitung</h4>
+                  <ol className="text-sm space-y-1.5 list-decimal pl-5">
+                    {openRecipe.steps.map((s, j) => <li key={j}>{s}</li>)}
+                  </ol>
+                </div>
+              )}
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpenRecipe(null)}>Schließen</Button>
+                <Button
+                  onClick={() => { addRecipeToDay(openRecipe); setOpenRecipe(null); }}
+                  style={{ background: "hsl(var(--tile-nutrition))", color: "hsl(var(--tile-nutrition-foreground, var(--background)))" }}
+                >
+                  <CalendarPlus className="h-4 w-4 mr-2" /> Zum Tag hinzufügen
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
