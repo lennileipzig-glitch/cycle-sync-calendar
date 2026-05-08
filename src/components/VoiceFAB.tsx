@@ -487,17 +487,23 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
             </div>
           )}
 
-          {pendingAction && pendingAction.action !== "suggest_recipe" && pendingAction.action !== "clarify" && pendingAction.action !== "clarify_category" && (
+          {pendingAction && pendingAction.action !== "suggest_recipe" && pendingAction.action !== "clarify" && pendingAction.action !== "clarify_category" && (() => {
+            const cat: "termin" | "mahlzeit" | "sport" =
+              pendingAction.action === "add_meal" || pendingAction.action === "smart_plan_meal" ? "mahlzeit" :
+              pendingAction.action === "add_sport" || pendingAction.action === "smart_plan_sport" ? "sport" : "termin";
+            const defaultDur = cat === "mahlzeit" ? 30 : cat === "sport" ? 60 : 60;
+            const effectiveDur = (pendingAction.payload as { duration_min?: number }).duration_min ?? defaultDur;
+            const startsAt = new Date(`${pendingAction.payload.date}T${pendingAction.payload.time}:00`);
+            const endsAt = new Date(startsAt.getTime() + effectiveDur * 60_000);
+            return (
             <div className="space-y-3">
               {!editMode ? (
                 <Card className="p-4 bg-primary/5 border-primary/30">
                   <p className="text-sm font-medium">{pendingAction.payload.spoken_summary}</p>
                   <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
-                    <p>📅 {format(new Date(`${pendingAction.payload.date}T${pendingAction.payload.time}:00`), "EEEE, d. MMMM · HH:mm 'Uhr'", { locale: de })}</p>
+                    <p>📅 {format(startsAt, "EEEE, d. MMMM", { locale: de })}</p>
+                    <p>🕐 {format(startsAt, "HH:mm", { locale: de })} – {format(endsAt, "HH:mm 'Uhr'", { locale: de })} ({effectiveDur} Min.)</p>
                     <p>📝 {pendingAction.payload.title}</p>
-                    {"duration_min" in pendingAction.payload && pendingAction.payload.duration_min && (
-                      <p>⏱️ {pendingAction.payload.duration_min} Min.</p>
-                    )}
                     {"location" in pendingAction.payload && pendingAction.payload.location && (
                       <p>📍 {pendingAction.payload.location}</p>
                     )}
@@ -543,16 +549,17 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
                       type="number"
                       min={5}
                       step={5}
-                      value={("duration_min" in pendingAction.payload && pendingAction.payload.duration_min) || ""}
+                      value={effectiveDur}
                       onChange={(e) => setPendingAction({ ...pendingAction, payload: { ...pendingAction.payload, duration_min: e.target.value ? Number(e.target.value) : undefined } } as VoiceAction)}
                     />
+                    <p className="text-[11px] text-muted-foreground">Endet um {format(endsAt, "HH:mm 'Uhr'", { locale: de })}</p>
                   </div>
-                  {"location" in pendingAction.payload && (
+                  {(pendingAction.action === "add_appointment" || ("location" in pendingAction.payload)) && (
                     <div className="space-y-1">
                       <Label htmlFor="edit-location" className="text-xs">Ort</Label>
                       <Input
                         id="edit-location"
-                        value={pendingAction.payload.location ?? ""}
+                        value={("location" in pendingAction.payload && pendingAction.payload.location) || ""}
                         onChange={(e) => setPendingAction({ ...pendingAction, payload: { ...pendingAction.payload, location: e.target.value } } as VoiceAction)}
                       />
                     </div>
@@ -572,7 +579,8 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
                 </Button>
               </DialogFooter>
             </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </>
