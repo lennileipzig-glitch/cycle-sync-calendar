@@ -278,6 +278,39 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
             <Switch id="ev-allday" checked={allDay} onCheckedChange={setAllDay} />
           </div>
 
+          {!flexible && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="ev-startdate">Startdatum</Label>
+                <Input
+                  id="ev-startdate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setStartDate(v);
+                    if (endDate < v) setEndDate(v);
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ev-enddate">Enddatum</Label>
+                <Input
+                  id="ev-enddate"
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+          {!flexible && endDate > startDate && (
+            <p className="text-xs text-muted-foreground -mt-1">
+              Mehrtägiger Termin: erstreckt sich über {Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000) + 1} Tage.
+            </p>
+          )}
+
           {!allDay && (
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
