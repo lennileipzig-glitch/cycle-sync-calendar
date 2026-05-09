@@ -35,7 +35,7 @@ export default function Imprint() {
             <h3 className="font-semibold">Kontakt</h3>
             <p>
               E-Mail: <a className="underline" href="mailto:fravia@gmx.net">fravia@gmx.net</a><br />
-              Website / App: <a className="underline" href="https://cycle-harmony-planner.lovable.app" target="_blank" rel="noreferrer">https://cycle-harmony-planner.lovable.app</a>
+              Website / App: <a className="underline" href="https://fravia.lovable.app" target="_blank" rel="noreferrer">https://fravia.lovable.app</a>
             </p>
           </section>
 
