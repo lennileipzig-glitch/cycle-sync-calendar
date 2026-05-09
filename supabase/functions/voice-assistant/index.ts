@@ -72,7 +72,8 @@ KATEGORIE-ZUORDNUNG (wichtig!):
 - Nur wenn auch nach Kategorie-Klärung etwas ganz anderes unklar bleibt (z. B. fehlt das Datum) → tool=clarify (offene Rückfrage).
 
 - title kurz und klar ("Yoga-Kurs", "Spaghetti mit Spinat").
-- energy_cost (1-5): leicht=1-2, moderat=3, intensiv=4-5.`;
+- energy_cost (1-5): leicht=1-2, moderat=3, intensiv=4-5.
+- MEHRTÄGIGE EREIGNISSE: Wenn die Nutzerin von einem Termin/Event spricht, der über mehrere Tage geht (z. B. "Tagung von Freitag bis Sonntag", "Konferenz nächste Woche Dienstag bis Donnerstag", "Wochenendtrip", "Urlaub vom 5. bis 12. Mai"), setze date = Startdatum (YYYY-MM-DD), end_date = Enddatum (YYYY-MM-DD), und time = Startuhrzeit, end_time = Endeuhrzeit. Wenn keine konkreten Uhrzeiten genannt werden, nutze 09:00 für time und 18:00 für end_time. Trage es trotzdem ein – frage NICHT zurück, nur weil mehrere Tage involviert sind. Setze confidence auf "medium" wenn Uhrzeiten geraten wurden.`;
 
     const tools = [
       {
@@ -84,8 +85,10 @@ KATEGORIE-ZUORDNUNG (wichtig!):
             type: "object",
             properties: {
               title: { type: "string" },
-              date: { type: "string", description: "YYYY-MM-DD" },
-              time: { type: "string", description: "HH:mm" },
+              date: { type: "string", description: "Startdatum YYYY-MM-DD" },
+              time: { type: "string", description: "Start HH:mm" },
+              end_date: { type: "string", description: "Optionales Enddatum YYYY-MM-DD bei mehrtägigen Mahlzeiten/Events." },
+              end_time: { type: "string", description: "Optionale Endeuhrzeit HH:mm." },
               duration_min: { type: "number", description: "Dauer in Minuten. Wenn die Nutzerin sie nennt ('zwei Stunden', 'eine halbe Stunde'), übernimm sie. Sonst: 30 für Mahlzeiten." },
               details: { type: "string" },
               confidence: { type: "string", enum: ["high", "medium", "low"] },
@@ -104,8 +107,10 @@ KATEGORIE-ZUORDNUNG (wichtig!):
             type: "object",
             properties: {
               title: { type: "string" },
-              date: { type: "string" },
-              time: { type: "string" },
+              date: { type: "string", description: "Startdatum YYYY-MM-DD" },
+              time: { type: "string", description: "Start HH:mm" },
+              end_date: { type: "string", description: "Optionales Enddatum YYYY-MM-DD bei mehrtägigen Sport-Events (z. B. Trainingslager)." },
+              end_time: { type: "string", description: "Optionale Endeuhrzeit HH:mm." },
               duration_min: { type: "number", description: "Dauer in Minuten. Wenn die Nutzerin sie nennt ('zwei Stunden', '90 Minuten'), übernimm sie EXAKT. Sonst Default 60 für Sport." },
               energy_cost: { type: "number", description: "1-5" },
               details: { type: "string" },
@@ -125,8 +130,10 @@ KATEGORIE-ZUORDNUNG (wichtig!):
             type: "object",
             properties: {
               title: { type: "string" },
-              date: { type: "string" },
-              time: { type: "string" },
+              date: { type: "string", description: "Startdatum YYYY-MM-DD" },
+              time: { type: "string", description: "Start HH:mm" },
+              end_date: { type: "string", description: "Optionales Enddatum YYYY-MM-DD bei mehrtägigen Terminen (Tagungen, Konferenzen, Reisen, Urlaub). NUR setzen, wenn der Termin tatsächlich über mehrere Tage geht." },
+              end_time: { type: "string", description: "Optionale Endeuhrzeit HH:mm." },
               duration_min: { type: "number", description: "Dauer in Minuten. Wenn die Nutzerin sie nennt ('zwei Stunden', 'bis 16 Uhr'), übernimm sie. Sonst Default 60." },
               location: { type: "string" },
               details: { type: "string" },
