@@ -79,6 +79,8 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       setTitle(event.title ?? "");
       setDetails(event.details ?? "");
       setAllDay(!!event.all_day);
+      setStartDate(fmtDate(s));
+      setEndDate(fmtDate(e));
       setStartTime(`${pad(s.getHours())}:${pad(s.getMinutes())}`);
       setEndTime(`${pad(e.getHours())}:${pad(e.getMinutes())}`);
       setLocation(event.location ?? "");
@@ -92,6 +94,8 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       setTitle(initialTitle ?? "");
       setDetails(initialDetails ?? "");
       setAllDay(false);
+      setStartDate(fmtDate(date));
+      setEndDate(fmtDate(date));
       // Sinnvolle Default-Zeiten je Kategorie
       const defaultStart =
         initialTime ?? (cat === "mahlzeit" ? "12:00" : cat === "sport" ? "18:00" : "09:00");
