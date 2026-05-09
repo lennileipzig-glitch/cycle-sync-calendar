@@ -27,7 +27,9 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           <Route path="/share/:token" element={<AcceptShare />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/datenschutz" element={<Privacy />} />
           <Route path="/imprint" element={<Imprint />} />
+          <Route path="/impressum" element={<Imprint />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
