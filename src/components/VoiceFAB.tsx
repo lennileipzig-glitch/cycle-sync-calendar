@@ -18,7 +18,7 @@ import type { Profile } from "@/hooks/useProfile";
 type CategoryOption = "termin" | "todo" | "sport" | "ernaehrung";
 
 type VoiceAction =
-  | { action: "add_meal" | "add_sport" | "add_appointment"; payload: { title: string; date: string; time: string; duration_min?: number; energy_cost?: number; location?: string; details?: string; confidence: "high" | "medium" | "low"; spoken_summary: string } }
+  | { action: "add_meal" | "add_sport" | "add_appointment"; payload: { title: string; date: string; time: string; end_date?: string; end_time?: string; duration_min?: number; energy_cost?: number; location?: string; details?: string; confidence: "high" | "medium" | "low"; spoken_summary: string } }
   | { action: "smart_plan_sport" | "smart_plan_meal"; payload: { title: string; date: string; time: string; duration_min?: number; energy_cost?: number; reasoning: string; confidence: "high" | "medium" | "low"; spoken_summary: string } }
   | { action: "suggest_recipe"; payload: { recipes: { title: string; why: string; uses_from_fridge?: string[]; short_steps?: string; servings?: number; ingredients?: { name: string; amount?: number; unit?: string }[]; steps?: string[] }[]; spoken_summary: string } }
   | { action: "clarify_category"; payload: { question: string; options: CategoryOption[]; suggested_title?: string; suggested_date?: string; suggested_time?: string; spoken_summary: string } }
