@@ -40,8 +40,12 @@ export default function Auth() {
           options: { emailRedirectTo: `${window.location.origin}/`, data: { display_name: name } },
         });
         if (error) throw error;
-        toast.success("Willkommen! Du bist eingeloggt.");
-        navigate("/", { replace: true });
+        // Sign out so the user explicitly logs in after registration
+        await supabase.auth.signOut();
+        toast.success("Du hast dich erfolgreich registriert. Bitte melde dich jetzt an.");
+        setMode("signin");
+        setPassword("");
+        setAcceptedPrivacy(false);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
