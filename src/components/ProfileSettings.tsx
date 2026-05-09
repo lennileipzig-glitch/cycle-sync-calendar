@@ -85,9 +85,9 @@ export function ProfileSettings({ profile, userId, onSave }: Props) {
 
             <div className="space-y-2 pt-2 border-t border-border">
               <Label>Daten importieren</Label>
-              <Button variant="outline" className="w-full justify-start" onClick={() => setImportKind("csv")}>
-                <Upload className="h-4 w-4 mr-2" /> Zyklus-CSV (Clue, Flo, Apple Health)
-              </Button>
+              <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+                Kein Import nötig – gib einfach deinen letzten Periodenstart und deine Zykluslänge ein. Fravia lernt mit der Zeit.
+              </div>
               <Button variant="outline" className="w-full justify-start" onClick={() => setImportKind("ics")}>
                 <CalendarIcon className="h-4 w-4 mr-2" /> Kalender (.ics aus Google/Apple)
               </Button>
@@ -101,12 +101,6 @@ export function ProfileSettings({ profile, userId, onSave }: Props) {
       <ImportDialog
         kind={importKind}
         onOpenChange={(o) => !o && setImportKind(null)}
-        onImportLogs={async (logs, earliestPeriodStart) => {
-          await dataApi.bulkInsertLogs(userId, logs);
-          if (earliestPeriodStart && !profile.last_period_start) {
-            await onSave({ last_period_start: earliestPeriodStart });
-          }
-        }}
         onImportEvents={async (events) => {
           await dataApi.addEvents(userId, events.map(e => ({ ...e, source: "ics-import" })));
         }}
