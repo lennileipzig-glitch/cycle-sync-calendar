@@ -450,12 +450,20 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                   const endD = ev.ends_at ? new Date(ev.ends_at) : new Date(startD.getTime() + 60 * 60 * 1000);
                   const Icon = categoryIcon(ev.category);
                   const draggable = !ev._shared_owner_name && !!onMoveEvent;
-                  if (ev.all_day) {
+
+                  // Mehrtägiger Termin: auf jedem Tag im Zeitraum als Banner anzeigen
+                  const dayStart = new Date(d); dayStart.setHours(0, 0, 0, 0);
+                  const dayEnd = new Date(d); dayEnd.setHours(23, 59, 59, 999);
+                  const isMultiDay = !isSameDay(startD, endD);
+
+                  if (ev.all_day || isMultiDay) {
+                    const isFirst = isSameDay(startD, d);
+                    const isLast = isSameDay(endD, d);
                     return (
                       <div
                         key={ev.id}
-                        draggable={draggable}
-                        onDragStart={draggable ? (e) => {
+                        draggable={draggable && !isMultiDay}
+                        onDragStart={draggable && !isMultiDay ? (e) => {
                           e.stopPropagation();
                           e.dataTransfer.effectAllowed = "move";
                           e.dataTransfer.setData("application/x-luna-event", JSON.stringify(ev));
@@ -465,12 +473,18 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                           "absolute inset-x-0.5 top-0.5 px-1.5 py-0.5 rounded text-[10px] truncate cursor-pointer border-l-2",
                           phaseFill[phase],
                           categoryAccent(ev.category),
-                          draggable && "cursor-grab active:cursor-grabbing",
+                          draggable && !isMultiDay && "cursor-grab active:cursor-grabbing",
                         )}
                         style={{ borderLeftColor: `hsl(var(--phase-${phase}))` }}
+                        title={isMultiDay ? `${ev.title} · ${format(startD, "d.M.")} – ${format(endD, "d.M.")}` : ev.title}
                       >
                         {Icon && <Icon className="inline h-2.5 w-2.5 mr-0.5 opacity-70" />}
                         {ev.title}
+                        {isMultiDay && !ev.all_day && (
+                          <span className="ml-1 text-muted-foreground">
+                            {isFirst ? `ab ${format(startD, "HH:mm")}` : isLast ? `bis ${format(endD, "HH:mm")}` : "ganztägig"}
+                          </span>
+                        )}
                       </div>
                     );
                   }

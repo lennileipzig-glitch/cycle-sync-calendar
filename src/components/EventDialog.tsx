@@ -56,6 +56,8 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [allDay, setAllDay] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
   const [location, setLocation] = useState("");
@@ -77,6 +79,8 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       setTitle(event.title ?? "");
       setDetails(event.details ?? "");
       setAllDay(!!event.all_day);
+      setStartDate(fmtDate(s));
+      setEndDate(fmtDate(e));
       setStartTime(`${pad(s.getHours())}:${pad(s.getMinutes())}`);
       setEndTime(`${pad(e.getHours())}:${pad(e.getMinutes())}`);
       setLocation(event.location ?? "");
@@ -90,6 +94,8 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       setTitle(initialTitle ?? "");
       setDetails(initialDetails ?? "");
       setAllDay(false);
+      setStartDate(fmtDate(date));
+      setEndDate(fmtDate(date));
       // Sinnvolle Default-Zeiten je Kategorie
       const defaultStart =
         initialTime ?? (cat === "mahlzeit" ? "12:00" : cat === "sport" ? "18:00" : "09:00");
@@ -122,21 +128,27 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       toast.error("Bitte ein Enddatum für die Wiederholung wählen.");
       return;
     }
+    if (endDate < startDate) {
+      toast.error("Das Enddatum darf nicht vor dem Startdatum liegen.");
+      return;
+    }
     setSaving(true);
     try {
-      const dateStr = fmtDate(targetDate);
-      const toLocalIso = (timeStr: string) => {
+      // Bei "Flexibler Tag" wird auf einen einzelnen passenden Tag geplant
+      const startDateStr = flexible ? fmtDate(targetDate) : startDate;
+      const endDateStr = flexible ? fmtDate(targetDate) : endDate;
+      const toLocalIso = (dateStr: string, timeStr: string) => {
         const [h, m] = timeStr.split(":").map(Number);
-        const d = new Date(targetDate);
+        const d = new Date(`${dateStr}T00:00:00`);
         d.setHours(h, m, 0, 0);
         return d.toISOString();
       };
       const starts_at = allDay
-        ? new Date(`${dateStr}T00:00:00`).toISOString()
-        : toLocalIso(startTime);
+        ? new Date(`${startDateStr}T00:00:00`).toISOString()
+        : toLocalIso(startDateStr, startTime);
       const ends_at = allDay
-        ? new Date(`${dateStr}T23:59:59`).toISOString()
-        : toLocalIso(endTime);
+        ? new Date(`${endDateStr}T23:59:59`).toISOString()
+        : toLocalIso(endDateStr, endTime);
 
       const payload = {
         title: title.trim(),
@@ -265,6 +277,39 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
             <Label htmlFor="ev-allday">Ganztägig</Label>
             <Switch id="ev-allday" checked={allDay} onCheckedChange={setAllDay} />
           </div>
+
+          {!flexible && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="ev-startdate">Startdatum</Label>
+                <Input
+                  id="ev-startdate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setStartDate(v);
+                    if (endDate < v) setEndDate(v);
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ev-enddate">Enddatum</Label>
+                <Input
+                  id="ev-enddate"
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+          {!flexible && endDate > startDate && (
+            <p className="text-xs text-muted-foreground -mt-1">
+              Mehrtägiger Termin: erstreckt sich über {Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000) + 1} Tage.
+            </p>
+          )}
 
           {!allDay && (
             <div className="grid grid-cols-2 gap-3">

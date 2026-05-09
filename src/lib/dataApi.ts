@@ -150,7 +150,11 @@ export const dataApi = {
 
   async getEventsForDate(userId: string | null, date: string): Promise<GuestEvent[]> {
     const all = await this.getEvents(userId);
-    return all.filter(e => e.starts_at.slice(0, 10) === date);
+    return all.filter(e => {
+      const s = e.starts_at.slice(0, 10);
+      const en = (e.ends_at ?? e.starts_at).slice(0, 10);
+      return s <= date && date <= en;
+    });
   },
 
   async addEvents(userId: string | null, events: Omit<GuestEvent, "id">[], opts?: { sharedVia?: string; ownerUserId?: string }): Promise<GuestEvent[]> {

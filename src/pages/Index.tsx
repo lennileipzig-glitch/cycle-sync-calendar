@@ -145,8 +145,19 @@ const Index = () => {
   const eventsByDay = useMemo(() => {
     const m: Record<string, GuestEvent[]> = {};
     allEvents.forEach(e => {
-      const k = e.starts_at.slice(0, 10);
-      (m[k] ??= []).push(e);
+      const startKey = e.starts_at.slice(0, 10);
+      const endKey = (e.ends_at ?? e.starts_at).slice(0, 10);
+      if (startKey === endKey) {
+        (m[startKey] ??= []).push(e);
+        return;
+      }
+      // Mehrtägiges Event: an jedem Tag im Zeitraum eintragen
+      const start = new Date(`${startKey}T00:00:00`);
+      const end = new Date(`${endKey}T00:00:00`);
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        (m[k] ??= []).push(e);
+      }
     });
     return m;
   }, [allEvents]);
