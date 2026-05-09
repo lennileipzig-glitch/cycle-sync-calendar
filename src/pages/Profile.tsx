@@ -395,13 +395,6 @@ export default function Profile() {
       <ImportDialog
         kind={importKind}
         onOpenChange={(o) => !o && setImportKind(null)}
-        onImportLogs={async (logs, earliestPeriodStart) => {
-          await dataApi.bulkInsertLogs(userId, logs);
-          if (earliestPeriodStart && !profile.last_period_start) {
-            await update({ last_period_start: earliestPeriodStart });
-          }
-          toast.success(`${logs.length} Einträge importiert`);
-        }}
         onImportEvents={async (events) => {
           await dataApi.addEvents(userId, events.map(e => ({ ...e, source: "ics-import" })));
           toast.success(`${events.length} Termine importiert`);
