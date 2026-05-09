@@ -316,6 +316,7 @@ const Index = () => {
                   setAllEvents(await dataApi.getEvents(userId));
                 }}
                 onSelectEvent={(ev) => { setEditEvent(ev); setQuickAddDate(new Date(ev.starts_at)); setQuickAddCategory(ev.category ?? "termin"); setLockEventCategory(false); setEventDialogOpen(true); }}
+                onSelectTodo={(t, d) => { setEditTodo({ id: t.id, title: t.title, completed: t.completed }); setQuickAddDate(d); setTodoDialogOpen(true); }}
               />
             </Card>
           )}
