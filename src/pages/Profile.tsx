@@ -179,63 +179,20 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border border-border p-3">
-                <div>
-                  <div className="text-sm font-medium">Ich bin in der Menopause</div>
-                  <div className="text-xs text-muted-foreground">Fravia fokussiert auf Energie & Wohlbefinden statt Zyklusphase.</div>
-                </div>
-                <Switch checked={meno} onCheckedChange={setMeno} />
+              <div className="space-y-2">
+                <Label>Letzter Periodenstart</Label>
+                <Input type="date" value={lastPeriod} onChange={e => setLastPeriod(e.target.value)} />
               </div>
-
-              <div className="space-y-2 rounded-lg border border-border p-3">
-                <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                  <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  <span>
-                    <strong className="text-foreground">Endometriose</strong> ist eine chronische Erkrankung, bei der gebärmutterschleimhautähnliches Gewebe außerhalb der Gebärmutter wächst. Häufige Anzeichen: starke Regelschmerzen, Schmerzen im Becken, Erschöpfung. Fravia berücksichtigt das in ihren Empfehlungen.
-                  </span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Zykluslänge (Tage)</Label>
+                  <Input type="number" min={20} max={45} value={cycleLen} onChange={e => setCycleLen(+e.target.value)} />
                 </div>
-
-                <div className="flex items-center justify-between pt-2 border-t border-border/60">
-                  <div className="pr-3">
-                    <div className="text-sm font-medium">Ich habe diagnostizierte Endometriose</div>
-                    <div className="text-xs text-muted-foreground">Ärztlich bestätigt (z. B. per Laparoskopie).</div>
-                  </div>
-                  <Switch
-                    checked={endoStatus === "diagnosed"}
-                    onCheckedChange={(v) => setEndoStatus(v ? "diagnosed" : "none")}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pt-2 border-t border-border/60">
-                  <div className="pr-3">
-                    <div className="text-sm font-medium">Bei mir ist Verdacht auf Endometriose</div>
-                    <div className="text-xs text-muted-foreground">Symptome passen, aber noch keine gesicherte Diagnose.</div>
-                  </div>
-                  <Switch
-                    checked={endoStatus === "suspected"}
-                    onCheckedChange={(v) => setEndoStatus(v ? "suspected" : "none")}
-                  />
+                <div className="space-y-2">
+                  <Label>Periodendauer</Label>
+                  <Input type="number" min={2} max={10} value={periodLen} onChange={e => setPeriodLen(+e.target.value)} />
                 </div>
               </div>
-
-              {!meno && (
-                <>
-                  <div className="space-y-2">
-                    <Label>Letzter Periodenstart</Label>
-                    <Input type="date" value={lastPeriod} onChange={e => setLastPeriod(e.target.value)} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>Zykluslänge (Tage)</Label>
-                      <Input type="number" min={20} max={45} value={cycleLen} onChange={e => setCycleLen(+e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Periodendauer</Label>
-                      <Input type="number" min={2} max={10} value={periodLen} onChange={e => setPeriodLen(+e.target.value)} />
-                    </div>
-                  </div>
-                </>
-              )}
 
               <Button onClick={saveProfileBasics} className="w-full"><Save className="h-4 w-4 mr-2" /> Speichern</Button>
             </Card>
