@@ -252,10 +252,15 @@ const Index = () => {
             <Button variant="ghost" size="icon" onClick={navigateNext}><ChevronRight className="h-4 w-4" /></Button>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="rounded-full gap-1.5" onClick={() => setShareOpen(true)}>
-              <Share2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Teilen</span>
-            </Button>
+            <div className="relative">
+              <Button variant="outline" size="sm" className="rounded-full gap-1.5" disabled>
+                <Share2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Teilen</span>
+              </Button>
+              <span className="absolute -top-2 -right-2 text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                Coming soon
+              </span>
+            </div>
             <div className="flex items-center gap-1 bg-muted rounded-full p-1">
               {ZOOM_ORDER.map(z => (
                 <Button key={z} variant={zoom === z ? "default" : "ghost"} size="sm" className="rounded-full" onClick={() => setZoom(z)}>
