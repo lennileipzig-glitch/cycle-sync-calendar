@@ -208,8 +208,11 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground">{t("settings.privacy_body")}</p>
             </div>
           </div>
-          <Button variant="link" className="p-0 h-auto justify-start" onClick={() => window.open("/privacy", "_blank")}>
+          <Button variant="link" className="p-0 h-auto justify-start" onClick={() => navigate("/privacy")}>
             {t("settings.privacy_link")} <ExternalLink className="h-3 w-3 ml-1" />
+          </Button>
+          <Button variant="link" className="p-0 h-auto justify-start" onClick={() => navigate("/imprint")}>
+            Impressum <ExternalLink className="h-3 w-3 ml-1" />
           </Button>
         </Card>
 
