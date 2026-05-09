@@ -538,8 +538,17 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                 >
                   <ul className="space-y-0.5">
                     {todos.slice(0, 3).map(t => (
-                      <li key={t.id} className={cn("text-[10px] leading-tight truncate", t.completed && "line-through opacity-60")}>
-                        • {t.title}
+                      <li key={t.id}>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onSelectTodo?.(t, d); }}
+                          className={cn(
+                            "w-full text-left text-[10px] leading-tight truncate hover:text-primary transition-colors",
+                            t.completed && "line-through opacity-60"
+                          )}
+                        >
+                          • {t.title}
+                        </button>
                       </li>
                     ))}
                     {todos.length > 3 && (
