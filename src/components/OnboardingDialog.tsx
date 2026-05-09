@@ -40,7 +40,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
   const [knowsPeriod, setKnowsPeriod] = useState<"yes" | "no" | "">("");
   const [periodLen, setPeriodLen] = useState(5);
   const [endoStatus, setEndoStatus] = useState<EndometriosisStatus>("none");
-  const [importOpen, setImportOpen] = useState<"csv" | "ics" | null>(null);
+  const [importOpen, setImportOpen] = useState<"ics" | null>(null);
 
   const totalSteps = 5;
   const next = () => setStep(s => Math.min(s + 1, totalSteps - 1));
