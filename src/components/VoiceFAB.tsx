@@ -239,7 +239,11 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
       act.action === "add_sport" || act.action === "smart_plan_sport" ? "sport" : "termin";
     const startsAt = new Date(`${p.date}T${p.time}:00`);
     const dur = "duration_min" in p && p.duration_min ? p.duration_min : (category === "mahlzeit" ? 30 : category === "sport" ? 60 : 60);
-    const endsAt = new Date(startsAt.getTime() + dur * 60_000);
+    const endDate = ("end_date" in p && p.end_date) ? p.end_date : null;
+    const endTime = ("end_time" in p && p.end_time) ? p.end_time : null;
+    const endsAt = endDate
+      ? new Date(`${endDate}T${endTime ?? p.time}:00`)
+      : new Date(startsAt.getTime() + dur * 60_000);
 
     const eventInput: Omit<GuestEvent, "id"> = {
       title: p.title,
