@@ -161,28 +161,30 @@ export default function Settings() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+          <div className="flex items-center justify-between rounded-lg border border-border p-3 relative">
             <div>
               <div className="text-sm font-medium">Benachrichtigungen aktivieren</div>
-              <div className="text-xs text-muted-foreground">Du kannst es jederzeit wieder ausschalten.</div>
+              <div className="text-xs text-muted-foreground">Push-Notifications folgen in Kürze.</div>
             </div>
-            <Switch checked={notifEnabled} onCheckedChange={setNotifEnabled} />
+            <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+              Coming soon
+            </span>
           </div>
 
           <div className="space-y-2">
             <Label>Bevorzugte Uhrzeit</Label>
-            <Input type="time" value={notifTime} onChange={e => setNotifTime(e.target.value)} disabled={!notifEnabled} />
+            <Input type="time" value={notifTime} onChange={e => setNotifTime(e.target.value)} disabled />
           </div>
 
           <div className="space-y-2">
             <Label>Themen</Label>
             <div className="space-y-2">
               {NOTIFICATION_TOPIC_OPTIONS.map(topic => (
-                <label key={topic.id} className="flex items-start gap-3 p-3 rounded-lg border border-border cursor-pointer hover:bg-muted/40 transition">
+                <label key={topic.id} className="flex items-start gap-3 p-3 rounded-lg border border-border opacity-60">
                   <Checkbox
                     checked={notifTopics.includes(topic.id)}
                     onCheckedChange={() => toggleTopic(topic.id)}
-                    disabled={!notifEnabled}
+                    disabled
                     className="mt-0.5"
                   />
                   <div className="flex-1">
@@ -194,7 +196,7 @@ export default function Settings() {
             </div>
           </div>
 
-          <Button onClick={saveNotifications} className="w-full">
+          <Button onClick={saveNotifications} className="w-full" disabled>
             <Save className="h-4 w-4 mr-2" /> {t("app.save")}
           </Button>
         </Card>
@@ -290,14 +292,14 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground">{t("settings.rate_body")}</p>
             </div>
           </div>
-          <Button
-            variant="default"
-            className="w-full"
-            onClick={() => { setRated(true); toast.success(t("settings.rate_thanks")); }}
-            disabled={rated}
-          >
-            <Star className="h-4 w-4 mr-2" /> {rated ? t("settings.rate_thanks") : t("settings.rate_cta")}
-          </Button>
+          <div className="relative">
+            <Button variant="default" className="w-full" disabled>
+              <Star className="h-4 w-4 mr-2" /> {t("settings.rate_cta")}
+            </Button>
+            <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary-foreground/20 text-primary-foreground font-medium">
+              Coming soon
+            </span>
+          </div>
         </Card>
       </main>
     </div>
