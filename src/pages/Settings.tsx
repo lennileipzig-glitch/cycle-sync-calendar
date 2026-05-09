@@ -292,14 +292,14 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground">{t("settings.rate_body")}</p>
             </div>
           </div>
-          <Button
-            variant="default"
-            className="w-full"
-            onClick={() => { setRated(true); toast.success(t("settings.rate_thanks")); }}
-            disabled={rated}
-          >
-            <Star className="h-4 w-4 mr-2" /> {rated ? t("settings.rate_thanks") : t("settings.rate_cta")}
-          </Button>
+          <div className="relative">
+            <Button variant="default" className="w-full" disabled>
+              <Star className="h-4 w-4 mr-2" /> {t("settings.rate_cta")}
+            </Button>
+            <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary-foreground/20 text-primary-foreground font-medium">
+              Coming soon
+            </span>
+          </div>
         </Card>
       </main>
     </div>
