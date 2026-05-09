@@ -40,7 +40,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
   const [knowsPeriod, setKnowsPeriod] = useState<"yes" | "no" | "">("");
   const [periodLen, setPeriodLen] = useState(5);
   const [endoStatus, setEndoStatus] = useState<EndometriosisStatus>("none");
-  const [importOpen, setImportOpen] = useState<"csv" | "ics" | null>(null);
+  const [importOpen, setImportOpen] = useState<"ics" | null>(null);
 
   const totalSteps = 5;
   const next = () => setStep(s => Math.min(s + 1, totalSteps - 1));
@@ -213,14 +213,13 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
             {step === 4 && (
               <div className="space-y-3">
                 <Label>Daten importieren (optional)</Label>
-                <p className="text-sm text-muted-foreground">Du kannst Daten aus deiner bisherigen Zyklus-App und deinem Kalender mitbringen.</p>
-                <Button variant="outline" className="w-full justify-start" onClick={() => setImportOpen("csv")}>
-                  <Upload className="h-4 w-4 mr-2" /> Zyklusdaten als CSV importieren
-                </Button>
+                <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                  Kein Import nötig – gib einfach deinen letzten Periodenstart und deine Zykluslänge ein. Fravia lernt mit der Zeit.
+                </div>
                 <Button variant="outline" className="w-full justify-start" onClick={() => setImportOpen("ics")}>
                   <CalendarIcon className="h-4 w-4 mr-2" /> Termine aus .ics-Datei importieren
                 </Button>
-                <p className="text-xs text-muted-foreground">Beides geht später jederzeit in den Einstellungen.</p>
+                <p className="text-xs text-muted-foreground">Du kannst Kalendertermine auch später jederzeit in den Einstellungen importieren.</p>
               </div>
             )}
           </div>
@@ -243,7 +242,6 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
       <ImportDialog
         kind={importOpen}
         onOpenChange={(o) => !o && setImportOpen(null)}
-        onImportLogs={onImportLogs}
         onImportEvents={onImportEvents}
       />
     </>

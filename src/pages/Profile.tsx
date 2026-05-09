@@ -44,7 +44,7 @@ export default function Profile() {
   const userId = user?.id ?? null;
   const { profile, update, loading } = useProfile(user?.id, guest);
 
-  const [importKind, setImportKind] = useState<"csv" | "ics" | null>(null);
+  const [importKind, setImportKind] = useState<"ics" | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
 
   // Lokale Form-States
@@ -284,16 +284,14 @@ export default function Profile() {
             <Card className="p-5 space-y-3">
               <div>
                 <h2 className="text-lg">Daten importieren</h2>
-                <p className="text-sm text-muted-foreground">Übernimm Daten aus deinem bisherigen Kalender oder deiner Zyklus-App.</p>
+                <p className="text-sm text-muted-foreground">Übernimm Termine aus deinem bisherigen Kalender.</p>
               </div>
-              <div className="grid sm:grid-cols-2 gap-2">
-                <Button variant="outline" className="justify-start" onClick={() => setImportKind("csv")}>
-                  <Upload className="h-4 w-4 mr-2" /> Zyklus-CSV (Clue, Flo, Apple Health)
-                </Button>
-                <Button variant="outline" className="justify-start" onClick={() => setImportKind("ics")}>
-                  <CalendarIcon className="h-4 w-4 mr-2" /> Kalender (.ics aus Google/Apple)
-                </Button>
+              <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                Kein Import nötig – gib einfach deinen letzten Periodenstart und deine Zykluslänge ein. Fravia lernt mit der Zeit.
               </div>
+              <Button variant="outline" className="w-full justify-start" onClick={() => setImportKind("ics")}>
+                <CalendarIcon className="h-4 w-4 mr-2" /> Kalender (.ics aus Google/Apple)
+              </Button>
             </Card>
 
             {/* Kalender teilen */}
@@ -397,13 +395,6 @@ export default function Profile() {
       <ImportDialog
         kind={importKind}
         onOpenChange={(o) => !o && setImportKind(null)}
-        onImportLogs={async (logs, earliestPeriodStart) => {
-          await dataApi.bulkInsertLogs(userId, logs);
-          if (earliestPeriodStart && !profile.last_period_start) {
-            await update({ last_period_start: earliestPeriodStart });
-          }
-          toast.success(`${logs.length} Einträge importiert`);
-        }}
         onImportEvents={async (events) => {
           await dataApi.addEvents(userId, events.map(e => ({ ...e, source: "ics-import" })));
           toast.success(`${events.length} Termine importiert`);
