@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 import { lovable } from "@/integrations/lovable";
@@ -16,6 +17,7 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,6 +28,10 @@ export default function Auth() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === "signup" && !acceptedPrivacy) {
+      toast.error("Bitte stimme der Datenschutzerklärung zu.");
+      return;
+    }
     setBusy(true);
     try {
       if (mode === "signup") {
@@ -91,7 +97,24 @@ export default function Auth() {
             <Label htmlFor="pw">Passwort</Label>
             <PasswordInput id="pw" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
-          <Button type="submit" className="w-full" disabled={busy}>
+          {mode === "signup" && (
+            <label className="flex items-start gap-2 text-sm text-muted-foreground cursor-pointer">
+              <Checkbox
+                checked={acceptedPrivacy}
+                onCheckedChange={(v) => setAcceptedPrivacy(v === true)}
+                className="mt-0.5"
+                aria-label="Datenschutzerklärung akzeptieren"
+              />
+              <span>
+                Ich habe die{" "}
+                <a href="/datenschutz" target="_blank" rel="noreferrer" className="underline text-foreground hover:text-primary">
+                  Datenschutzerklärung
+                </a>{" "}
+                gelesen und stimme ihr zu.
+              </span>
+            </label>
+          )}
+          <Button type="submit" className="w-full" disabled={busy || (mode === "signup" && !acceptedPrivacy)}>
             {busy ? "Moment..." : mode === "signup" ? "Konto erstellen" : "Anmelden"}
           </Button>
         </form>
