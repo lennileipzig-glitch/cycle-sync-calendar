@@ -9,6 +9,8 @@ import Profile from "./pages/Profile.tsx";
 import Settings from "./pages/Settings.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AcceptShare from "./pages/AcceptShare.tsx";
+import Privacy from "./pages/Privacy.tsx";
+import Imprint from "./pages/Imprint.tsx";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/share/:token" element={<AcceptShare />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/imprint" element={<Imprint />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
