@@ -241,6 +241,7 @@ interface WeekProps extends DataMaps, QuickAdd {
   profile: Profile | null;
   moodByDay?: Record<string, { energy?: string | null; symptoms?: string[] }>;
   onSelectEvent?: (e: GuestEvent) => void;
+  onSelectTodo?: (t: { id: string; title: string; completed: boolean }, d: Date) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i); // klickbare Slots: 0:00 – 23:00
