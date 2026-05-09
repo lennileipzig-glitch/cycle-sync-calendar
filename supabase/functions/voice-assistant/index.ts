@@ -130,8 +130,10 @@ KATEGORIE-ZUORDNUNG (wichtig!):
             type: "object",
             properties: {
               title: { type: "string" },
-              date: { type: "string" },
-              time: { type: "string" },
+              date: { type: "string", description: "Startdatum YYYY-MM-DD" },
+              time: { type: "string", description: "Start HH:mm" },
+              end_date: { type: "string", description: "Optionales Enddatum YYYY-MM-DD bei mehrtägigen Terminen (Tagungen, Konferenzen, Reisen, Urlaub). NUR setzen, wenn der Termin tatsächlich über mehrere Tage geht." },
+              end_time: { type: "string", description: "Optionale Endeuhrzeit HH:mm." },
               duration_min: { type: "number", description: "Dauer in Minuten. Wenn die Nutzerin sie nennt ('zwei Stunden', 'bis 16 Uhr'), übernimm sie. Sonst Default 60." },
               location: { type: "string" },
               details: { type: "string" },
