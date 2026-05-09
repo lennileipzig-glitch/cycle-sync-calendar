@@ -496,17 +496,30 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
               pendingAction.action === "add_meal" || pendingAction.action === "smart_plan_meal" ? "mahlzeit" :
               pendingAction.action === "add_sport" || pendingAction.action === "smart_plan_sport" ? "sport" : "termin";
             const defaultDur = cat === "mahlzeit" ? 30 : cat === "sport" ? 60 : 60;
-            const effectiveDur = (pendingAction.payload as { duration_min?: number }).duration_min ?? defaultDur;
-            const startsAt = new Date(`${pendingAction.payload.date}T${pendingAction.payload.time}:00`);
-            const endsAt = new Date(startsAt.getTime() + effectiveDur * 60_000);
+            const payload = pendingAction.payload as { date: string; time: string; end_date?: string; end_time?: string; duration_min?: number };
+            const effectiveDur = payload.duration_min ?? defaultDur;
+            const startsAt = new Date(`${payload.date}T${payload.time}:00`);
+            const isMultiDay = !!(payload.end_date && payload.end_date !== payload.date);
+            const endsAt = isMultiDay
+              ? new Date(`${payload.end_date}T${(payload.end_time ?? payload.time)}:00`)
+              : new Date(startsAt.getTime() + effectiveDur * 60_000);
             return (
             <div className="space-y-3">
               {!editMode ? (
                 <Card className="p-4 bg-primary/5 border-primary/30">
                   <p className="text-sm font-medium">{pendingAction.payload.spoken_summary}</p>
                   <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
-                    <p>📅 {format(startsAt, "EEEE, d. MMMM", { locale: de })}</p>
-                    <p>🕐 {format(startsAt, "HH:mm", { locale: de })} – {format(endsAt, "HH:mm 'Uhr'", { locale: de })} ({effectiveDur} Min.)</p>
+                    {isMultiDay ? (
+                      <>
+                        <p>📅 {format(startsAt, "EEE d. MMM", { locale: de })} – {format(endsAt, "EEE d. MMM", { locale: de })}</p>
+                        <p>🕐 {format(startsAt, "HH:mm", { locale: de })} – {format(endsAt, "HH:mm 'Uhr'", { locale: de })}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p>📅 {format(startsAt, "EEEE, d. MMMM", { locale: de })}</p>
+                        <p>🕐 {format(startsAt, "HH:mm", { locale: de })} – {format(endsAt, "HH:mm 'Uhr'", { locale: de })} ({effectiveDur} Min.)</p>
+                      </>
+                    )}
                     <p>📝 {pendingAction.payload.title}</p>
                     {"location" in pendingAction.payload && pendingAction.payload.location && (
                       <p>📍 {pendingAction.payload.location}</p>
@@ -528,7 +541,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <Label htmlFor="edit-date" className="text-xs">Datum</Label>
+                      <Label htmlFor="edit-date" className="text-xs">Startdatum</Label>
                       <Input
                         id="edit-date"
                         type="date"
@@ -546,18 +559,40 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
                       />
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="edit-duration" className="text-xs">Dauer (Min.)</Label>
-                    <Input
-                      id="edit-duration"
-                      type="number"
-                      min={5}
-                      step={5}
-                      value={effectiveDur}
-                      onChange={(e) => setPendingAction({ ...pendingAction, payload: { ...pendingAction.payload, duration_min: e.target.value ? Number(e.target.value) : undefined } } as VoiceAction)}
-                    />
-                    <p className="text-[11px] text-muted-foreground">Endet um {format(endsAt, "HH:mm 'Uhr'", { locale: de })}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="edit-end-date" className="text-xs">Enddatum (optional)</Label>
+                      <Input
+                        id="edit-end-date"
+                        type="date"
+                        value={payload.end_date ?? ""}
+                        onChange={(e) => setPendingAction({ ...pendingAction, payload: { ...pendingAction.payload, end_date: e.target.value || undefined } } as VoiceAction)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="edit-end-time" className="text-xs">Uhrzeit (Ende)</Label>
+                      <Input
+                        id="edit-end-time"
+                        type="time"
+                        value={payload.end_time ?? payload.time}
+                        onChange={(e) => setPendingAction({ ...pendingAction, payload: { ...pendingAction.payload, end_time: e.target.value || undefined } } as VoiceAction)}
+                      />
+                    </div>
                   </div>
+                  {!isMultiDay && (
+                    <div className="space-y-1">
+                      <Label htmlFor="edit-duration" className="text-xs">Dauer (Min.)</Label>
+                      <Input
+                        id="edit-duration"
+                        type="number"
+                        min={5}
+                        step={5}
+                        value={effectiveDur}
+                        onChange={(e) => setPendingAction({ ...pendingAction, payload: { ...pendingAction.payload, duration_min: e.target.value ? Number(e.target.value) : undefined } } as VoiceAction)}
+                      />
+                      <p className="text-[11px] text-muted-foreground">Endet um {format(endsAt, "HH:mm 'Uhr'", { locale: de })}</p>
+                    </div>
+                  )}
                   {(pendingAction.action === "add_appointment" || ("location" in pendingAction.payload)) && (
                     <div className="space-y-1">
                       <Label htmlFor="edit-location" className="text-xs">Ort</Label>
