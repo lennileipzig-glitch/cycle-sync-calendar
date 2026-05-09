@@ -44,7 +44,7 @@ export default function Profile() {
   const userId = user?.id ?? null;
   const { profile, update, loading } = useProfile(user?.id, guest);
 
-  const [importKind, setImportKind] = useState<"csv" | "ics" | null>(null);
+  const [importKind, setImportKind] = useState<"ics" | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
 
   // Lokale Form-States
