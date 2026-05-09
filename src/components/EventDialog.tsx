@@ -56,6 +56,8 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [allDay, setAllDay] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
   const [location, setLocation] = useState("");
