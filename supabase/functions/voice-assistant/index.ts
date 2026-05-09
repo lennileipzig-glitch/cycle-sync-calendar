@@ -107,8 +107,10 @@ KATEGORIE-ZUORDNUNG (wichtig!):
             type: "object",
             properties: {
               title: { type: "string" },
-              date: { type: "string" },
-              time: { type: "string" },
+              date: { type: "string", description: "Startdatum YYYY-MM-DD" },
+              time: { type: "string", description: "Start HH:mm" },
+              end_date: { type: "string", description: "Optionales Enddatum YYYY-MM-DD bei mehrtägigen Sport-Events (z. B. Trainingslager)." },
+              end_time: { type: "string", description: "Optionale Endeuhrzeit HH:mm." },
               duration_min: { type: "number", description: "Dauer in Minuten. Wenn die Nutzerin sie nennt ('zwei Stunden', '90 Minuten'), übernimm sie EXAKT. Sonst Default 60 für Sport." },
               energy_cost: { type: "number", description: "1-5" },
               details: { type: "string" },
