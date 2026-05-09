@@ -85,8 +85,10 @@ KATEGORIE-ZUORDNUNG (wichtig!):
             type: "object",
             properties: {
               title: { type: "string" },
-              date: { type: "string", description: "YYYY-MM-DD" },
-              time: { type: "string", description: "HH:mm" },
+              date: { type: "string", description: "Startdatum YYYY-MM-DD" },
+              time: { type: "string", description: "Start HH:mm" },
+              end_date: { type: "string", description: "Optionales Enddatum YYYY-MM-DD bei mehrtägigen Mahlzeiten/Events." },
+              end_time: { type: "string", description: "Optionale Endeuhrzeit HH:mm." },
               duration_min: { type: "number", description: "Dauer in Minuten. Wenn die Nutzerin sie nennt ('zwei Stunden', 'eine halbe Stunde'), übernimm sie. Sonst: 30 für Mahlzeiten." },
               details: { type: "string" },
               confidence: { type: "string", enum: ["high", "medium", "low"] },
