@@ -65,32 +65,28 @@ export function ProfileSettings({ profile, userId, onSave }: Props) {
           <div className="space-y-4 py-2">
             <div className="space-y-2"><Label>Name</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
 
-            <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <div>
-                <div className="text-sm font-medium">Ich bin in der Menopause</div>
-                <div className="text-xs text-muted-foreground">Fravia fokussiert auf Energie & Wohlbefinden statt Zyklusphase.</div>
-              </div>
-              <Switch checked={meno} onCheckedChange={setMeno} />
+            <div className="space-y-2"><Label>Letzter Periodenstart</Label><Input type="date" value={lastPeriod} onChange={e => setLastPeriod(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2"><Label>Zykluslänge (Tage)</Label><Input type="number" min={20} max={45} value={cycleLen} onChange={e => setCycleLen(+e.target.value)} /></div>
+              <div className="space-y-2"><Label>Periodendauer</Label><Input type="number" min={2} max={10} value={periodLen} onChange={e => setPeriodLen(+e.target.value)} /></div>
             </div>
-
-            {!meno && (
-              <>
-                <div className="space-y-2"><Label>Letzter Periodenstart</Label><Input type="date" value={lastPeriod} onChange={e => setLastPeriod(e.target.value)} /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2"><Label>Zykluslänge (Tage)</Label><Input type="number" min={20} max={45} value={cycleLen} onChange={e => setCycleLen(+e.target.value)} /></div>
-                  <div className="space-y-2"><Label>Periodendauer</Label><Input type="number" min={2} max={10} value={periodLen} onChange={e => setPeriodLen(+e.target.value)} /></div>
-                </div>
-              </>
-            )}
 
             <div className="space-y-2 pt-2 border-t border-border">
               <Label>Daten importieren</Label>
               <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-                Kein Import nötig – gib einfach deinen letzten Periodenstart und deine Zykluslänge ein. Fravia lernt mit der Zeit.
+                Zyklusdaten-Import ist vorerst nicht nötig – gib einfach deinen letzten Periodenstart und deine Zykluslänge ein. Fravia lernt mit der Zeit.
               </div>
-              <Button variant="outline" className="w-full justify-start" onClick={() => setImportKind("ics")}>
-                <CalendarIcon className="h-4 w-4 mr-2" /> Kalender (.ics aus Google/Apple)
-              </Button>
+              <div className="relative">
+                <Button variant="outline" className="w-full justify-start" disabled>
+                  <CalendarIcon className="h-4 w-4 mr-2" /> Kalender (.ics aus Google/Apple)
+                </Button>
+                <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                  Coming soon
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Kalender-Import folgt in Kürze – du kannst deine Termine vorerst direkt in Fravia eintragen.
+              </p>
             </div>
 
             <Button onClick={save} className="w-full">Speichern</Button>
