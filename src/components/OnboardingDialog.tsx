@@ -213,9 +213,15 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
             {step === 4 && (
               <div className="space-y-3">
                 <Label>Daten importieren (optional)</Label>
-                <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-                  Zyklusdaten-Import ist vorerst nicht nötig – gib einfach deinen letzten Periodenstart und deine Zykluslänge ein. Fravia lernt mit der Zeit.
+                <div className="relative">
+                  <Button variant="outline" className="w-full justify-start" disabled>
+                    <Upload className="h-4 w-4 mr-2" /> Zyklusdaten (Clue, Flo, Apple Health)
+                  </Button>
+                  <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                    Coming soon
+                  </span>
                 </div>
+                <p className="text-xs text-muted-foreground">Zyklusdaten-Import ist vorerst nicht nötig – gib einfach deinen letzten Periodenstart und deine Zykluslänge ein. Fravia lernt mit der Zeit.</p>
                 <div className="relative">
                   <Button variant="outline" className="w-full justify-start" disabled>
                     <CalendarIcon className="h-4 w-4 mr-2" /> Termine aus .ics-Datei importieren
