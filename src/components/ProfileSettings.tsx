@@ -26,7 +26,7 @@ export function ProfileSettings({ profile, userId, onSave }: Props) {
   const [periodLen, setPeriodLen] = useState(profile.avg_period_length);
   const [lastPeriod, setLastPeriod] = useState(profile.last_period_start ?? "");
   const [meno, setMeno] = useState(profile.in_menopause);
-  const [importKind, setImportKind] = useState<"csv" | "ics" | null>(null);
+  const [importKind, setImportKind] = useState<"ics" | null>(null);
   const navigate = useNavigate();
   const guest = isGuest();
 
