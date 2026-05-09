@@ -241,6 +241,7 @@ interface WeekProps extends DataMaps, QuickAdd {
   profile: Profile | null;
   moodByDay?: Record<string, { energy?: string | null; symptoms?: string[] }>;
   onSelectEvent?: (e: GuestEvent) => void;
+  onSelectTodo?: (t: { id: string; title: string; completed: boolean }, d: Date) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i); // klickbare Slots: 0:00 – 23:00
@@ -261,7 +262,7 @@ const energyToFloat = (raw?: string | null): number | null => {
   return null;
 };
 
-export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddEventAtTime, onAddMealForDate, onAddSportForDate, onMoveEvent, onSelectEvent }: WeekProps) {
+export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}, moodByDay = {}, todosByDay = {}, onAddEventForDate, onAddTodoForDate, onAddEventAtTime, onAddMealForDate, onAddSportForDate, onMoveEvent, onSelectEvent, onSelectTodo }: WeekProps) {
   const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
@@ -537,8 +538,17 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                 >
                   <ul className="space-y-0.5">
                     {todos.slice(0, 3).map(t => (
-                      <li key={t.id} className={cn("text-[10px] leading-tight truncate", t.completed && "line-through opacity-60")}>
-                        • {t.title}
+                      <li key={t.id}>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onSelectTodo?.(t, d); }}
+                          className={cn(
+                            "w-full text-left text-[10px] leading-tight truncate hover:text-primary transition-colors",
+                            t.completed && "line-through opacity-60"
+                          )}
+                        >
+                          • {t.title}
+                        </button>
                       </li>
                     ))}
                     {todos.length > 3 && (
