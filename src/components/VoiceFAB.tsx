@@ -533,7 +533,7 @@ export function VoiceFAB({ userId, profile, onChanged }: Props) {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="edit-time" className="text-xs">Uhrzeit</Label>
+                      <Label htmlFor="edit-time" className="text-xs">Uhrzeit (Beginn)</Label>
                       <Input
                         id="edit-time"
                         type="time"
