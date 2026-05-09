@@ -103,6 +103,11 @@ export default function Auth() {
           {mode === "signup" ? "Schon ein Konto? Anmelden" : "Neu hier? Konto erstellen"}
         </button>
       </Card>
+      <div className="fixed bottom-4 inset-x-0 flex justify-center gap-4 text-xs text-muted-foreground">
+        <a href="/datenschutz" className="hover:text-foreground underline-offset-4 hover:underline">Datenschutzerklärung</a>
+        <span aria-hidden>·</span>
+        <a href="/impressum" className="hover:text-foreground underline-offset-4 hover:underline">Impressum</a>
+      </div>
     </div>
   );
 }
