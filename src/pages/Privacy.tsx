@@ -28,7 +28,7 @@ export default function Privacy() {
               Lene Böttcher<br />
               Kormoranweg 10, 39114 Magdeburg, Deutschland<br />
               E-Mail: <a className="underline" href="mailto:fravia@gmx.net">fravia@gmx.net</a><br />
-              Website / App: <a className="underline" href="https://cycle-harmony-planner.lovable.app" target="_blank" rel="noreferrer">https://cycle-harmony-planner.lovable.app</a>
+              Website / App: <a className="underline" href="https://fravia.lovable.app/auth" target="_blank" rel="noreferrer">https://fravia.lovable.app/auth</a>
             </p>
           </section>
 
