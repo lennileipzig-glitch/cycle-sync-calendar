@@ -128,21 +128,27 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       toast.error("Bitte ein Enddatum für die Wiederholung wählen.");
       return;
     }
+    if (endDate < startDate) {
+      toast.error("Das Enddatum darf nicht vor dem Startdatum liegen.");
+      return;
+    }
     setSaving(true);
     try {
-      const dateStr = fmtDate(targetDate);
-      const toLocalIso = (timeStr: string) => {
+      // Bei "Flexibler Tag" wird auf einen einzelnen passenden Tag geplant
+      const startDateStr = flexible ? fmtDate(targetDate) : startDate;
+      const endDateStr = flexible ? fmtDate(targetDate) : endDate;
+      const toLocalIso = (dateStr: string, timeStr: string) => {
         const [h, m] = timeStr.split(":").map(Number);
-        const d = new Date(targetDate);
+        const d = new Date(`${dateStr}T00:00:00`);
         d.setHours(h, m, 0, 0);
         return d.toISOString();
       };
       const starts_at = allDay
-        ? new Date(`${dateStr}T00:00:00`).toISOString()
-        : toLocalIso(startTime);
+        ? new Date(`${startDateStr}T00:00:00`).toISOString()
+        : toLocalIso(startDateStr, startTime);
       const ends_at = allDay
-        ? new Date(`${dateStr}T23:59:59`).toISOString()
-        : toLocalIso(endTime);
+        ? new Date(`${endDateStr}T23:59:59`).toISOString()
+        : toLocalIso(endDateStr, endTime);
 
       const payload = {
         title: title.trim(),
