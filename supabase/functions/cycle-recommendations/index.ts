@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     const recipeContext = kind === "recipes"
       ? `\nErnährungsstil: ${dietStyle ?? "omnivor"}.${(intolerances ?? []).length ? ` Unverträglichkeiten/Verzicht: ${(intolerances ?? []).join(", ")}.` : ""}${(favoriteFoods ?? []).length ? ` Lieblingszutaten: ${(favoriteFoods ?? []).join(", ")}.` : ""}${fridgeList.length ? ` Verfügbare Zutaten im Kühlschrank, die bevorzugt verwendet werden sollen: ${fridgeList.join(", ")}. Nutze möglichst viele dieser Zutaten und ergänze nur das Nötigste.` : ""}`
       : "";
-    const userMsg = `Aktuelle Zyklusphase: ${phase}. Energielevel: ${energy ?? "unbekannt"}. Beschwerden: ${(symptoms ?? []).join(", ") || "keine"}.${recipeContext} Erstelle ${kind === "recipes" ? "3 passende Rezeptideen mit kurzer Begründung, Zutatenliste mit Mengen für 2 Portionen, und 3-6 kurzen Zubereitungsschritten" : "3 passende Sport-/Bewegungsempfehlungen mit Dauer und Begründung"}.`;
+    const userMsg = `Aktuelle Zyklusphase: ${phase}. Energielevel: ${energy ?? "unbekannt"}. Beschwerden: ${(symptoms ?? []).join(", ") || "keine"}.${recipeContext} Erstelle ${kind === "recipes" ? "3 passende Rezeptideen mit kurzer Begründung, Zutatenliste mit Mengen für 2 Portionen, und 3-6 kurzen Zubereitungsschritten" : "3 passende Sport-/Bewegungsempfehlungen mit Dauer, Begründung und 4-7 konkreten Übungen pro Workout (Übungsname, Sätze/Wiederholungen oder Dauer, kurzer Hinweis zur Ausführung)"}.`;
 
     const tool = kind === "recipes" ? {
       type: "function",
