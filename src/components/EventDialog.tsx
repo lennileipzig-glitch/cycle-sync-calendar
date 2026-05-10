@@ -104,6 +104,8 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       setCategory(cat);
       setTitle(initialTitle ?? "");
       setDetails(initialDetails ?? "");
+      setMeta(null);
+      setTab("edit");
       setAllDay(false);
       setStartDate(fmtDate(date));
       setEndDate(fmtDate(date));
