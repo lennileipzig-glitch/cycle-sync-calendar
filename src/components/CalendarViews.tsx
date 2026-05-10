@@ -454,6 +454,7 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                   const startD = new Date(ev.starts_at);
                   const endD = ev.ends_at ? new Date(ev.ends_at) : new Date(startD.getTime() + 60 * 60 * 1000);
                   const Icon = categoryIcon(ev.category);
+                  const iconColor = categoryIconColor(ev.category);
                   const draggable = !ev._shared_owner_name && !!onMoveEvent;
 
                   // Mehrtägiger Termin: auf jedem Tag im Zeitraum als Banner anzeigen
@@ -475,15 +476,13 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                         } : undefined}
                         onClick={(e) => { e.stopPropagation(); onSelectEvent?.(ev); }}
                         className={cn(
-                          "absolute inset-x-0.5 top-0.5 px-1.5 py-0.5 rounded text-[10px] truncate cursor-pointer border-l-2",
-                          phaseFill[phase],
-                          categoryAccent(ev.category),
+                          "absolute inset-x-0.5 top-0.5 px-1.5 py-0.5 rounded text-[10px] truncate cursor-pointer border-l-2 bg-muted/40",
                           draggable && !isMultiDay && "cursor-grab active:cursor-grabbing",
                         )}
-                        style={{ borderLeftColor: `hsl(var(--phase-${phase}))` }}
+                        style={{ borderLeftColor: iconColor }}
                         title={isMultiDay ? `${ev.title} · ${format(startD, "d.M.")} – ${format(endD, "d.M.")}` : ev.title}
                       >
-                        {Icon && <Icon className="inline h-2.5 w-2.5 mr-0.5 opacity-70" />}
+                        {Icon && <Icon className="inline h-2.5 w-2.5 mr-0.5" style={{ color: iconColor }} />}
                         {ev.title}
                         {isMultiDay && !ev.all_day && (
                           <span className="ml-1 text-muted-foreground">
@@ -509,15 +508,13 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
                       } : undefined}
                       onClick={(e) => { e.stopPropagation(); onSelectEvent?.(ev); }}
                       className={cn(
-                        "absolute inset-x-0.5 px-1.5 py-1 rounded text-[10px] overflow-hidden border-l-2 cursor-pointer hover:ring-1 hover:ring-primary/50",
-                        phaseFill[phase],
-                        categoryAccent(ev.category),
+                        "absolute inset-x-0.5 px-1.5 py-1 rounded text-[10px] overflow-hidden border-l-2 cursor-pointer hover:ring-1 hover:ring-primary/50 bg-muted/40",
                         draggable && "cursor-grab active:cursor-grabbing",
                       )}
-                      style={{ top, height, borderLeftColor: `hsl(var(--phase-${phase}))` }}
+                      style={{ top, height, borderLeftColor: iconColor }}
                     >
                       <div className="font-medium truncate flex items-center gap-1">
-                        {Icon && <Icon className="h-2.5 w-2.5 shrink-0 opacity-70" />}
+                        {Icon && <Icon className="h-2.5 w-2.5 shrink-0" style={{ color: iconColor }} />}
                         <span className="truncate">{ev.title}</span>
                       </div>
                       <div className="text-[9px] text-muted-foreground">
