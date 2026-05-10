@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { fmtDate, findNextDateForEnergyCost } from "@/lib/cycle";
 import { dataApi } from "@/lib/dataApi";
 import { useProfile } from "@/hooks/useProfile";
@@ -15,6 +16,7 @@ import { de } from "date-fns/locale";
 import { toast } from "sonner";
 import { Trash2, CalendarCheck, UtensilsCrossed, Dumbbell } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { unpackMeta, packMeta, type EventMeta } from "@/lib/eventMeta";
 import type { GuestEvent, EventCategory } from "@/lib/guestStore";
 
 interface Props {
