@@ -36,7 +36,12 @@ const phaseFill: Record<string, string> = {
 const categoryIcon = (cat?: EventCategory) => {
   if (cat === "mahlzeit") return UtensilsCrossed;
   if (cat === "sport") return Dumbbell;
-  return null;
+  return CalendarDays;
+};
+const categoryIconColor = (cat?: EventCategory): string => {
+  if (cat === "mahlzeit") return "hsl(var(--tile-nutrition))";
+  if (cat === "sport") return "hsl(var(--tile-movement))";
+  return "hsl(var(--muted-foreground))";
 };
 const categoryAccent = (cat?: EventCategory): string => {
   if (cat === "mahlzeit") return "border-l-amber-400 bg-amber-100/30 dark:bg-amber-400/10";
