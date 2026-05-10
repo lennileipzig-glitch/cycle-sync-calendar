@@ -133,6 +133,15 @@ export function Recommendations({
     const detailsParts: string[] = [r.why];
     if (r.nutrients?.length) detailsParts.push(`Nährstoffe: ${r.nutrients.join(", ")}`);
     if (r.uses_from_fridge?.length) detailsParts.push(`Aus Kühlschrank: ${r.uses_from_fridge.join(", ")}`);
+    const details = packMeta(detailsParts.join("\n"), {
+      kind: "recipe",
+      servings: r.servings ?? 2,
+      ingredients: r.ingredients,
+      steps: r.steps,
+      nutrients: r.nutrients,
+      uses_from_fridge: r.uses_from_fridge,
+      why: r.why,
+    });
     await dataApi.addEvents(userId, [{
       title: r.title,
       starts_at: start.toISOString(),
@@ -145,7 +154,7 @@ export function Recommendations({
       recurrence_freq: null,
       recurrence_until: null,
       category: "mahlzeit",
-      details: detailsParts.join("\n"),
+      details,
     }]);
     toast.success(`„${r.title}" zu ${dayLabel} hinzugefügt`);
     onEventAdded?.();
@@ -157,6 +166,13 @@ export function Recommendations({
     const minutes = minMatch ? Math.min(180, parseInt(minMatch[1], 10)) : 45;
     const end = new Date(start.getTime() + minutes * 60_000);
     const intensityCost = w.intensity === "intensiv" ? 4.5 : w.intensity === "moderat" ? 3.5 : 2.5;
+    const details = packMeta(`${w.why}\nDauer: ${w.duration} · Intensität: ${w.intensity}`, {
+      kind: "workout",
+      duration: w.duration,
+      intensity: w.intensity,
+      why: w.why,
+      exercises: w.exercises,
+    });
     await dataApi.addEvents(userId, [{
       title: w.title,
       starts_at: start.toISOString(),
@@ -169,7 +185,7 @@ export function Recommendations({
       recurrence_freq: null,
       recurrence_until: null,
       category: "sport",
-      details: `${w.why}\nDauer: ${w.duration} · Intensität: ${w.intensity}`,
+      details,
     }]);
     toast.success(`„${w.title}" zu ${dayLabel} hinzugefügt`);
     onEventAdded?.();
