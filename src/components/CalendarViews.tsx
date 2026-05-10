@@ -274,6 +274,16 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const today = new Date();
 
+  // Aktuelle Uhrzeit für Zeitstrich (live, jede Minute aktualisiert)
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const todayInWeek = days.findIndex(d => isSameDay(d, now));
+  const showNowLine = todayInWeek >= 0;
+  const nowTopPx = (now.getHours() + now.getMinutes() / 60) * ROW_HEIGHT;
+
   const dropProps = (d: Date) => onMoveEvent ? {
     onDragOver: (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; },
     onDrop: (e: React.DragEvent) => {
