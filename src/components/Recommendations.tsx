@@ -581,6 +581,57 @@ export function Recommendations({
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!openWorkout} onOpenChange={(o) => { if (!o) setOpenWorkout(null); }}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          {openWorkout && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Dumbbell className="h-5 w-5" style={{ color: "hsl(var(--tile-movement))" }} />
+                  {openWorkout.title}
+                </DialogTitle>
+                <DialogDescription>{openWorkout.why}</DialogDescription>
+              </DialogHeader>
+
+              <div className="text-xs" style={{ color: "hsl(var(--tile-movement))" }}>
+                {openWorkout.duration} · {openWorkout.intensity}
+              </div>
+
+              {openWorkout.exercises && openWorkout.exercises.length > 0 ? (
+                <div>
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Übungen</h4>
+                  <ol className="text-sm space-y-2 list-decimal pl-5">
+                    {openWorkout.exercises.map((ex, j) => (
+                      <li key={j}>
+                        <div className="font-medium">
+                          {ex.name}
+                          {ex.sets && <span className="text-muted-foreground font-normal"> · {ex.sets}</span>}
+                        </div>
+                        {ex.details && <div className="text-xs text-muted-foreground">{ex.details}</div>}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  Für dieses Workout sind keine konkreten Übungen hinterlegt.
+                </p>
+              )}
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpenWorkout(null)}>Schließen</Button>
+                <Button
+                  onClick={() => { addWorkoutToDay(openWorkout); setOpenWorkout(null); }}
+                  style={{ background: "hsl(var(--tile-movement))", color: "hsl(var(--background))" }}
+                >
+                  <CalendarPlus className="h-4 w-4 mr-2" /> Zum Tag hinzufügen
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
