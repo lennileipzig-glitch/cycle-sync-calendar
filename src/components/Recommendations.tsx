@@ -476,14 +476,22 @@ export function Recommendations({
             {workouts.length > 0 && (
               <ul className="space-y-3 mt-3">
                 {workouts.map((w, i) => (
-                  <li key={i} className="border-l-2 pl-3" style={{ borderColor: "hsl(var(--tile-movement) / 0.6)" }}>
+                  <li
+                    key={i}
+                    className="border-l-2 pl-3 cursor-pointer rounded-r-md hover:bg-accent/40 transition-colors py-1"
+                    style={{ borderColor: "hsl(var(--tile-movement) / 0.6)" }}
+                    onClick={() => setOpenWorkout(w)}
+                  >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="font-medium text-sm">{w.title}</div>
+                      <div className="font-medium text-sm flex items-center gap-1">
+                        {w.title}
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
                       <Button
                         size="sm"
                         variant="ghost"
                         className="h-6 px-2 text-[11px] -mr-2 shrink-0"
-                        onClick={() => addWorkoutToDay(w)}
+                        onClick={(e) => { e.stopPropagation(); addWorkoutToDay(w); }}
                       >
                         <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
                       </Button>
@@ -491,6 +499,7 @@ export function Recommendations({
                     <div className="text-xs text-muted-foreground mt-0.5">{w.why}</div>
                     <div className="text-xs mt-1" style={{ color: "hsl(var(--tile-movement))" }}>
                       {w.duration} · {w.intensity}
+                      {w.exercises && w.exercises.length > 0 && ` · ${w.exercises.length} Übungen`}
                     </div>
                   </li>
                 ))}
