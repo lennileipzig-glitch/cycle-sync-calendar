@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { fmtDate, findNextDateForEnergyCost } from "@/lib/cycle";
 import { dataApi } from "@/lib/dataApi";
 import { useProfile } from "@/hooks/useProfile";
@@ -15,6 +16,7 @@ import { de } from "date-fns/locale";
 import { toast } from "sonner";
 import { Trash2, CalendarCheck, UtensilsCrossed, Dumbbell } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { unpackMeta, packMeta, type EventMeta } from "@/lib/eventMeta";
 import type { GuestEvent, EventCategory } from "@/lib/guestStore";
 
 interface Props {
@@ -67,6 +69,9 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
   const [until, setUntil] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [meta, setMeta] = useState<EventMeta | null>(null);
+  const [recipeServings, setRecipeServings] = useState<number>(2);
+  const [tab, setTab] = useState<"edit" | "details">("edit");
 
   useEffect(() => {
     if (!open) return;
@@ -75,9 +80,15 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       const s = new Date(event.starts_at);
       const e = event.ends_at ? new Date(event.ends_at) : new Date(s.getTime() + 60 * 60 * 1000);
       const pad = (n: number) => n.toString().padStart(2, "0");
+      const { text: plainDetails, meta: extractedMeta } = unpackMeta(event.details);
       setCategory(event.category ?? "termin");
       setTitle(event.title ?? "");
-      setDetails(event.details ?? "");
+      setDetails(plainDetails);
+      setMeta(extractedMeta);
+      setTab("edit");
+      if (extractedMeta?.kind === "recipe") {
+        setRecipeServings(extractedMeta.servings && extractedMeta.servings > 0 ? extractedMeta.servings : 2);
+      }
       setAllDay(!!event.all_day);
       setStartDate(fmtDate(s));
       setEndDate(fmtDate(e));
@@ -93,6 +104,8 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       setCategory(cat);
       setTitle(initialTitle ?? "");
       setDetails(initialDetails ?? "");
+      setMeta(null);
+      setTab("edit");
       setAllDay(false);
       setStartDate(fmtDate(date));
       setEndDate(fmtDate(date));
@@ -150,6 +163,16 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
         ? new Date(`${endDateStr}T23:59:59`).toISOString()
         : toLocalIso(endDateStr, endTime);
 
+      // Meta beibehalten (ggf. mit aktualisierter Portionenzahl bei Rezepten)
+      const updatedMeta: EventMeta | null = meta
+        ? meta.kind === "recipe"
+          ? { ...meta, servings: recipeServings }
+          : meta
+        : null;
+      const finalDetails = updatedMeta
+        ? packMeta(details.trim(), updatedMeta)
+        : (details.trim() || null);
+
       const payload = {
         title: title.trim(),
         starts_at,
@@ -162,7 +185,7 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
         recurrence_freq: recurrence === "none" ? null : recurrence,
         recurrence_until: recurrence === "none" ? null : until,
         category,
-        details: details.trim() || null,
+        details: finalDetails,
       };
 
       const labelByCat: Record<EventCategory, string> = {
@@ -228,7 +251,16 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
         <DialogHeader>
           <DialogTitle>{titleByCat[category]}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as "edit" | "details")}>
+          {meta && isEdit && (
+            <TabsList className="grid grid-cols-2 w-full mb-2">
+              <TabsTrigger value="edit">Bearbeiten</TabsTrigger>
+              <TabsTrigger value="details">
+                {meta.kind === "recipe" ? "Rezept" : "Übungen"}
+              </TabsTrigger>
+            </TabsList>
+          )}
+          <TabsContent value="edit" className="space-y-4 mt-0">
           {/* Kategorie-Auswahl (ausgeblendet, wenn Kategorie fixiert ist – z. B. Wochenansicht: nur Termin) */}
           {!lockCategory && !isEdit && (
             <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg bg-muted">
@@ -397,7 +429,96 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
               </p>
             )}
           </div>
-        </div>
+          </TabsContent>
+
+          {meta && isEdit && (
+            <TabsContent value="details" className="space-y-4 mt-0">
+              {meta.kind === "recipe" ? (
+                <>
+                  {meta.why && (
+                    <p className="text-sm text-muted-foreground italic">{meta.why}</p>
+                  )}
+                  <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
+                    <Label className="text-xs">Portionen</Label>
+                    <div className="flex items-center gap-2">
+                      <Button type="button" variant="outline" size="icon" className="h-8 w-8"
+                        onClick={() => setRecipeServings(s => Math.max(1, s - 1))}>–</Button>
+                      <span className="w-8 text-center text-sm font-medium tabular-nums">{recipeServings}</span>
+                      <Button type="button" variant="outline" size="icon" className="h-8 w-8"
+                        onClick={() => setRecipeServings(s => Math.min(20, s + 1))}>+</Button>
+                    </div>
+                  </div>
+
+                  {meta.ingredients && meta.ingredients.length > 0 && (() => {
+                    const base = meta.servings && meta.servings > 0 ? meta.servings : 2;
+                    const factor = recipeServings / base;
+                    const fmt = (n: number) => {
+                      const r = Math.round(n * 100) / 100;
+                      return Number.isInteger(r) ? String(r) : r.toFixed(2).replace(/\.?0+$/, "");
+                    };
+                    return (
+                      <div>
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Zutaten</h4>
+                        <ul className="text-sm space-y-1">
+                          {meta.ingredients!.map((ing, j) => (
+                            <li key={j} className="flex justify-between gap-3 border-b border-border/40 py-1">
+                              <span>{ing.name}</span>
+                              <span className="text-muted-foreground tabular-nums shrink-0">
+                                {ing.amount != null ? `${fmt(ing.amount * factor)}${ing.unit ? " " + ing.unit : ""}` : (ing.unit ?? "")}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })()}
+
+                  {meta.steps && meta.steps.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Zubereitung</h4>
+                      <ol className="text-sm space-y-1.5 list-decimal pl-5">
+                        {meta.steps.map((s, j) => <li key={j}>{s}</li>)}
+                      </ol>
+                    </div>
+                  )}
+
+                  <p className="text-[11px] text-muted-foreground">
+                    Hinweis: Portionsänderungen werden beim Speichern übernommen.
+                  </p>
+                </>
+              ) : (
+                <>
+                  {meta.why && (
+                    <p className="text-sm text-muted-foreground italic">{meta.why}</p>
+                  )}
+                  <div className="text-xs" style={{ color: "hsl(var(--tile-movement))" }}>
+                    {meta.duration}{meta.intensity && ` · ${meta.intensity}`}
+                  </div>
+                  {meta.exercises && meta.exercises.length > 0 ? (
+                    <div>
+                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Übungen</h4>
+                      <ol className="text-sm space-y-2 list-decimal pl-5">
+                        {meta.exercises.map((ex, j) => (
+                          <li key={j}>
+                            <div className="font-medium">
+                              {ex.name}
+                              {ex.sets && <span className="text-muted-foreground font-normal"> · {ex.sets}</span>}
+                            </div>
+                            {ex.details && <div className="text-xs text-muted-foreground">{ex.details}</div>}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">
+                      Für dieses Workout sind keine konkreten Übungen hinterlegt.
+                    </p>
+                  )}
+                </>
+              )}
+            </TabsContent>
+          )}
+        </Tabs>
         <DialogFooter className="gap-2 sm:justify-between">
           {isEdit ? (
             <Button variant="ghost" size="sm" onClick={handleDelete} disabled={deleting || saving} className="text-destructive hover:text-destructive">

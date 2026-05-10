@@ -17,10 +17,12 @@ import { de } from "date-fns/locale";
 import { InlineAddMeal } from "@/components/InlineAddMeal";
 import { InlineAddSport } from "@/components/InlineAddSport";
 import { cn } from "@/lib/utils";
+import { packMeta } from "@/lib/eventMeta";
 
 interface RecipeIngredient { name: string; amount?: number; unit?: string }
 interface RecipeItem { title: string; why: string; nutrients: string[]; uses_from_fridge?: string[]; servings?: number; ingredients?: RecipeIngredient[]; steps?: string[] }
-interface WorkoutItem { title: string; duration: string; intensity: string; why: string; }
+interface WorkoutExercise { name: string; sets?: string; details?: string }
+interface WorkoutItem { title: string; duration: string; intensity: string; why: string; exercises?: WorkoutExercise[] }
 
 const intensityWord = (v: number) => {
   if (v <= 1.5) return "sehr leicht";
@@ -72,6 +74,7 @@ export function Recommendations({
   const [fridgeInput, setFridgeInput] = useState("");
   const [openRecipe, setOpenRecipe] = useState<RecipeItem | null>(null);
   const [recipeServings, setRecipeServings] = useState<number>(2);
+  const [openWorkout, setOpenWorkout] = useState<WorkoutItem | null>(null);
   const meals = dayEvents.filter(e => e.category === "mahlzeit");
   const sports = dayEvents.filter(e => e.category === "sport");
 
@@ -130,6 +133,15 @@ export function Recommendations({
     const detailsParts: string[] = [r.why];
     if (r.nutrients?.length) detailsParts.push(`Nährstoffe: ${r.nutrients.join(", ")}`);
     if (r.uses_from_fridge?.length) detailsParts.push(`Aus Kühlschrank: ${r.uses_from_fridge.join(", ")}`);
+    const details = packMeta(detailsParts.join("\n"), {
+      kind: "recipe",
+      servings: r.servings ?? 2,
+      ingredients: r.ingredients,
+      steps: r.steps,
+      nutrients: r.nutrients,
+      uses_from_fridge: r.uses_from_fridge,
+      why: r.why,
+    });
     await dataApi.addEvents(userId, [{
       title: r.title,
       starts_at: start.toISOString(),
@@ -142,7 +154,7 @@ export function Recommendations({
       recurrence_freq: null,
       recurrence_until: null,
       category: "mahlzeit",
-      details: detailsParts.join("\n"),
+      details,
     }]);
     toast.success(`„${r.title}" zu ${dayLabel} hinzugefügt`);
     onEventAdded?.();
@@ -154,6 +166,13 @@ export function Recommendations({
     const minutes = minMatch ? Math.min(180, parseInt(minMatch[1], 10)) : 45;
     const end = new Date(start.getTime() + minutes * 60_000);
     const intensityCost = w.intensity === "intensiv" ? 4.5 : w.intensity === "moderat" ? 3.5 : 2.5;
+    const details = packMeta(`${w.why}\nDauer: ${w.duration} · Intensität: ${w.intensity}`, {
+      kind: "workout",
+      duration: w.duration,
+      intensity: w.intensity,
+      why: w.why,
+      exercises: w.exercises,
+    });
     await dataApi.addEvents(userId, [{
       title: w.title,
       starts_at: start.toISOString(),
@@ -166,7 +185,7 @@ export function Recommendations({
       recurrence_freq: null,
       recurrence_until: null,
       category: "sport",
-      details: `${w.why}\nDauer: ${w.duration} · Intensität: ${w.intensity}`,
+      details,
     }]);
     toast.success(`„${w.title}" zu ${dayLabel} hinzugefügt`);
     onEventAdded?.();
@@ -457,14 +476,22 @@ export function Recommendations({
             {workouts.length > 0 && (
               <ul className="space-y-3 mt-3">
                 {workouts.map((w, i) => (
-                  <li key={i} className="border-l-2 pl-3" style={{ borderColor: "hsl(var(--tile-movement) / 0.6)" }}>
+                  <li
+                    key={i}
+                    className="border-l-2 pl-3 cursor-pointer rounded-r-md hover:bg-accent/40 transition-colors py-1"
+                    style={{ borderColor: "hsl(var(--tile-movement) / 0.6)" }}
+                    onClick={() => setOpenWorkout(w)}
+                  >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="font-medium text-sm">{w.title}</div>
+                      <div className="font-medium text-sm flex items-center gap-1">
+                        {w.title}
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
                       <Button
                         size="sm"
                         variant="ghost"
                         className="h-6 px-2 text-[11px] -mr-2 shrink-0"
-                        onClick={() => addWorkoutToDay(w)}
+                        onClick={(e) => { e.stopPropagation(); addWorkoutToDay(w); }}
                       >
                         <CalendarPlus className="h-3 w-3 mr-1" /> Zum Tag
                       </Button>
@@ -472,6 +499,7 @@ export function Recommendations({
                     <div className="text-xs text-muted-foreground mt-0.5">{w.why}</div>
                     <div className="text-xs mt-1" style={{ color: "hsl(var(--tile-movement))" }}>
                       {w.duration} · {w.intensity}
+                      {w.exercises && w.exercises.length > 0 && ` · ${w.exercises.length} Übungen`}
                     </div>
                   </li>
                 ))}
@@ -545,6 +573,57 @@ export function Recommendations({
                 <Button
                   onClick={() => { addRecipeToDay(openRecipe); setOpenRecipe(null); }}
                   style={{ background: "hsl(var(--tile-nutrition))", color: "hsl(var(--tile-nutrition-foreground, var(--background)))" }}
+                >
+                  <CalendarPlus className="h-4 w-4 mr-2" /> Zum Tag hinzufügen
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!openWorkout} onOpenChange={(o) => { if (!o) setOpenWorkout(null); }}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          {openWorkout && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Dumbbell className="h-5 w-5" style={{ color: "hsl(var(--tile-movement))" }} />
+                  {openWorkout.title}
+                </DialogTitle>
+                <DialogDescription>{openWorkout.why}</DialogDescription>
+              </DialogHeader>
+
+              <div className="text-xs" style={{ color: "hsl(var(--tile-movement))" }}>
+                {openWorkout.duration} · {openWorkout.intensity}
+              </div>
+
+              {openWorkout.exercises && openWorkout.exercises.length > 0 ? (
+                <div>
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Übungen</h4>
+                  <ol className="text-sm space-y-2 list-decimal pl-5">
+                    {openWorkout.exercises.map((ex, j) => (
+                      <li key={j}>
+                        <div className="font-medium">
+                          {ex.name}
+                          {ex.sets && <span className="text-muted-foreground font-normal"> · {ex.sets}</span>}
+                        </div>
+                        {ex.details && <div className="text-xs text-muted-foreground">{ex.details}</div>}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  Für dieses Workout sind keine konkreten Übungen hinterlegt.
+                </p>
+              )}
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpenWorkout(null)}>Schließen</Button>
+                <Button
+                  onClick={() => { addWorkoutToDay(openWorkout); setOpenWorkout(null); }}
+                  style={{ background: "hsl(var(--tile-movement))", color: "hsl(var(--background))" }}
                 >
                   <CalendarPlus className="h-4 w-4 mr-2" /> Zum Tag hinzufügen
                 </Button>

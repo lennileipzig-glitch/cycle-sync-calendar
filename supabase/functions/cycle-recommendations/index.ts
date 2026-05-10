@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     const recipeContext = kind === "recipes"
       ? `\nErnährungsstil: ${dietStyle ?? "omnivor"}.${(intolerances ?? []).length ? ` Unverträglichkeiten/Verzicht: ${(intolerances ?? []).join(", ")}.` : ""}${(favoriteFoods ?? []).length ? ` Lieblingszutaten: ${(favoriteFoods ?? []).join(", ")}.` : ""}${fridgeList.length ? ` Verfügbare Zutaten im Kühlschrank, die bevorzugt verwendet werden sollen: ${fridgeList.join(", ")}. Nutze möglichst viele dieser Zutaten und ergänze nur das Nötigste.` : ""}`
       : "";
-    const userMsg = `Aktuelle Zyklusphase: ${phase}. Energielevel: ${energy ?? "unbekannt"}. Beschwerden: ${(symptoms ?? []).join(", ") || "keine"}.${recipeContext} Erstelle ${kind === "recipes" ? "3 passende Rezeptideen mit kurzer Begründung, Zutatenliste mit Mengen für 2 Portionen, und 3-6 kurzen Zubereitungsschritten" : "3 passende Sport-/Bewegungsempfehlungen mit Dauer und Begründung"}.`;
+    const userMsg = `Aktuelle Zyklusphase: ${phase}. Energielevel: ${energy ?? "unbekannt"}. Beschwerden: ${(symptoms ?? []).join(", ") || "keine"}.${recipeContext} Erstelle ${kind === "recipes" ? "3 passende Rezeptideen mit kurzer Begründung, Zutatenliste mit Mengen für 2 Portionen, und 3-6 kurzen Zubereitungsschritten" : "3 passende Sport-/Bewegungsempfehlungen mit Dauer, Begründung und 4-7 konkreten Übungen pro Workout (Übungsname, Sätze/Wiederholungen oder Dauer, kurzer Hinweis zur Ausführung)"}.`;
 
     const tool = kind === "recipes" ? {
       type: "function",
@@ -80,8 +80,21 @@ Deno.serve(async (req) => {
                   duration: { type: "string", description: "z.B. 20 min" },
                   intensity: { type: "string", enum: ["leicht", "moderat", "intensiv"] },
                   why: { type: "string" },
+                  exercises: {
+                    type: "array",
+                    description: "4-7 konkrete Übungen.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string", description: "Name der Übung, z.B. Squats" },
+                        sets: { type: "string", description: "Sätze x Wiederholungen oder Dauer, z.B. '3 x 12' oder '2 min'" },
+                        details: { type: "string", description: "Kurzer Hinweis zur Ausführung (1 Satz)" },
+                      },
+                      required: ["name"],
+                    },
+                  },
                 },
-                required: ["title", "duration", "intensity", "why"],
+                required: ["title", "duration", "intensity", "why", "exercises"],
               },
             },
           },

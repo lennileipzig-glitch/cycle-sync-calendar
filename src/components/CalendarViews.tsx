@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { addDays, format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from "date-fns";
 import { de } from "date-fns/locale";
 import { phaseForDate } from "@/lib/cycle";
@@ -273,6 +274,16 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
   const lastPeriod = profile?.last_period_start ? new Date(profile.last_period_start) : null;
   const today = new Date();
 
+  // Aktuelle Uhrzeit für Zeitstrich (live, jede Minute aktualisiert)
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const todayInWeek = days.findIndex(d => isSameDay(d, now));
+  const showNowLine = todayInWeek >= 0;
+  const nowTopPx = (now.getHours() + now.getMinutes() / 60) * ROW_HEIGHT;
+
   const dropProps = (d: Date) => onMoveEvent ? {
     onDragOver: (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; },
     onDrop: (e: React.DragEvent) => {
@@ -368,6 +379,19 @@ export function WeekView({ selectedDate, onSelectDate, profile, eventsByDay = {}
       {/* Stundenraster (scrollbar, ganzer Tag 0–24h) */}
       <div className="rounded-lg border border-border/60 overflow-hidden bg-card">
         <div className="grid grid-cols-[3rem_repeat(7,minmax(0,1fr))] gap-0 relative max-h-[60vh] overflow-y-auto items-start">
+          {/* Aktuelle-Zeit-Linie (nur wenn heute in der angezeigten Woche) */}
+          {showNowLine && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-12 right-0 z-20"
+              style={{ top: nowTopPx }}
+            >
+              <div className="h-px w-full bg-primary/40" />
+              <div
+                className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-primary/60"
+              />
+            </div>
+          )}
           {/* Zeit-Spalte (0:00 bis 24:00 als Endmarker, exakt am Rand der Stundenzeilen) */}
           <div className="relative sticky left-0 self-start bg-background z-10 w-12" style={{ height: HOURS.length * ROW_HEIGHT }}>
             {HOUR_LABELS.map(h => (

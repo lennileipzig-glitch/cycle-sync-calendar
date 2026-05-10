@@ -56,6 +56,15 @@ export default function Settings() {
     if (!authLoading && !user && !guest) navigate("/auth", { replace: true });
   }, [authLoading, user, guest, navigate]);
 
+  // Solange nur Deutsch verfügbar ist: ggf. zurücksetzen
+  useEffect(() => {
+    const cur = i18n.language?.split("-")[0];
+    if (cur && cur !== "de") {
+      i18n.changeLanguage("de");
+      localStorage.setItem("luna-lang", "de");
+    }
+  }, [i18n]);
+
   if (loading || !profile) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">{t("app.loading_profile")}</div>;
   }
@@ -138,14 +147,20 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground">{t("settings.language_desc")}</p>
             </div>
           </div>
-          <Select value={i18n.language?.split("-")[0] ?? "de"} onValueChange={(v) => changeLanguage(v as LangCode)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {SUPPORTED_LANGUAGES.map(l => (
-                <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="relative">
+            <Select value="de" disabled>
+              <SelectTrigger><SelectValue placeholder="Deutsch" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="de">Deutsch</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="absolute top-1/2 right-10 -translate-y-1/2 text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium pointer-events-none">
+              Coming soon
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Aktuell ist Fravia nur auf Deutsch verfügbar. Weitere Sprachen folgen in Kürze.
+          </p>
         </Card>
 
         {/* Benachrichtigungen */}
