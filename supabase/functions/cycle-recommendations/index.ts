@@ -80,8 +80,21 @@ Deno.serve(async (req) => {
                   duration: { type: "string", description: "z.B. 20 min" },
                   intensity: { type: "string", enum: ["leicht", "moderat", "intensiv"] },
                   why: { type: "string" },
+                  exercises: {
+                    type: "array",
+                    description: "4-7 konkrete Übungen.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string", description: "Name der Übung, z.B. Squats" },
+                        sets: { type: "string", description: "Sätze x Wiederholungen oder Dauer, z.B. '3 x 12' oder '2 min'" },
+                        details: { type: "string", description: "Kurzer Hinweis zur Ausführung (1 Satz)" },
+                      },
+                      required: ["name"],
+                    },
+                  },
                 },
-                required: ["title", "duration", "intensity", "why"],
+                required: ["title", "duration", "intensity", "why", "exercises"],
               },
             },
           },
