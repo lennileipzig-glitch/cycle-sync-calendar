@@ -56,6 +56,15 @@ export default function Settings() {
     if (!authLoading && !user && !guest) navigate("/auth", { replace: true });
   }, [authLoading, user, guest, navigate]);
 
+  // Solange nur Deutsch verfügbar ist: ggf. zurücksetzen
+  useEffect(() => {
+    const cur = i18n.language?.split("-")[0];
+    if (cur && cur !== "de") {
+      i18n.changeLanguage("de");
+      localStorage.setItem("luna-lang", "de");
+    }
+  }, [i18n]);
+
   if (loading || !profile) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">{t("app.loading_profile")}</div>;
   }
