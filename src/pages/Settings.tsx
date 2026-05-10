@@ -138,14 +138,20 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground">{t("settings.language_desc")}</p>
             </div>
           </div>
-          <Select value={i18n.language?.split("-")[0] ?? "de"} onValueChange={(v) => changeLanguage(v as LangCode)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {SUPPORTED_LANGUAGES.map(l => (
-                <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="relative">
+            <Select value="de" disabled>
+              <SelectTrigger><SelectValue placeholder="Deutsch" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="de">Deutsch</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="absolute top-1/2 right-10 -translate-y-1/2 text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium pointer-events-none">
+              Coming soon
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Aktuell ist Fravia nur auf Deutsch verfügbar. Weitere Sprachen folgen in Kürze.
+          </p>
         </Card>
 
         {/* Benachrichtigungen */}
