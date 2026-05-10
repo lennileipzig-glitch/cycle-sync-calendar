@@ -69,6 +69,9 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
   const [until, setUntil] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [meta, setMeta] = useState<EventMeta | null>(null);
+  const [recipeServings, setRecipeServings] = useState<number>(2);
+  const [tab, setTab] = useState<"edit" | "details">("edit");
 
   useEffect(() => {
     if (!open) return;
