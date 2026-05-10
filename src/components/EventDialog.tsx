@@ -80,9 +80,15 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
       const s = new Date(event.starts_at);
       const e = event.ends_at ? new Date(event.ends_at) : new Date(s.getTime() + 60 * 60 * 1000);
       const pad = (n: number) => n.toString().padStart(2, "0");
+      const { text: plainDetails, meta: extractedMeta } = unpackMeta(event.details);
       setCategory(event.category ?? "termin");
       setTitle(event.title ?? "");
-      setDetails(event.details ?? "");
+      setDetails(plainDetails);
+      setMeta(extractedMeta);
+      setTab("edit");
+      if (extractedMeta?.kind === "recipe") {
+        setRecipeServings(extractedMeta.servings && extractedMeta.servings > 0 ? extractedMeta.servings : 2);
+      }
       setAllDay(!!event.all_day);
       setStartDate(fmtDate(s));
       setEndDate(fmtDate(e));
