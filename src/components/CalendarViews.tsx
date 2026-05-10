@@ -199,6 +199,7 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
               <div className="flex-1 flex flex-col gap-0.5 px-1 pb-1 mt-1 overflow-hidden">
                 {events.slice(0, 2).map((e) => {
                   const Icon = categoryIcon(e.category);
+                  const iconColor = categoryIconColor(e.category);
                   const draggable = !e._shared_owner_name && !!onMoveEvent;
                   return (
                     <div
@@ -210,14 +211,13 @@ export function MonthView({ monthDate, selectedDate, onSelectDate, profile, even
                         ev.dataTransfer.setData("application/x-luna-event", JSON.stringify(e));
                       } : undefined}
                       className={cn(
-                        "text-[9px] leading-tight px-1 py-0.5 rounded truncate text-left border-l-2 flex items-center gap-1",
-                        e._shared_owner_name && "border-dashed",
+                        "text-[9px] leading-tight px-1 py-0.5 rounded truncate text-left flex items-center gap-1 bg-muted/40",
+                        e._shared_owner_name && "border border-dashed border-border/50",
                         draggable && "cursor-grab active:cursor-grabbing",
                       )}
-                      style={{ background: `${phaseColorVar.replace(')', ' / 0.18)')}`, borderLeftColor: phaseColorVar }}
                       title={e._shared_owner_name ? `${e.title} · von ${e._shared_owner_name}` : e.title}
                     >
-                      {Icon && <Icon className="h-2.5 w-2.5 shrink-0 opacity-70" />}
+                      {Icon && <Icon className="h-2.5 w-2.5 shrink-0" style={{ color: iconColor }} />}
                       {!e.all_day && (
                         <span className="text-muted-foreground">
                           {format(new Date(e.starts_at), "HH:mm")}
