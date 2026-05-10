@@ -251,7 +251,16 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
         <DialogHeader>
           <DialogTitle>{titleByCat[category]}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as "edit" | "details")}>
+          {meta && isEdit && (
+            <TabsList className="grid grid-cols-2 w-full mb-2">
+              <TabsTrigger value="edit">Bearbeiten</TabsTrigger>
+              <TabsTrigger value="details">
+                {meta.kind === "recipe" ? "Rezept" : "Übungen"}
+              </TabsTrigger>
+            </TabsList>
+          )}
+          <TabsContent value="edit" className="space-y-4 mt-0">
           {/* Kategorie-Auswahl (ausgeblendet, wenn Kategorie fixiert ist – z. B. Wochenansicht: nur Termin) */}
           {!lockCategory && !isEdit && (
             <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg bg-muted">
