@@ -163,6 +163,16 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
         ? new Date(`${endDateStr}T23:59:59`).toISOString()
         : toLocalIso(endDateStr, endTime);
 
+      // Meta beibehalten (ggf. mit aktualisierter Portionenzahl bei Rezepten)
+      const updatedMeta: EventMeta | null = meta
+        ? meta.kind === "recipe"
+          ? { ...meta, servings: recipeServings }
+          : meta
+        : null;
+      const finalDetails = updatedMeta
+        ? packMeta(details.trim(), updatedMeta)
+        : (details.trim() || null);
+
       const payload = {
         title: title.trim(),
         starts_at,
@@ -175,7 +185,7 @@ export function EventDialog({ userId, date, open, onOpenChange, onCreated, event
         recurrence_freq: recurrence === "none" ? null : recurrence,
         recurrence_until: recurrence === "none" ? null : until,
         category,
-        details: details.trim() || null,
+        details: finalDetails,
       };
 
       const labelByCat: Record<EventCategory, string> = {
