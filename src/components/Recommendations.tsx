@@ -17,10 +17,12 @@ import { de } from "date-fns/locale";
 import { InlineAddMeal } from "@/components/InlineAddMeal";
 import { InlineAddSport } from "@/components/InlineAddSport";
 import { cn } from "@/lib/utils";
+import { packMeta } from "@/lib/eventMeta";
 
 interface RecipeIngredient { name: string; amount?: number; unit?: string }
 interface RecipeItem { title: string; why: string; nutrients: string[]; uses_from_fridge?: string[]; servings?: number; ingredients?: RecipeIngredient[]; steps?: string[] }
-interface WorkoutItem { title: string; duration: string; intensity: string; why: string; }
+interface WorkoutExercise { name: string; sets?: string; details?: string }
+interface WorkoutItem { title: string; duration: string; intensity: string; why: string; exercises?: WorkoutExercise[] }
 
 const intensityWord = (v: number) => {
   if (v <= 1.5) return "sehr leicht";
