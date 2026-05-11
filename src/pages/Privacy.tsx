@@ -22,10 +22,10 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h3 className="font-semibold">1. Verantwortlicher</h3>
-            <p>Verantwortlich für die Verarbeitung personenbezogener Daten im Zusammenhang mit dem Prototyp „Fravia" ist:</p>
+            <h3 className="font-semibold">1. Verantwortliche</h3>
+            <p>Verantwortlich für die Verarbeitung personenbezogener Daten im Zusammenhang mit dem Prototyp „Fravia" sind:</p>
             <p>
-              Lene Böttcher<br />
+              Lene Böttcher, Hannah Emilia Höpfner, Jana Meyer<br />
               Kormoranweg 10, 39114 Magdeburg, Deutschland<br />
               E-Mail: <a className="underline" href="mailto:fravia@gmx.net">fravia@gmx.net</a><br />
               Website / App: <a className="underline" href="https://fravia.lovable.app" target="_blank" rel="noreferrer">https://fravia.lovable.app</a>
