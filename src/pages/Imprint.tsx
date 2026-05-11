@@ -41,7 +41,7 @@ export default function Imprint() {
 
           <section>
             <h3 className="font-semibold">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h3>
-            <p>Lene Böttcher, Anschrift wie oben.</p>
+            <p>Lene Böttcher, Anschrift wie oben. Hannah Emilia Höpfner und Jana Meyer.</p>
           </section>
 
           <section>
