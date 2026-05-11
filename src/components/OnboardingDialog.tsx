@@ -118,7 +118,7 @@ export function OnboardingDialog({ open, initialName, onComplete, onImportLogs, 
                   </RadioGroup>
                 </div>
                 <div className="space-y-2 pt-2 border-t border-border">
-                  <Label htmlFor="lp">Wann hat deine letzte Periode begonnen?</Label>
+                  <Label htmlFor="lp">Wann hat deine letzte Periode begonnen? <span className="text-muted-foreground font-normal">(Wenn du gerade menstruierst, gib einfach den ersten Tag deiner jetzigen Periode an.)</span></Label>
                   <Input id="lp" type="date" value={lastPeriod} onChange={e => setLastPeriod(e.target.value)} max={new Date().toISOString().slice(0, 10)} />
                   <p className="text-sm text-muted-foreground">Wenn du es nicht weißt, lass das Feld leer – Fravia lernt mit jedem Tag, den du trackst.</p>
                 </div>
