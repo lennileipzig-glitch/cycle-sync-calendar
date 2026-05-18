@@ -19,6 +19,77 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      {/* Veraltet-Overlay — nicht schließbar, Vollbild */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg, hsl(36 40% 92%), hsl(14 30% 88%))",
+          padding: "1.5rem",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "420px",
+            width: "100%",
+            textAlign: "center",
+            background: "hsl(36 25% 99%)",
+            borderRadius: "1rem",
+            padding: "2.5rem",
+            boxShadow: "0 12px 40px -12px hsl(14 45% 42% / 0.18)",
+            border: "1px solid hsl(30 15% 86%)",
+          }}
+        >
+          <h2
+            style={{
+              fontFamily: "'Fraunces', Georgia, serif",
+              fontWeight: 600,
+              fontSize: "1.5rem",
+              color: "hsl(25 20% 15%)",
+              marginBottom: "0.75rem",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Diese Version ist veraltet
+          </h2>
+          <p
+            style={{
+              fontFamily: "'Inter', system-ui, sans-serif",
+              fontSize: "0.95rem",
+              lineHeight: 1.6,
+              color: "hsl(25 10% 42%)",
+              marginBottom: "1.75rem",
+            }}
+          >
+            Fravia gibt es jetzt in einer neuen, verbesserten Version. Bitte registriere dich dort neu.
+          </p>
+          <a
+            href="https://fravia.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-block",
+              fontFamily: "'Inter', system-ui, sans-serif",
+              fontWeight: 500,
+              fontSize: "0.95rem",
+              color: "hsl(36 30% 97%)",
+              background: "hsl(14 45% 42%)",
+              padding: "0.75rem 1.5rem",
+              borderRadius: "0.75rem",
+              textDecoration: "none",
+              transition: "opacity 0.2s ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.92")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+          >
+            Zur neuen Version →
+          </a>
+        </div>
+      </div>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
